@@ -3,6 +3,7 @@
 #include <vector>
 #include "Util/Time.hpp"
 #include "interfaces.hpp"
+class BaseBloons:public 
 class Bloons: public Interface::IUpdatable {
 public:
   enum class State { alive, frozed, glued, pop };
