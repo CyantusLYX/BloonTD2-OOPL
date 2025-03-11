@@ -1,8 +1,11 @@
 #ifndef BLOONS_HPP
 #define BLOONS_HPP
+#include "pch.hpp"
+#include <memory>
 #include <vector>
 #include "Util/Time.hpp"
 #include "interfaces.hpp"
+#include "Util/GameObject.hpp"
 class Bloons: public Interface::IUpdatable {
 public:
   enum class State { alive, frozed, glued, pop };
@@ -15,7 +18,7 @@ private:
   float m_SpeedMult; //real speed = baseSpeed*m_SpeedMult
   int m_RBE; //Red Bloon Equivalent
   float meltTime;
-  std::vector<Bloons> m_ChildBloons;
+  std::vector<std::shared_ptr<Bloons>> m_ChildBloons;
 public:
   Bloons(Type type);
   void update() override;

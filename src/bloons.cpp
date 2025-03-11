@@ -7,44 +7,44 @@ Bloons::Bloons(Type type) : m_Type(type) {
     m_RBE = 1;
     break;
   case Type::blue:
-    m_SpeedMult = 1.6f;
+    m_SpeedMult = 1.4f;
     m_RBE = 2;
-    m_ChildBloons.push_back(Bloons(Type::red));
+    m_ChildBloons.push_back(std::make_shared<Bloons>(Type::red));
     break;
   case Type::green:
     m_SpeedMult = 1.8f;
     m_RBE = 3;
-    m_ChildBloons.push_back(Bloons(Type::blue));
+    m_ChildBloons.push_back(std::make_shared<Bloons>(Type::blue));
     break;
   case Type::yellow:
     m_SpeedMult = 3.2f;
     m_RBE = 4;
-    m_ChildBloons.push_back(Bloons(Type::green));
+    m_ChildBloons.push_back(std::make_shared<Bloons>(Type::green));
     break;
   case Type::black:
     m_SpeedMult = 1.8f;
     m_RBE = 9;
     for (int _=0; _ < 2; _++)
-      m_ChildBloons.push_back(Bloons(Type::yellow));
+      m_ChildBloons.push_back(std::make_shared<Bloons>(Type::yellow));
     break;
   case Type::white:
-    m_SpeedMult = 2.0f;
+    m_SpeedMult = 2.5f;
     m_RBE = 9;
     for (int _=0; _ < 2; _++)
-      m_ChildBloons.push_back(Bloons(Type::yellow));
+      m_ChildBloons.push_back(std::make_shared<Bloons>(Type::yellow));
     break;
   case Type::lead:
     m_SpeedMult = 1.0f;
     m_RBE = 19;
     for (int _=0; _ < 2; _++)
-      m_ChildBloons.push_back(Bloons(Type::yellow));
+      m_ChildBloons.push_back(std::make_shared<Bloons>(Type::yellow));
     break;
   case Type::rainbow:
     m_SpeedMult = 2.2f;
     m_RBE = 37;
     for (int _ = 0; _ < 2; _++) {
-      m_ChildBloons.push_back(Bloons(Type::white));
-      m_ChildBloons.push_back(Bloons(Type::black));
+      m_ChildBloons.push_back(std::make_shared<Bloons>(Type::white));
+      m_ChildBloons.push_back(std::make_shared<Bloons>(Type::black));
     }
     break;
   }
