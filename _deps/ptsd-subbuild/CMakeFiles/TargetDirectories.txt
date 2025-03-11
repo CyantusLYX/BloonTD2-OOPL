@@ -1,3 +1,0 @@
-/home/cyantus/code/oopl/BloonTD2-OOPL/_deps/ptsd-subbuild/CMakeFiles/ptsd-populate.dir
-/home/cyantus/code/oopl/BloonTD2-OOPL/_deps/ptsd-subbuild/CMakeFiles/edit_cache.dir
-/home/cyantus/code/oopl/BloonTD2-OOPL/_deps/ptsd-subbuild/CMakeFiles/rebuild_cache.dir

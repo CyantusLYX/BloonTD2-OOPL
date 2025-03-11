@@ -1,0 +1,3 @@
+[submodule "PTSD"]
+	path = PTSD
+	url = https://github.com/CyantusLYX/practical-tools-for-simple-design.git
