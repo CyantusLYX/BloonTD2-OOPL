@@ -496,3 +496,4 @@ lib/
 docs/html/
 
 _deps
+CMakeFiles
