@@ -13,11 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+    - name: Configure
+      run: cmake -DCMAKE_BUILD_TYPE=Debug -B build -G Ninja
+    - name: Build
+      run: cmake --build build
+    - name: Test
+      run: cd build && ctest
