@@ -1,6 +1,7 @@
 #ifndef COLLAPSIBLE_HPP
 #define COLLAPSIBLE_HPP
 #include "Util/GameObject.hpp"
+#include <glm/fwd.hpp>
 
 class Collapsible : public Util::GameObject {
 public:
@@ -11,7 +12,8 @@ public:
                   std::vector<std::shared_ptr<GameObject>>())
       : Util::GameObject(drawable, zIndex, pivot, visible, children) {}
     Collapsible() = default;
-  virtual bool isCollide(const Collapsible &other) const=0;
+  bool isCollide(const Collapsible &other) const;
+  bool isCollide(const glm::vec2 pt) const;
   virtual ~Collapsible() = default;
 };
 
