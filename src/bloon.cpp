@@ -63,9 +63,7 @@ void Bloon::setFrozed(float froze_time) {
   m_State = State::frozed;
   meltTime = Util::Time::GetElapsedTimeMs() + froze_time;
 }
-bool Bloon::isCollide(const Collapsible &other) const {
-  return false;
-}
+
 void Bloon::update() {
   if (m_State == State::frozed) {
     if (meltTime < Util::Time::GetElapsedTimeMs()) {

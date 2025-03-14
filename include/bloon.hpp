@@ -26,8 +26,6 @@ public:
   Bloon(Type type, const glm::vec2 &pos);
 
   Bloon(Type type){};
-
-  bool isCollide(const Collapsible &other) const override;
   
   void update() override;
 
