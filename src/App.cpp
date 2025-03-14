@@ -24,10 +24,10 @@ void App::Start() {
   m_Renderer.AddChild(easy_map);
   m_Renderer.AddChild(med_map);
   m_Renderer.AddChild(hard_map);
-  auto test = Bloon(Bloon::Type::rainbow);
-  //auto test = Bloon(Bloon::Type::rainbow, glm::vec2{0,0});
+  //auto test = Bloon(Bloon::Type::rainbow);
+  auto test = std::make_shared<Bloon>(Bloon::Type::rainbow);
   //auto test = std::make_shared<Collapsible>(nullptr, 10, glm::vec2{0,0}, true);
-  //m_Renderer.AddChild(test);
+  m_Renderer.AddChild(test);
 }
 
 void App::Update() {

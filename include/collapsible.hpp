@@ -11,7 +11,7 @@ public:
                   std::vector<std::shared_ptr<GameObject>>())
       : Util::GameObject(drawable, zIndex, pivot, visible, children) {}
     Collapsible() = default;
-  virtual bool isCollide(const Collapsible &other) const;
+  virtual bool isCollide(const Collapsible &other) const=0;
   virtual ~Collapsible() = default;
 };
 

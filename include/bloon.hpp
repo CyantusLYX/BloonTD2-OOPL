@@ -25,9 +25,9 @@ private:
 public:
   Bloon(Type type, const glm::vec2 &pos);
 
-  Bloon(Type type);
+  Bloon(Type type){};
 
-  bool isCollide(const Collapsible &other) const ;
+  bool isCollide(const Collapsible &other) const override;
   
   void update() override;
 
@@ -43,6 +43,5 @@ public:
 
   State GetState() const { return m_State; }
 
-  void Destroy(); // NOLINT(readability-convert-member-functions-to-static)
 };
 #endif // BLOON_HPP

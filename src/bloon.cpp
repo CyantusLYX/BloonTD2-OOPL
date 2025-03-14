@@ -56,7 +56,7 @@ Bloon::Bloon(Bloon::Type type, const glm::vec2 &pos)
     break;
   }
   m_Drawable = std::make_shared<Util::Image>(
-      RESOURCE_DIR "/bloons/" + std::to_string(static_cast<int>(m_Type)) +
+      RESOURCE_DIR "/bloons/b" + std::to_string(static_cast<int>(m_Type)) +
       ".png");
 }
 void Bloon::setFrozed(float froze_time) {
