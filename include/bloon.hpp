@@ -1,12 +1,15 @@
-#ifndef BLOONS_HPP
-#define BLOONS_HPP
+#ifndef BLOON_HPP
+#define BLOON_HPP
+#include "Util/Input.hpp"
 #include "pch.hpp"
 #include <memory>
 #include <vector>
 #include "Util/Time.hpp"
 #include "interfaces.hpp"
 #include "Util/GameObject.hpp"
-class Bloon: public Interface::IUpdatable {
+#include "collapsible.hpp"
+//class Bloon: public Collapsible{
+class Bloon: public Interface::IUpdatable, public Collapsible{
 public:
   enum class State { alive, frozed, glued, pop };
   enum class Type { red, blue, green, yellow, black, white, lead, rainbow };
@@ -18,9 +21,14 @@ private:
   float m_SpeedMult; //real speed = baseSpeed*m_SpeedMult
   int m_RBE; //Red Bloon Equivalent
   float meltTime;
-  std::vector<std::shared_ptr<Bloon>> m_ChildBloons;
+  std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
 public:
+  Bloon(Type type, const glm::vec2 &pos);
+
   Bloon(Type type);
+
+  bool isCollide(const Collapsible &other) const ;
+  
   void update() override;
 
   void setFrozed(float froze_time);
@@ -37,4 +45,4 @@ public:
 
   void Destroy(); // NOLINT(readability-convert-member-functions-to-static)
 };
-#endif // BLOONS_HPP
+#endif // BLOON_HPP
