@@ -4,7 +4,7 @@
 //ColType to ColType
 //wait to be implement
 bool Collapsible::isCollide(const Collapsible &other) const{
-    return false;
+    //return false;
 
     switch (m_tcol) {
         case ColType::DOT:
@@ -56,7 +56,7 @@ bool Collapsible::isCollide(const Collapsible &other) const{
 //if it trigger every object's isCollide when mouse click
 //it will be so odd, doesn't it?
 bool Collapsible::isCollide(const glm::vec2 pt) const{
-    return false;
+    //return false;
     switch (m_tcol) {
         case ColType::DOT:
             return pt == m_Pivot;
