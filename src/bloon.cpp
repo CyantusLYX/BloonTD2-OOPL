@@ -5,7 +5,7 @@
 #include "collapsible.hpp"
 #include <memory>
 Bloon::Bloon(Bloon::Type type, const glm::vec2 &pos)
-   : Collapsible(nullptr, 10, pos, true), m_Type(type) {
+   : Collapsible(nullptr, 10, pos, pos, ColType::OVAL, true), m_Type(type) {
 //Bloon::Bloon(Bloon::Type type)
 //    :  m_Type(type) {
   switch (type) {
