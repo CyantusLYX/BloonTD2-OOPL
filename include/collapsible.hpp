@@ -2,8 +2,11 @@
 #define COLLAPSIBLE_HPP
 #include "Util/GameObject.hpp"
 
-enum class ColType {OVAL, RECTANGLE};
+enum class ColType { OVAL, RECTANGLE };
 class Collapsible : public Util::GameObject {
+  private:
+    bool can_click = false;
+
 public:
   Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
               const float zIndex, const glm::vec2 &pivot = {0, 0},
@@ -11,27 +14,29 @@ public:
               const ColType col_type = ColType::RECTANGLE,
               const bool visible = true,
               const std::vector<std::shared_ptr<GameObject>> &children =
-                    std::vector<std::shared_ptr<GameObject>>()
-                    )
-      : Util::GameObject(drawable, zIndex, pivot, visible, children), 
-        m_col_parm(col_parm), m_col_type(col_type){}
+                  std::vector<std::shared_ptr<GameObject>>())
+      : Util::GameObject(drawable, zIndex, pivot, visible, children),
+        m_col_parm(col_parm), m_col_type(col_type) {}
   Collapsible() = default;
-  
-  /**
-  * @param m_col_parm The parameter of the collision box.
-  *               If m_col_type == OVAL       then m_col_parm refers to the width and height of the oval
-  *               If m_col_type == RECTANGLE  then m_col_parm refers to the width and height of the rectangle
-  * @param m_col_type The type of the collision box        
-  */
-  glm::vec2 m_col_parm;
-  ColType   m_col_type;
 
-	bool rec_to_oval(Collapsible &rec, Collapsible &oval);
-	bool rec_to_rec(Collapsible &rec1, Collapsible &rec2);
-	bool oval_to_oval(Collapsible &oval1, Collapsible &oval2);
+  /**
+   * @param m_col_parm The parameter of the collision box.
+   *               If m_col_type == OVAL       then m_col_parm refers to the
+   * width and height of the oval If m_col_type == RECTANGLE  then m_col_parm
+   * refers to the width and height of the rectangle
+   * @param m_col_type The type of the collision box
+   */
+  glm::vec2 m_col_parm;
+  ColType m_col_type;
+
+  bool rec_to_oval(Collapsible &rec, Collapsible &oval);
+  bool rec_to_rec(Collapsible &rec1, Collapsible &rec2);
+  bool oval_to_oval(Collapsible &oval1, Collapsible &oval2);
   bool isCollide(const Collapsible &other) const;
   bool isCollide(const glm::vec2 pt) const;
   virtual ~Collapsible() = default;
+  void set_can_click(bool can_click) { this->can_click = can_click; }
+  bool get_can_click() { return this->can_click; }
 };
 
 #endif // COLLAPSIBLE_HPP
