@@ -3,18 +3,30 @@
 #include "Util/GameObject.hpp"
 
 enum class ColType {OVAL, RECTANGLE};
+
 class Collapsible : public Util::GameObject {
 public:
+
   Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
               const float zIndex, const glm::vec2 &pivot = {0, 0},
-              const glm::vec2 &col_parm = {0, 0},
-              const ColType col_type = ColType::RECTANGLE,
+              const float circle_r = 0.0,
               const bool visible = true,
               const std::vector<std::shared_ptr<GameObject>> &children =
                     std::vector<std::shared_ptr<GameObject>>()
                     )
       : Util::GameObject(drawable, zIndex, pivot, visible, children), 
-        m_col_parm(col_parm), m_col_type(col_type){}
+        m_col_parm(circle_r), m_col_type(ColType::OVAL){}
+
+  Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
+              const float zIndex, const glm::vec2 &pivot = {0, 0},
+              const glm::vec2 &rectangle_xy = {0, 0},
+              const bool visible = true,
+              const std::vector<std::shared_ptr<GameObject>> &children =
+                    std::vector<std::shared_ptr<GameObject>>()
+                    )
+      : Util::GameObject(drawable, zIndex, pivot, visible, children), 
+        m_col_parm(rectangle_xy), m_col_type(ColType::RECTANGLE){}
+        
   Collapsible() = default;
   
   /**
