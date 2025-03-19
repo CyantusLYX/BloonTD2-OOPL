@@ -1,5 +1,4 @@
 #include "collapsible.hpp"
-#include <X11/Xlib.h>
 
 // ColType to ColType
 // wait to be implement

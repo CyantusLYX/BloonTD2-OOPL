@@ -1,7 +1,6 @@
 #ifndef COLLAPSIBLE_HPP
 #define COLLAPSIBLE_HPP
 #include "Util/GameObject.hpp"
-#include <glm/fwd.hpp>
 
 enum class ColType {OVAL, RECTANGLE};
 class Collapsible : public Util::GameObject {
