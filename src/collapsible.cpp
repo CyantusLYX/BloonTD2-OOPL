@@ -1,4 +1,5 @@
 #include "collapsible.hpp"
+#include <glm/fwd.hpp>
 
 // ColType to ColType
 // wait to be implement
@@ -55,8 +56,9 @@ bool Collapsible::isCollide(const glm::vec2 pt) const {
   // return false;
   switch (m_col_type) {
   case ColType::OVAL:
-    return (pow(pt.x - m_Pivot.x, 2) + pow(pt.y - m_Pivot.y, 2)) > m_col_parm;
-  case ColType::RECTANGLE:
+    //return glm::vec2(pow(pt.x - m_Pivot.x, 2) , pow(pt.y - m_Pivot.y, 2)) > m_col_parm;
+    return false;
+    case ColType::RECTANGLE:
     return (pt.x < m_Pivot.x + m_col_parm.x / 2) &&
            (pt.x > m_Pivot.x - m_col_parm.x / 2) &&
            (pt.y < m_Pivot.y + m_col_parm.y / 2) &&
@@ -65,4 +67,7 @@ bool Collapsible::isCollide(const glm::vec2 pt) const {
     throw std::invalid_argument("err on collapsible::isCollide switch");
     return false;
   }
+}
+void Collapsible::set_position(const glm::vec2 &position) {
+  m_Pivot = position;
 }

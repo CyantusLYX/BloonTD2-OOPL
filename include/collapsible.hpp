@@ -2,34 +2,29 @@
 #define COLLAPSIBLE_HPP
 #include "Util/GameObject.hpp"
 
-enum class ColType {OVAL, RECTANGLE};
+enum class ColType { OVAL, RECTANGLE };
 
 class Collapsible : public Util::GameObject {
-  private:
-    bool can_click = false;
+private:
+  bool can_click = false;
 
 public:
+  Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
+              const float zIndex, const glm::vec2 &pivot = {0, 0},
+              const float circle_r = 0.0, const bool visible = true,
+              const std::vector<std::shared_ptr<GameObject>> &children =
+                  std::vector<std::shared_ptr<GameObject>>())
+      : Util::GameObject(drawable, zIndex, pivot, visible, children),
+        m_col_parm(circle_r), m_col_type(ColType::OVAL) {}
 
   Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
               const float zIndex, const glm::vec2 &pivot = {0, 0},
-              const float circle_r = 0.0,
-              const bool visible = true,
+              const glm::vec2 &rectangle_xy = {0, 0}, const bool visible = true,
               const std::vector<std::shared_ptr<GameObject>> &children =
-                    std::vector<std::shared_ptr<GameObject>>()
-                    )
-      : Util::GameObject(drawable, zIndex, pivot, visible, children), 
-        m_col_parm(circle_r), m_col_type(ColType::OVAL){}
+                  std::vector<std::shared_ptr<GameObject>>())
+      : Util::GameObject(drawable, zIndex, pivot, visible, children),
+        m_col_parm(rectangle_xy), m_col_type(ColType::RECTANGLE) {}
 
-  Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
-              const float zIndex, const glm::vec2 &pivot = {0, 0},
-              const glm::vec2 &rectangle_xy = {0, 0},
-              const bool visible = true,
-              const std::vector<std::shared_ptr<GameObject>> &children =
-                    std::vector<std::shared_ptr<GameObject>>()
-                    )
-      : Util::GameObject(drawable, zIndex, pivot, visible, children), 
-        m_col_parm(rectangle_xy), m_col_type(ColType::RECTANGLE){}
-        
   Collapsible() = default;
 
   /**
@@ -42,6 +37,7 @@ public:
   glm::vec2 m_col_parm;
   ColType m_col_type;
 
+  void set_position(const glm::vec2 &position);
   bool rec_to_oval(Collapsible &rec, Collapsible &oval);
   bool rec_to_rec(Collapsible &rec1, Collapsible &rec2);
   bool oval_to_oval(Collapsible &oval1, Collapsible &oval2);
