@@ -55,7 +55,7 @@ bool Collapsible::isCollide(const glm::vec2 pt) const {
   // return false;
   switch (m_col_type) {
   case ColType::OVAL:
-    return pow(pt.x - m_Pivot.x, 2) + pow(pt.y - m_Pivot.y, 2) > m_col_parm;
+    return (pow(pt.x - m_Pivot.x, 2) + pow(pt.y - m_Pivot.y, 2)) > m_col_parm;
   case ColType::RECTANGLE:
     return (pt.x < m_Pivot.x + m_col_parm.x / 2) &&
            (pt.x > m_Pivot.x - m_col_parm.x / 2) &&
