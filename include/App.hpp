@@ -2,6 +2,7 @@
 #define APP_HPP
 
 #include "Util/Renderer.hpp"
+#include "manager.hpp"
 #include "pch.hpp" // IWYU pragma: export
 
 class App {
@@ -23,7 +24,7 @@ public:
 private:
     void ValidTask();
     Util::Renderer m_Renderer;
-
+    Manager manager;
 private:
     State m_CurrentState = State::START;
 };

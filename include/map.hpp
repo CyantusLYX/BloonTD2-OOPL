@@ -2,7 +2,6 @@
 #define MAP_HPP
 #include "pch.hpp"
 #include <Util/GameObject.hpp>
-#include <glm/fwd.hpp>
 #include <vector>
 class Map : public Util::GameObject {
 public:
