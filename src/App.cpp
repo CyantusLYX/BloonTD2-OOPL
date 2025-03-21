@@ -34,20 +34,13 @@ void App::Start() {
 
 void App::Update() {
 
-  // TODO: do your things here and delete this line <3
-
-  /*
-   * Do not touch the code below as they serve the purpose for
-   * closing the window.
-   */
-
   if (manager.get_mouse_status() == Manager::mouse_status::drag) {
     manager.get_dragging()->set_position(Util::Input::GetCursorPosition());
   }
   for (auto &move : manager.get_movings()) {
   }
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
-    for (auto &move : manager.get_movings()) {
+    for (auto &move : manager.get_movings()) { //iterating over all moving
       if (move->get_can_click()) {
         if (move->isCollide(Util::Input::GetCursorPosition())) {
           manager.set_dragging(move);
