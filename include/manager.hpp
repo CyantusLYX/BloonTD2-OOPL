@@ -27,6 +27,6 @@ public:
   mouse_status get_mouse_status() { return m_mouse_status; }
   void set_dragging(std::shared_ptr<Collapsible> dragging);
   std::shared_ptr<Collapsible> get_dragging() { return dragging; }
-  void end_dragging();
+  void end_dragging(); //ender_dragon()
 };
 #endif
