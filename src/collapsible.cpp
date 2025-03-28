@@ -96,11 +96,12 @@ bool Collapsible::isCollide(const Collapsible &that) const {
 // it will be so odd, doesn't it?
 bool Collapsible::isCollide(const glm::vec2 pt) const {
   // return false;
-  std::cout << "render isCollide(dot)";
   switch (m_col_type) {
   case ColType::OVAL:
+    LOG_INFO("object({},{}) collide with point: ({}, {})",m_Pivot.x,m_Pivot.y, pt.x, pt.y);
     return (pow(pt.x - m_Pivot.x, 2) + pow(pt.y - m_Pivot.y, 2)) <
            pow(std::get<int>(m_col_parm), 2);
+           LOG_INFO("not collide with point: ({}, {})", pt.x, pt.y);
     return false;
   case ColType::RECTANGLE:
     return (pt.x < m_Pivot.x + std::get<glm::vec2>(m_col_parm).x / 2) &&
@@ -115,4 +116,5 @@ bool Collapsible::isCollide(const glm::vec2 pt) const {
 
 void Collapsible::set_position(const glm::vec2 &position) {
   m_Pivot = position;
+  ;
 }

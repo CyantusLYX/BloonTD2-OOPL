@@ -8,9 +8,11 @@
 #include "bloon.hpp"
 #include "manager.hpp"
 #include "map.hpp"
+#include <cmath>
 #include <glm/fwd.hpp>
 #include <memory>
 
+bool drag_cd = false;
 void App::Start() {
   LOG_TRACE("Start");
   m_CurrentState = State::UPDATE;
@@ -30,6 +32,7 @@ void App::Start() {
   // true);
   test->set_can_click(true);
   m_Renderer.AddChild(test);
+  manager.add_moving(test);
 }
 
 void App::Update() {
@@ -38,12 +41,20 @@ void App::Update() {
     manager.get_dragging()->set_position(Util::Input::GetCursorPosition());
   }
   for (auto &move : manager.get_movings()) {
+    //move->update();
   }
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
+    LOG_INFO("Mouse Left Button Pressed");
+    drag_cd = false;
+    if (manager.get_mouse_status()==Manager::mouse_status::drag && !drag_cd) {
+      manager.end_dragging();
+      drag_cd = true;
+    }
     for (auto &move : manager.get_movings()) { //iterating over all moving
-      if (move->get_can_click()) {
+      if (move->get_can_click()&&manager.get_mouse_status()==Manager::mouse_status::free && !drag_cd) {
         if (move->isCollide(Util::Input::GetCursorPosition())) {
           manager.set_dragging(move);
+          drag_cd = true;
         }
       }
     }
