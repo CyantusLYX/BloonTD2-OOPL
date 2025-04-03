@@ -2,6 +2,7 @@
 #define COLLAPSIBLE_HPP
 #include "Util/GameObject.hpp"
 #include <variant>
+#include "Util/Position.hpp"
 
 enum class ColType { OVAL, RECTANGLE };
 
@@ -47,6 +48,7 @@ public:
   virtual ~Collapsible() = default;
   void set_can_click(bool can_click) { this->can_click = can_click; }
   bool get_can_click() { return this->can_click; }
+  Util::PTSDPosition get_position()const;
 };
 
 #endif // COLLAPSIBLE_HPP
