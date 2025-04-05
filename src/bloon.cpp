@@ -5,7 +5,7 @@
 #include "collapsible.hpp"
 #include <memory>
 Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
-    : Collapsible(nullptr, 10, pos.ToVec2(), 15, true), m_Type(type) {
+    : Collapsible(nullptr, 10, pos.ToVec2(), 0, true), m_Type(type), m_State(State::alive){
   // Bloon::Bloon(Bloon::Type type)
   //     :  m_Type(type) {
   switch (type) {
@@ -58,23 +58,24 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
   m_Drawable = std::make_shared<Util::Image>(
       RESOURCE_DIR "/bloons/b" + std::to_string(static_cast<int>(m_Type)) +
       ".png");
+  set_col_parm(static_cast<int>(m_Drawable->GetSize().x / 2));
 }
-void Bloon::setFrozed(float froze_time) {
+void Bloon::setFrozed(const float froze_time) {
   m_State = State::frozed;
   meltTime = Util::Time::GetElapsedTimeMs() + froze_time;
 }
 
-void Bloon::update() {
-  if (m_State == State::frozed) {
-    if (meltTime < Util::Time::GetElapsedTimeMs()) {
-      m_State = State::alive;
-    }
-  }
-  if (m_State == State::alive) {
-  }
-  if (m_State == State::pop) {
-    for (auto &bloon : m_ChildBloons) {
-      // std::make_shared<Bloon>(*bloon, m_Pivot);
-    }
-  }
-}
+// void Bloon::update() {
+//   if (m_State == State::frozed) {
+//     if (meltTime < Util::Time::GetElapsedTimeMs()) {
+//       m_State = State::alive;
+//     }
+//   }
+//   if (m_State == State::alive) {
+//   }
+//   if (m_State == State::pop) {
+//     for (auto &bloon : m_ChildBloons) {
+//       // std::make_shared<Bloon>(*bloon, m_Pivot);
+//     }
+//   }
+// }

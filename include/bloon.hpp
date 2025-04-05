@@ -1,11 +1,9 @@
 #ifndef BLOON_HPP
 #define BLOON_HPP
 #include "collapsible.hpp"
-#include "interfaces.hpp"
 #include <memory>
 #include <vector>
-// class Bloon: public Collapsible{
-class Bloon : public Interface::IUpdatable, public Collapsible {
+class Bloon final : public Collapsible {
 public:
   enum class State { alive, frozed, glued, pop };
   enum class Type { red, blue, green, yellow, black, white, lead, rainbow };
@@ -17,24 +15,22 @@ private:
   float baseSpeed = 1.0f; // Base speed of the bloon
   float m_SpeedMult;      // real speed = baseSpeed*m_SpeedMult
   int m_RBE;              // Red Bloon Equivalent
-  float meltTime;
+  float meltTime{};
   std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
 
 public:
-  Bloon(Type type, const Util::PTSDPosition pos);
-
-  void update() override;
+  Bloon(Type type, Util::PTSDPosition pos);
 
   void setFrozed(float froze_time);
 
-  State GetCurrentState() const { return m_CurrentState; }
+  [[nodiscard]] State GetCurrentState() const { return m_CurrentState; }
 
-  float GetSpeed() const { return baseSpeed * m_SpeedMult; }
+  [[nodiscard]] float GetSpeed() const { return baseSpeed * m_SpeedMult; }
 
-  int GetRBE() const { return m_RBE; }
+  [[nodiscard]] int GetRBE() const { return m_RBE; }
 
-  Type GetType() const { return m_Type; }
+  [[nodiscard]] Type GetType() const { return m_Type; }
 
-  State GetState() const { return m_State; }
+  [[nodiscard]] State GetState() const { return m_State; }
 };
 #endif // BLOON_HPP
