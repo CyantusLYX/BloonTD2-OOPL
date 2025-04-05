@@ -13,22 +13,14 @@ private:
 public:
   Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
               const float zIndex, const Util::PTSDPosition &pos = {0, 0},
-              const int circle_r = 0, const bool visible = true,
+              const std::variant<glm::vec2, int>  circle_r_or_rectangle_xy = 0, const bool visible = true,
               const std::vector<std::shared_ptr<GameObject>> &children =
                   std::vector<std::shared_ptr<GameObject>>())
       : Util::GameObject(drawable, zIndex, {0,0}, visible, children),
-        m_col_parm(circle_r), m_col_type(ColType::OVAL) {
+        m_col_parm(circle_r_or_rectangle_xy) {
           this->m_Transform.translation = pos.ToVec2();
+          m_col_type = circle_r_or_rectangle_xy.index() == 1 ? ColType::OVAL : ColType::RECTANGLE;
         }
-
-  Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
-              const float zIndex, const Util::PTSDPosition &pos = {0, 0},
-              const glm::vec2 &rectangle_xy = {0, 0}, const bool visible = true,
-              const std::vector<std::shared_ptr<GameObject>> &children =
-                  std::vector<std::shared_ptr<GameObject>>())
-      : Util::GameObject(drawable, zIndex, {0,0}, visible, children),
-        m_col_parm(rectangle_xy), m_col_type(ColType::RECTANGLE) {
-          this->m_Transform.translation = pos.ToVec2();}
 
   Collapsible() = default;
 
@@ -43,15 +35,16 @@ public:
   ColType m_col_type;
 
   void set_position(const Util::PTSDPosition &position);
-  bool rec_to_oval(const Collapsible &rec, const Collapsible &oval) const;
-  bool rec_to_rec(const Collapsible &rec1, const Collapsible &rec2) const;
-  bool oval_to_oval(const Collapsible &oval1, const Collapsible &oval2) const;
-  bool isCollide(const Collapsible &that) const;
-  bool isCollide(const Util::PTSDPosition pt) const;
-  virtual ~Collapsible() = default;
-  void set_can_click(bool can_click) { this->can_click = can_click; }
-  bool get_can_click() { return this->can_click; }
-  Util::PTSDPosition get_position()const;
+  void set_col_parm(const std::variant<glm::vec2, int> &col_parm);
+  static bool rec_to_oval(const Collapsible &rec, const Collapsible &oval) ;
+  [[nodiscard]] static bool rec_to_rec(const Collapsible &rec1, const Collapsible &rec2) ;
+  [[nodiscard]] static bool oval_to_oval(const Collapsible &oval1, const Collapsible &oval2) ;
+  [[nodiscard]] bool isCollide(const Collapsible &that) const;
+  [[nodiscard]] bool isCollide(Util::PTSDPosition pt) const;
+  ~Collapsible() override = default;
+  void set_can_click(const bool can_click) { this->can_click = can_click; }
+  [[nodiscard]] bool get_can_click() const { return this->can_click; }
+  [[nodiscard]] Util::PTSDPosition get_position()const;
 };
 
 #endif // COLLAPSIBLE_HPP

@@ -5,17 +5,23 @@
 
 // ColType to ColType
 // wait to be implement
+
+void Collapsible::set_col_parm(const std::variant<glm::vec2, int> &col_parm) {
+  if (m_col_parm.index() == col_parm.index())
+    this->m_col_parm = col_parm;
+}
+
 bool Collapsible::rec_to_oval(const Collapsible &rec,
-                              const Collapsible &oval) const {
+                              const Collapsible &oval) {
   if (rec.m_col_type != ColType::RECTANGLE ||
       oval.m_col_type != ColType::OVAL) {
     throw std::invalid_argument("err on collapsible::rec_to_oval");
   } else {
-    glm::vec2 r = rec.get_position().ToVec2();
-    glm::vec2 ur = {
+    const glm::vec2 r = rec.get_position().ToVec2();
+    const glm::vec2 ur = {
         rec.get_position().x + std::get<glm::vec2>(rec.m_col_parm).x / 2,
         rec.get_position().y + std::get<glm::vec2>(rec.m_col_parm).y / 2};
-    glm::vec2 dl = {
+    const glm::vec2 dl = {
         rec.get_position().x - std::get<glm::vec2>(rec.m_col_parm).x / 2,
         rec.get_position().y - std::get<glm::vec2>(rec.m_col_parm).y / 2};
     glm::vec2 c = oval.get_position().ToVec2();
@@ -32,7 +38,7 @@ bool Collapsible::rec_to_oval(const Collapsible &rec,
 }
 
 bool Collapsible::rec_to_rec(const Collapsible &rec1,
-                             const Collapsible &rec2) const {
+                             const Collapsible &rec2) {
   if (rec1.m_col_type != ColType::RECTANGLE ||
       rec2.m_col_type != ColType::RECTANGLE) {
     throw std::invalid_argument("err on collapsible::rec_to_rec");
@@ -50,7 +56,7 @@ bool Collapsible::rec_to_rec(const Collapsible &rec1,
 }
 
 bool Collapsible::oval_to_oval(const Collapsible &oval1,
-                               const Collapsible &oval2) const {
+                               const Collapsible &oval2) {
   if (oval1.m_col_type != ColType::OVAL || oval2.m_col_type != ColType::OVAL) {
     throw std::invalid_argument("err on collapsible::oval_to_oval");
   } else {
@@ -125,6 +131,6 @@ void Collapsible::set_position(const Util::PTSDPosition &position) {
 
 Util::PTSDPosition Collapsible::get_position() const {
   // return m_Transform.translation + m_Pivot;
-  return Util::PTSDPosition(m_Transform.translation.x,
-                            m_Transform.translation.y);
+  return {m_Transform.translation.x,
+                            m_Transform.translation.y};
 }

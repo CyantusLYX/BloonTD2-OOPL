@@ -3,9 +3,9 @@
 #include "Util/Renderer.hpp"
 #include <memory>
 #include "Util/Image.hpp"
-void Manager::set_dragging(std::shared_ptr<Collapsible> dragging) {
+void Manager::set_dragging(const std::shared_ptr<Collapsible> &dragging) {
   if (m_mouse_status == mouse_status::free) {
-    LOG_INFO("stard dragging");
+    LOG_INFO("start dragging");
     this->dragging = dragging;
     m_mouse_status = mouse_status::drag;
   }
@@ -23,7 +23,7 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   }
 }
 /**
- * @brief ender_dragon(LOL)
+ * @brief ender_dragon(LOL) ;)
  */
 void Manager::end_dragging() {
   if (m_mouse_status == mouse_status::drag) {
@@ -32,7 +32,7 @@ void Manager::end_dragging() {
     m_mouse_status = mouse_status::free;
   }
 }
-void Manager::add_map(std::shared_ptr<Map> map) { maps.push_back(map); }
+void Manager::add_map(const std::shared_ptr<Map>& map) { maps.push_back(map); }
 
 /**
  * @brief Add an object that should automatically move
@@ -42,7 +42,7 @@ void Manager::add_map(std::shared_ptr<Map> map) { maps.push_back(map); }
  *
  * @param moving The collapsible object to be added
  */
-void Manager::add_moving(std::shared_ptr<Collapsible> moving) {
+void Manager::add_moving(const std::shared_ptr<Collapsible>& moving) {
   movings.push_back(moving);
   m_Renderer->AddChild(moving);
 }
