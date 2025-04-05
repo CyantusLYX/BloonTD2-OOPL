@@ -1,13 +1,13 @@
 #include "bloon.hpp"
-#include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Position.hpp"
 #include "Util/Time.hpp"
 #include "collapsible.hpp"
 #include <memory>
-Bloon::Bloon(Bloon::Type type, const glm::vec2 &pos)
-   : Collapsible(nullptr, 10, pos, pos, ColType::OVAL, true), m_Type(type) {
-//Bloon::Bloon(Bloon::Type type)
-//    :  m_Type(type) {
+Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
+    : Collapsible(nullptr, 10, pos.ToVec2(), 15, true), m_Type(type) {
+  // Bloon::Bloon(Bloon::Type type)
+  //     :  m_Type(type) {
   switch (type) {
   case Type::red:
     m_SpeedMult = 1.0f;
@@ -74,7 +74,7 @@ void Bloon::update() {
   }
   if (m_State == State::pop) {
     for (auto &bloon : m_ChildBloons) {
-      //std::make_shared<Bloon>(*bloon, m_Pivot);
+      // std::make_shared<Bloon>(*bloon, m_Pivot);
     }
   }
 }
