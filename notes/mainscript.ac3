@@ -1,0 +1,1352 @@
+var §\x01§ = 843;
+var §\x0f§ = 1;
+class BloonsTD
+{
+   var mainTimeline;
+   var bloonholder;
+   var bulletholder;
+   var towerholder;
+   var towerplace;
+   var toweroptions;
+   var towerinfo;
+   var winpanel;
+   var diff;
+   var userProfile;
+   var timeLastFrame;
+   var fpsFrameCount;
+   var timeSum;
+   var levelsArray;
+   var levelHints;
+   var lives;
+   var costmult;
+   var curLevel;
+   var money;
+   var noMore;
+   var currentTower;
+   var currentTool;
+   var ingame;
+   var towerlist;
+   var bulletlist;
+   var numBloons;
+   var endRoundCount;
+   var counter;
+   var bloonIndex;
+   var bloonsSpawned;
+   var bloonInterval;
+   var frozenClink;
+   var metalClink;
+   var splatSound;
+   var COST_DART = 275;
+   var COST_TACK = 375;
+   var COST_BOMB = 575;
+   var COST_ICE = 425;
+   var COST_SUPER = 4000;
+   var COST_BOOMERANG = 525;
+   var COST_SPIKES = 30;
+   var COST_GLUE = 40;
+   var COST_DART_RANGE_UPGRADE = 90;
+   var COST_DART_PIERCE_UPGRADE = 200;
+   var COST_TACK_RANGE_UPGRADE = 100;
+   var COST_TACK_RATE_UPGRADE = 200;
+   var COST_BOOMERANG_PIERCE_UPGRADE = 300;
+   var COST_BOOMERANG_SONIC_UPGRADE = 150;
+   var COST_BOMB_SIZE_UPGRADE = 420;
+   var COST_BOMB_RANGE_UPGRADE = 200;
+   var COST_ICE_FREEZE_UPGRADE = 300;
+   var COST_ICE_RANGE_UPGRADE = 200;
+   var COST_SUPER_RANGE_UPGRADE = 2400;
+   var COST_SUPER_LASER_UPGRADE = 4500;
+   var RANGE_DART = 100;
+   var RANGE_TACK = 70;
+   var RANGE_SPIKEY = 85;
+   var RANGE_BOMB = 120;
+   var RANGE_ICE = 60;
+   var RANGE_SUPER = 140;
+   var RANGE_BOOMERANG = 130;
+   var SELL_RATE = 0.8;
+   var STARTING_MONEY = 650;
+   var MAX_LIVES_EASY = 100;
+   var MAX_LIVES_MEDIUM = 75;
+   var MAX_LIVES_HARD = 50;
+   var COST_MULT_EASY = 0.9;
+   var COST_MULT_MED = 1.02;
+   var COST_MULT_HARD = 1.04;
+   function BloonsTD(timeline)
+   {
+      this.mainTimeline = timeline;
+      this.bloonholder = this.mainTimeline.bloonholder;
+      this.bulletholder = this.mainTimeline.bulletholder;
+      this.towerholder = this.mainTimeline.towerholder;
+      this.towerplace = this.mainTimeline.towerplace;
+      this.toweroptions = this.mainTimeline.toweroptions;
+      this.towerinfo = this.mainTimeline.towerinfo;
+      this.winpanel = this.mainTimeline.winpanel;
+      this.mainTimeline.output._visible = false;
+      this.mainTimeline.onEnterFrame = mx.utils.Delegate.create(this,this.EnterFrame);
+      this.mainTimeline.playarea.onPress = mx.utils.Delegate.create(this,this.OnClick);
+      this.diff = "easy";
+      this.userProfile = SharedObject.getLocal("bloonstd2");
+      this.UpdateMedals();
+      var _loc2_ = 1;
+      while(_loc2_ < 33)
+      {
+         this.mainTimeline.pathhitmc["pathhit" + _loc2_]._visible = false;
+         _loc2_ = _loc2_ + 1;
+      }
+      this.Init();
+   }
+   function UpdateMedals()
+   {
+      if(this.userProfile.data.bronze)
+      {
+         this.mainTimeline.mainmenu.bronze.gotoAndStop(2);
+      }
+      else
+      {
+         this.mainTimeline.mainmenu.bronze.gotoAndStop(1);
+      }
+      if(this.userProfile.data.silver)
+      {
+         this.mainTimeline.mainmenu.silver.gotoAndStop(2);
+      }
+      else
+      {
+         this.mainTimeline.mainmenu.silver.gotoAndStop(1);
+      }
+      if(this.userProfile.data.gold)
+      {
+         this.mainTimeline.mainmenu.gold.gotoAndStop(2);
+      }
+      else
+      {
+         this.mainTimeline.mainmenu.gold.gotoAndStop(1);
+      }
+   }
+   function Init()
+   {
+      this.timeLastFrame = getTimer();
+      this.fpsFrameCount = 0;
+      this.timeSum = 0;
+      this.levelsArray = new Array();
+      this.levelHints = new Array();
+      this.towerinfo._visible = false;
+      this.mainTimeline.startrnd_btn._visible = true;
+      this.ClearAll();
+      this.BuildLevels();
+      this.BuildLevelHints();
+      if(this.diff == "easy")
+      {
+         this.lives = this.MAX_LIVES_EASY;
+         this.costmult = this.COST_MULT_EASY;
+      }
+      if(this.diff == "medium")
+      {
+         this.lives = this.MAX_LIVES_MEDIUM;
+         this.costmult = this.COST_MULT_MED;
+      }
+      if(this.diff == "hard")
+      {
+         this.lives = this.MAX_LIVES_HARD;
+         this.costmult = this.COST_MULT_HARD;
+      }
+      this.mainTimeline.lives_txt.text = this.lives;
+      this.curLevel = 0;
+      this.money = this.STARTING_MONEY;
+      this.noMore = true;
+      this.currentTower = null;
+      this.currentTool = "none";
+      this.ingame = false;
+      this.towerlist = new Array();
+      this.bulletlist = new Array();
+      this.mainTimeline.lives_txt.text = this.lives;
+      this.UpdateMoney();
+      this.SetUpSound();
+   }
+   function SetDiff(pdiff)
+   {
+      this.diff = pdiff;
+      this.mainTimeline.playarea.gotoAndStop(pdiff);
+      this.mainTimeline.pathhitmc.gotoAndStop(pdiff);
+      if(this.diff == "easy")
+      {
+         this.lives = this.MAX_LIVES_EASY;
+         this.costmult = this.COST_MULT_EASY;
+      }
+      if(this.diff == "medium")
+      {
+         this.lives = this.MAX_LIVES_MEDIUM;
+         this.costmult = this.COST_MULT_MED;
+      }
+      if(this.diff == "hard")
+      {
+         this.lives = this.MAX_LIVES_HARD;
+         this.costmult = this.COST_MULT_HARD;
+      }
+      this.mainTimeline.lives_txt.text = this.lives;
+      trace("set diff to : " + pdiff);
+   }
+   function OnClick()
+   {
+      if(this.currentTool != "none")
+      {
+         if(this.towerplace.radiusmc._currentframe == 1)
+         {
+            if(this.currentTool != "spikes" && this.currentTool != "glue")
+            {
+               this.CreateNewTower(this.currentTool,_xmouse,_ymouse);
+            }
+            else
+            {
+               var _loc2_ = 0;
+               if(this.currentTool == "spikes")
+               {
+                  _loc2_ = this.GetPrice(this.COST_SPIKES);
+               }
+               if(this.currentTool == "glue")
+               {
+                  _loc2_ = this.GetPrice(this.COST_GLUE);
+               }
+               if(_loc2_ > this.money)
+               {
+                  this.Output("not enough money.");
+                  return undefined;
+               }
+               this.money -= _loc2_;
+               this.UpdateMoney();
+               this.ShootBullet();
+               this.DeselectCurrent();
+            }
+         }
+      }
+      else
+      {
+         this.DeselectCurrent();
+      }
+   }
+   function ClearAll()
+   {
+      this.ClearBalloons();
+      this.ClearBullets();
+      this.numBloons = 0;
+      this.ClearTowers();
+   }
+   function Test()
+   {
+   }
+   function StartLevel()
+   {
+      if(!this.noMore && this.numBloons == 0)
+      {
+         return undefined;
+      }
+      this.endRoundCount = 0;
+      this.mainTimeline.startrnd_btn._visible = false;
+      this.mainTimeline.output.gotoAndPlay("drawOff");
+      trace("START NEW LEVEL");
+      this.curLevel++;
+      this.ingame = true;
+      this.noMore = false;
+      this.counter = 0;
+      this.numBloons = 0;
+      this.bloonIndex = 0;
+      this.bloonsSpawned = 0;
+      this.bloonInterval = 15 - this.curLevel;
+      if(this.bloonInterval < 5)
+      {
+         this.bloonInterval = Math.ceil(5 - this.curLevel / 20);
+      }
+   }
+   function EnterFrame()
+   {
+      this.ResolveInput();
+      if(this.currentTower != null)
+      {
+         this.EnableOptions();
+      }
+      else
+      {
+         this.DisableOptions();
+      }
+      if(this.curLevel)
+      {
+         this.mainTimeline.level_txt.text = this.curLevel;
+      }
+      else
+      {
+         this.mainTimeline.level_txt.text = 1;
+      }
+      if(this.currentTool != "none")
+      {
+         this.towerplace._x = _xmouse;
+         this.towerplace._y = _ymouse;
+         var _loc3_ = false;
+         if(_xmouse > 460)
+         {
+            _loc3_ = true;
+         }
+         var _loc2_ = 0;
+         while(_loc2_ < this.towerlist.length)
+         {
+            if(this.towerlist[_loc2_].hitbit.hitTest(this.towerplace.hitbit))
+            {
+               this.towerplace.radiusmc.gotoAndStop(2);
+               _loc3_ = true;
+               break;
+            }
+            _loc2_ = _loc2_ + 1;
+         }
+         if(this.currentTool != "spikes" && this.currentTool != "glue")
+         {
+            _loc2_ = 1;
+            while(_loc2_ < 33)
+            {
+               if(this.mainTimeline.pathhitmc["pathhit" + _loc2_].hitTest(this.towerplace.hitbit))
+               {
+                  this.towerplace.radiusmc.gotoAndStop(2);
+                  break;
+               }
+               if(!_loc3_)
+               {
+                  this.towerplace.radiusmc.gotoAndStop(1);
+               }
+               _loc2_ = _loc2_ + 1;
+            }
+         }
+         else
+         {
+            _loc2_ = 1;
+            while(_loc2_ < 33)
+            {
+               if(this.mainTimeline.pathhitmc["pathhit" + _loc2_].hitTest(this.towerplace.hitbit))
+               {
+                  if(!_loc3_)
+                  {
+                     this.towerplace.radiusmc.gotoAndStop(1);
+                     break;
+                  }
+               }
+               else
+               {
+                  this.towerplace.radiusmc.gotoAndStop(2);
+               }
+               _loc2_ = _loc2_ + 1;
+            }
+         }
+      }
+      else
+      {
+         this.towerplace._x = 1500;
+         this.towerplace._y = 1500;
+      }
+      if(!this.ingame)
+      {
+         return undefined;
+      }
+      if(!this.noMore)
+      {
+         this.counter++;
+         if(this.counter > this.bloonInterval)
+         {
+            this.counter = 0;
+            this.NewBloon(this.levelsArray[this.curLevel - 1][this.bloonIndex]);
+            this.bloonIndex++;
+            if(!this.levelsArray[this.curLevel - 1][this.bloonIndex])
+            {
+               trace("no more bloons");
+               this.noMore = true;
+            }
+         }
+      }
+      else if(this.numBloons < 1)
+      {
+         if(this.endRoundCount > 20)
+         {
+            trace("end lev");
+            this.EndLevel();
+            this.endRoundCount = 0;
+         }
+         else
+         {
+            this.endRoundCount++;
+         }
+      }
+      this.UpdateTowers();
+      this.UpdateBullets();
+      this.CalcFPS();
+   }
+   function CalcFPS()
+   {
+      this.timeSum += getTimer() - this.timeLastFrame;
+      this.fpsFrameCount++;
+      if(this.timeSum >= 1000)
+      {
+         this.mainTimeline.fps_txt.text = this.fpsFrameCount;
+         this.timeSum = 0;
+         this.fpsFrameCount = 0;
+      }
+      this.timeLastFrame = getTimer();
+   }
+   function NewBloon(prank, pframe, px, py, pname, pside)
+   {
+      this.numBloons++;
+      var _loc8_ = prank;
+      var _loc7_ = pname;
+      if(!pname)
+      {
+         this.bloonsSpawned++;
+         _loc7_ = "bloon" + this.bloonsSpawned;
+      }
+      var _loc3_ = "";
+      if(pside == 1)
+      {
+         _loc3_ = "1_";
+      }
+      if(pside == 2)
+      {
+         _loc3_ = "2_";
+      }
+      if(this.diff == "hard" && !pside)
+      {
+         if(random(100) > 49)
+         {
+            _loc3_ = "1_";
+            pside = 1;
+         }
+         else
+         {
+            _loc3_ = "2_";
+            pside = 2;
+         }
+      }
+      var _loc6_ = 55;
+      var _loc5_ = 210;
+      if(this.diff == "medium")
+      {
+         _loc6_ = 20;
+         _loc5_ = 10;
+      }
+      if(this.diff == "hard")
+      {
+         _loc6_ = 0;
+         _loc5_ = -8;
+         if(_loc3_ == "2_")
+         {
+            _loc5_ = 11;
+            _loc6_ = 2;
+         }
+      }
+      var _loc2_ = this.bloonholder.attachMovie(this.diff + _loc3_ + _loc8_,_loc7_,this.bloonholder.getNextHighestDepth());
+      _loc2_.rank = _loc8_;
+      _loc2_._x = _loc6_ + random(10);
+      _loc2_._y = _loc5_ + random(10);
+      _loc2_.game = this;
+      _loc2_.side = pside;
+      _loc2_.Init();
+      _loc2_.stop();
+      if(pframe)
+      {
+         var _loc9_ = Math.round(pframe * _loc2_._totalframes);
+         _loc2_.gotoAndStop(_loc9_);
+         _loc2_.frame = _loc2_._currentframe;
+         _loc2_._x = px;
+         _loc2_._y = py;
+      }
+   }
+   function PoppedOne(pcheck)
+   {
+      if(!pcheck)
+      {
+         this.numBloons--;
+      }
+      this.money++;
+      this.UpdateMoney();
+   }
+   function Escaped(pbloon)
+   {
+      if(!this.ingame)
+      {
+         return undefined;
+      }
+      trace("remove this bloon: " + pbloon.rank);
+      trace("-----------------");
+      var _loc2_ = 0;
+      switch(pbloon.rank)
+      {
+         case 1:
+            _loc2_ = 1;
+            break;
+         case 2:
+            _loc2_ = 2;
+            break;
+         case 3:
+            _loc2_ = 3;
+            break;
+         case 4:
+            _loc2_ = 4;
+            break;
+         case 5:
+            _loc2_ = 9;
+            break;
+         case 6:
+            _loc2_ = 9;
+            break;
+         case 7:
+            _loc2_ = 19;
+            break;
+         case 8:
+            _loc2_ = 37;
+      }
+      this.lives -= _loc2_;
+      this.mainTimeline.lives_txt.text = this.lives;
+      if(this.lives < 1)
+      {
+         this.lives = 0;
+         this.mainTimeline.lives_txt.text = this.lives;
+         this.GameOver(false);
+      }
+      else
+      {
+         this.numBloons--;
+      }
+   }
+   function EndLevel()
+   {
+      this.ingame = false;
+      trace("You win");
+      this.ClearBullets();
+      this.ClearBalloons();
+      if(this.curLevel < 50)
+      {
+         this.mainTimeline.startrnd_btn._visible = true;
+         var _loc2_ = 101 - this.curLevel;
+         this.money += _loc2_;
+         this.UpdateMoney();
+         this.Output("Round " + this.curLevel + " passed. " + _loc2_ + " money awarded. " + this.GetNextLevelHint());
+      }
+      else
+      {
+         this.GameOver(true);
+      }
+   }
+   function GameOver(pwin)
+   {
+      this.ClearBullets();
+      this.ingame = false;
+      trace("END GAME");
+      if(!pwin)
+      {
+         this.noMore = true;
+         this.mainTimeline.losepanel.gotoAndPlay("drawOn");
+      }
+      else
+      {
+         if(this.diff == "easy")
+         {
+            this.userProfile.data.bronze = "yes";
+         }
+         if(this.diff == "medium")
+         {
+            this.userProfile.data.silver = "yes";
+         }
+         if(this.diff == "hard")
+         {
+            this.userProfile.data.gold = "yes";
+         }
+         this.userProfile.flush();
+         this.UpdateMedals();
+         this.winpanel.gotoAndPlay("drawOn");
+      }
+   }
+   function UpdateBullets()
+   {
+      var _loc2_ = 0;
+      while(_loc2_ < this.bulletlist.length)
+      {
+         this.bulletlist[_loc2_].Update();
+         _loc2_ = _loc2_ + 1;
+      }
+   }
+   function UpdateTowers()
+   {
+      var _loc2_ = 0;
+      while(_loc2_ < this.towerlist.length)
+      {
+         this.towerlist[_loc2_].Update();
+         _loc2_ = _loc2_ + 1;
+      }
+   }
+   function ShootBullet(ptower, ptarget)
+   {
+      var _loc6_ = ptower.type;
+      if(ptower.laser)
+      {
+         _loc6_ = "laser";
+      }
+      var _loc10_ = 0;
+      var _loc5_ = 0;
+      var _loc4_ = 0;
+      if(ptarget)
+      {
+         _loc5_ = ptarget._x + ptarget.inner._x - 10 - ptower._x;
+         _loc4_ = ptarget._y + ptarget.inner._y - 15 - ptower._y;
+         var _loc9_ = Math.sqrt(_loc5_ * _loc5_ + _loc4_ * _loc4_);
+         _loc5_ /= _loc9_;
+         _loc4_ /= _loc9_;
+         _loc10_ = ptower.shootPower;
+      }
+      if(!ptower)
+      {
+         _loc6_ = this.currentTool;
+      }
+      var _loc2_ = this.bulletholder.attachMovie(_loc6_,_loc6_ + random(99999),this.bulletholder.getNextHighestDepth());
+      _loc2_._x = ptower._x;
+      _loc2_._y = ptower._y;
+      _loc2_.vx = _loc5_ * _loc10_;
+      _loc2_.vy = _loc4_ * _loc10_;
+      _loc2_.pierceMax = ptower.pierceMax;
+      _loc2_.isspread = ptower.isspread;
+      _loc2_.icebreak = ptower.icebreak;
+      _loc2_.game = this;
+      _loc2_.type = _loc6_;
+      _loc2_.shooter = ptower;
+      _loc2_.cacheAsBitmap = true;
+      _loc2_._xscale = _loc2_._yscale = ptower.bulletScale;
+      var _loc8_ = Math.atan(_loc4_ / _loc5_);
+      _loc8_ = 57.29577951308232 * _loc8_;
+      _loc2_._rotation = _loc8_ + 90;
+      if(_loc2_._rotation > 90 and _loc4_ < 0)
+      {
+         _loc2_._rotation -= 180;
+      }
+      if(_loc5_ < 0 and _loc4_ > 0)
+      {
+         _loc2_._rotation -= 180;
+      }
+      if(ptarget)
+      {
+         var _loc11_ = new Object();
+         ptower._rotation = _loc2_._rotation;
+         if(_loc6_ != "laser")
+         {
+            ptower.inner.arm.gotoAndPlay(2);
+         }
+         if((_loc2_.type == "dart" || _loc2_.type == "super") && _loc6_ != "laser")
+         {
+            _loc2_.inner._x += 8;
+            _loc2_.hitbit._x += 6;
+         }
+      }
+      _loc2_.Init();
+      this.bulletlist.push(_loc2_);
+   }
+   function CreateNewTower(type, px, py)
+   {
+      var _loc2_ = 0;
+      var _loc5_ = false;
+      switch(type)
+      {
+         case "dart":
+            _loc2_ = this.GetPrice(this.COST_DART);
+            break;
+         case "boomerang":
+            _loc2_ = this.GetPrice(this.COST_BOOMERANG);
+            break;
+         case "tack":
+            _loc2_ = this.GetPrice(this.COST_TACK);
+            break;
+         case "spikey":
+            break;
+         case "bomb":
+            _loc2_ = this.GetPrice(this.COST_BOMB);
+            break;
+         case "ice":
+            _loc2_ = this.GetPrice(this.COST_ICE);
+            break;
+         case "super":
+            _loc2_ = this.GetPrice(this.COST_SUPER);
+      }
+      if(_loc2_ > this.money)
+      {
+         this.Output("not enough money.");
+         return undefined;
+      }
+      this.money -= _loc2_;
+      this.UpdateMoney();
+      var _loc3_ = this.towerholder.attachMovie("tower" + type,"tower" + type + random(99999),this.towerholder.getNextHighestDepth());
+      _loc3_._x = px;
+      _loc3_._y = py;
+      _loc3_.type = type;
+      _loc3_.game = this;
+      _loc3_.Init();
+      this.towerlist.push(_loc3_);
+      this.SelectTower(_loc3_);
+   }
+   function SellCurrentTower()
+   {
+      if(this.currentTower != null)
+      {
+         this.money += Math.floor(this.SELL_RATE * this.currentTower.spentonme);
+         this.UpdateMoney();
+         this.RemoveTower(this.currentTower);
+         this.DeselectCurrent();
+      }
+   }
+   function EnableOptions()
+   {
+      this.toweroptions._visible = true;
+      this.toweroptions.sellfor_txt.text = Math.floor(this.SELL_RATE * this.currentTower.spentonme);
+   }
+   function DisableOptions()
+   {
+      this.toweroptions._visible = false;
+   }
+   function RemoveTower(ptower)
+   {
+      var _loc2_ = 0;
+      while(_loc2_ < this.towerlist.length)
+      {
+         if(ptower == this.towerlist[_loc2_])
+         {
+            this.towerlist.splice(_loc2_,1);
+            ptower.setDepthTo(mx.managers.DepthManager.kTop);
+            ptower.removeMovieClip();
+            return undefined;
+         }
+         _loc2_ = _loc2_ + 1;
+      }
+   }
+   function RemoveBullet(pbul)
+   {
+      var _loc2_ = 0;
+      while(_loc2_ < this.bulletlist.length)
+      {
+         if(pbul == this.bulletlist[_loc2_])
+         {
+            this.bulletlist.splice(_loc2_,1);
+            return undefined;
+         }
+         _loc2_ = _loc2_ + 1;
+      }
+   }
+   function ClearBalloons()
+   {
+      var _loc2_ = 0;
+      while(_loc2_ < 9999)
+      {
+         this.bloonholder["bloon" + _loc2_].removeMovieClip();
+         _loc2_ = _loc2_ + 1;
+      }
+   }
+   function ClearBullets()
+   {
+      while(this.bulletlist.length > 0)
+      {
+         var _loc2_ = this.bulletlist.shift();
+         _loc2_.removeMovieClip();
+      }
+   }
+   function ClearTowers()
+   {
+      while(this.towerlist.length > 0)
+      {
+         var _loc2_ = this.towerlist.shift();
+         _loc2_.setDepthTo(mx.managers.DepthManager.kTop);
+         _loc2_.removeMovieClip();
+      }
+   }
+   function ResolveInput()
+   {
+      if(Key.isDown(27))
+      {
+         this.DeselectCurrent();
+      }
+   }
+   function DeselectCurrent()
+   {
+      this.currentTool = "none";
+      this.currentTower.gotoAndStop(1);
+      this.currentTower = null;
+   }
+   function SelectTower(ptower)
+   {
+      this.DeselectCurrent();
+      this.currentTower = ptower;
+      this.currentTower.gotoAndStop(2);
+      this.toweroptions.towername_txt.text = this.currentTower.towerName;
+      this.toweroptions.towerspeed_txt.text = this.currentTower.GetSpeedRating();
+      this.toweroptions.towerrange_txt.text = this.currentTower.attackRadius;
+      this.toweroptions.Refresh();
+      this.currentTower.setDepthTo(mx.managers.DepthManager.kBottom);
+   }
+   function SetCurrentTool(ptool)
+   {
+      var _loc2_ = 0;
+      switch(ptool)
+      {
+         case "dart":
+            _loc2_ = this.GetPrice(this.COST_DART);
+            break;
+         case "tack":
+            _loc2_ = this.GetPrice(this.COST_TACK);
+            break;
+         case "spikes":
+            _loc2_ = this.GetPrice(this.COST_SPIKES);
+            break;
+         case "glue":
+            _loc2_ = this.GetPrice(this.COST_GLUE);
+            break;
+         case "bomb":
+            _loc2_ = this.GetPrice(this.COST_BOMB);
+            break;
+         case "ice":
+            _loc2_ = this.GetPrice(this.COST_ICE);
+            break;
+         case "super":
+            _loc2_ = this.GetPrice(this.COST_SUPER);
+            break;
+         case "boomerang":
+            _loc2_ = this.GetPrice(this.COST_BOOMERANG);
+      }
+      if(_loc2_ > this.money)
+      {
+         return undefined;
+      }
+      this.DeselectCurrent();
+      trace("try to select current tool: " + ptool);
+      this.towerplace.gotoAndStop("tack");
+      this.towerplace.gotoAndStop(ptool);
+      this.towerplace.radiusmc.cantplace.gotoAndPlay(1);
+      this.currentTool = ptool;
+   }
+   function ShowTowerInfo(ptype)
+   {
+      this.towerinfo._visible = true;
+      switch(ptype)
+      {
+         case "dart":
+            this.towerinfo.towername_txt.text = "Dart Monkey";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_DART);
+            this.towerinfo.towerspeed_txt.text = "Fast";
+            this.towerinfo.towerinfo_txt.text = "Shoots a single dart. Can upgrade to piercing darts and long range darts";
+            break;
+         case "tack":
+            this.towerinfo.towername_txt.text = "Tack Shooter";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_TACK);
+            this.towerinfo.towerspeed_txt.text = "Medium";
+            this.towerinfo.towerinfo_txt.text = "Shoots volley of tacks in 8 directions. Can upgrade its shoot speed and its range.";
+            break;
+         case "spikes":
+            this.towerinfo.towername_txt.text = "Road Spikes";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_SPIKES);
+            this.towerinfo.towerspeed_txt.text = "N/A";
+            this.towerinfo.towerinfo_txt.text = "Place these road spikes on the track to pop bloons. Can pop 10 bloons before wearing out. Road spikes only last until the end of the round.";
+            break;
+         case "glue":
+            this.towerinfo.towername_txt.text = "Monkey Glue";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_GLUE);
+            this.towerinfo.towerspeed_txt.text = "N/A";
+            this.towerinfo.towerinfo_txt.text = "Monkey glue slows down bloons. Each blob can slow down 20 bloons before wearing out. Monkey glue only lasts until the end of the round.";
+            break;
+         case "boomerang":
+            this.towerinfo.towername_txt.text = "Boomerang";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_BOOMERANG);
+            this.towerinfo.towerspeed_txt.text = "Medium";
+            this.towerinfo.towerinfo_txt.text = "Throws a boomerang that follows a curved path back to the tower. Can pop 2 bloons at once. Sonic booom upgrade allows popping of frozen bloons.";
+            break;
+         case "bomb":
+            this.towerinfo.towername_txt.text = "Cannon";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_BOMB);
+            this.towerinfo.towerspeed_txt.text = "Medium";
+            this.towerinfo.towerinfo_txt.text = "Launches a bomb that explodes on impact. Can upgrade to bigger bombs and longer range.";
+            break;
+         case "ice":
+            this.towerinfo.towername_txt.text = "Ice Ball";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_ICE);
+            this.towerinfo.towerspeed_txt.text = "Slow";
+            this.towerinfo.towerinfo_txt.text = "Freezes nearby bloons. Frozen bloons are immune to darts and tacks, but bombs will destroy them. Can upgrade to increased freeze time, and larger freeze radius.";
+            break;
+         case "super":
+            this.towerinfo.towername_txt.text = "Super Monkey";
+            this.towerinfo.towercost_txt.text = this.GetPrice(this.COST_SUPER);
+            this.towerinfo.towerspeed_txt.text = "Hypersonic";
+            this.towerinfo.towerinfo_txt.text = "Super monkey shoots incredibly fast. Can upgrade to epic range or laser vision!";
+      }
+   }
+   function HideTowerInfo()
+   {
+      this.towerinfo._visible = false;
+   }
+   function CanAfford(pupgrade)
+   {
+      switch(pupgrade)
+      {
+         case "dart1":
+            if(this.money >= this.GetPrice(this.COST_DART_PIERCE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "dart2":
+            if(this.money >= this.GetPrice(this.COST_DART_RANGE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "boomerang1":
+            if(this.money >= this.GetPrice(this.COST_BOOMERANG_PIERCE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "boomerang2":
+            if(this.money >= this.GetPrice(this.COST_BOOMERANG_SONIC_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "tack1":
+            if(this.money >= this.GetPrice(this.COST_TACK_RATE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "tack2":
+            if(this.money >= this.GetPrice(this.COST_TACK_RANGE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "bomb1":
+            if(this.money >= this.GetPrice(this.COST_BOMB_SIZE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "bomb2":
+            if(this.money >= this.GetPrice(this.COST_BOMB_RANGE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "ice1":
+            if(this.money >= this.GetPrice(this.COST_ICE_FREEZE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "ice2":
+            if(this.money >= this.GetPrice(this.COST_ICE_RANGE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "super1":
+            if(this.money >= this.GetPrice(this.COST_SUPER_RANGE_UPGRADE))
+            {
+               return true;
+            }
+            break;
+         case "super2":
+            if(this.money >= this.GetPrice(this.COST_SUPER_LASER_UPGRADE))
+            {
+               return true;
+            }
+            break;
+      }
+   }
+   function GetUpgradeCost(pnum)
+   {
+      var _loc2_ = this.currentTower.type + pnum;
+      trace("grade: " + _loc2_);
+      switch(_loc2_)
+      {
+         case "dart1":
+            return this.GetPrice(this.COST_DART_PIERCE_UPGRADE);
+         case "dart2":
+            return this.GetPrice(this.COST_DART_RANGE_UPGRADE);
+         case "boomerang1":
+            return this.GetPrice(this.COST_BOOMERANG_PIERCE_UPGRADE);
+         case "boomerang2":
+            return this.GetPrice(this.COST_BOOMERANG_SONIC_UPGRADE);
+         case "tack1":
+            return this.GetPrice(this.COST_TACK_RATE_UPGRADE);
+         case "tack2":
+            return this.GetPrice(this.COST_TACK_RANGE_UPGRADE);
+         case "bomb1":
+            return this.GetPrice(this.COST_BOMB_SIZE_UPGRADE);
+         case "bomb2":
+            return this.GetPrice(this.COST_BOMB_RANGE_UPGRADE);
+         case "ice1":
+            return this.GetPrice(this.COST_ICE_FREEZE_UPGRADE);
+         case "ice2":
+            return this.GetPrice(this.COST_ICE_RANGE_UPGRADE);
+         case "super1":
+            return this.GetPrice(this.COST_SUPER_RANGE_UPGRADE);
+         case "super2":
+            return this.GetPrice(this.COST_SUPER_LASER_UPGRADE);
+         default:
+      }
+   }
+   function GetUpgrade(pupgrade)
+   {
+      trace("try to buy: " + pupgrade);
+      switch(pupgrade)
+      {
+         case "dart1":
+            this.money -= this.GetPrice(this.COST_DART_PIERCE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_DART_PIERCE_UPGRADE);
+            this.currentTower.upgrade1 = true;
+            if(this.currentTower.type == "dart")
+            {
+               this.currentTower.pierceMax += 1;
+            }
+            break;
+         case "dart2":
+            this.money -= this.GetPrice(this.COST_DART_RANGE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_DART_RANGE_UPGRADE);
+            this.currentTower.upgrade2 = true;
+            if(this.currentTower.type == "dart")
+            {
+               this.currentTower.attackRadius += 25;
+            }
+            break;
+         case "tack1":
+            this.money -= this.GetPrice(this.COST_TACK_RATE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_TACK_RATE_UPGRADE);
+            this.currentTower.upgrade1 = true;
+            if(this.currentTower.type == "tack")
+            {
+               this.currentTower.attackRate -= 15;
+            }
+            break;
+         case "tack2":
+            this.money -= this.GetPrice(this.COST_TACK_RANGE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_TACK_RANGE_UPGRADE);
+            this.currentTower.upgrade2 = true;
+            if(this.currentTower.type == "tack")
+            {
+               this.currentTower.bulletScale = 130;
+               this.currentTower.attackRadius += 10;
+            }
+            break;
+         case "boomerang1":
+            this.money -= this.GetPrice(this.COST_BOOMERANG_PIERCE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_BOOMERANG_PIERCE_UPGRADE);
+            this.currentTower.upgrade1 = true;
+            if(this.currentTower.type == "boomerang")
+            {
+               this.currentTower.pierceMax += 3;
+            }
+            break;
+         case "boomerang2":
+            this.money -= this.GetPrice(this.COST_BOOMERANG_SONIC_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_BOOMERANG_SONIC_UPGRADE);
+            this.currentTower.upgrade2 = true;
+            if(this.currentTower.type == "boomerang")
+            {
+               this.currentTower.icebreak = true;
+            }
+            break;
+         case "bomb1":
+            this.money -= this.GetPrice(this.COST_BOMB_SIZE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_BOMB_SIZE_UPGRADE);
+            this.currentTower.upgrade1 = true;
+            if(this.currentTower.type == "bomb")
+            {
+               this.currentTower.bulletScale = 150;
+            }
+            break;
+         case "bomb2":
+            this.money -= this.GetPrice(this.COST_BOMB_RANGE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_BOMB_RANGE_UPGRADE);
+            this.currentTower.upgrade2 = true;
+            if(this.currentTower.type == "bomb")
+            {
+               this.currentTower.attackRadius += 20;
+            }
+            break;
+         case "ice1":
+            this.money -= this.GetPrice(this.COST_ICE_FREEZE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_ICE_FREEZE_UPGRADE);
+            this.currentTower.upgrade1 = true;
+            if(this.currentTower.type == "ice")
+            {
+               this.currentTower.freezeLen += 20;
+            }
+            break;
+         case "ice2":
+            this.money -= this.GetPrice(this.COST_ICE_RANGE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_ICE_RANGE_UPGRADE);
+            this.currentTower.upgrade2 = true;
+            if(this.currentTower.type == "ice")
+            {
+               this.currentTower.bulletScale = 100;
+               this.currentTower.attackRadius += 15;
+            }
+            break;
+         case "super1":
+            this.money -= this.GetPrice(this.COST_SUPER_RANGE_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_SUPER_RANGE_UPGRADE);
+            this.currentTower.upgrade1 = true;
+            if(this.currentTower.type == "super")
+            {
+               this.currentTower.attackRadius += 100;
+            }
+            break;
+         case "super2":
+            this.money -= this.GetPrice(this.COST_SUPER_LASER_UPGRADE);
+            this.currentTower.spentonme += this.GetPrice(this.COST_SUPER_LASER_UPGRADE);
+            this.currentTower.upgrade2 = true;
+            if(this.currentTower.type == "super")
+            {
+               this.currentTower.pierceMax += 1;
+               this.currentTower.icebreak = true;
+               this.currentTower.laser = true;
+               break;
+            }
+      }
+      this.currentTower.CalcRadius();
+      this.SelectTower(this.currentTower);
+      this.UpdateMoney();
+   }
+   function UpdateMoney()
+   {
+      this.mainTimeline.money_txt.text = this.money;
+      this.toweroptions.upgrade1.CheckAfford();
+      this.toweroptions.upgrade2.CheckAfford();
+   }
+   function Output(pstring)
+   {
+      this.mainTimeline.output.inner.output_txt.text = pstring;
+      if(!this.mainTimeline.output._visible)
+      {
+         this.mainTimeline.output.gotoAndPlay("drawOn");
+      }
+   }
+   function SetUpSound()
+   {
+      this.frozenClink = new Sound(this.mainTimeline);
+      this.frozenClink.attachSound("clink");
+      this.metalClink = new Sound(this.mainTimeline);
+      this.metalClink.attachSound("metalclink");
+      this.splatSound = new Sound(this.mainTimeline);
+      this.splatSound.attachSound("splat");
+   }
+   function GetPrice(pprice)
+   {
+      var _loc2_ = pprice * this.costmult;
+      _loc2_ /= 5;
+      _loc2_ = Math.round(_loc2_);
+      return _loc2_ * 5;
+   }
+   function BuildLevels()
+   {
+      this.ABSTL(12,1,1);
+      this.ABSTL(30,2,1);
+      this.ABSTL(10,3,1);
+      this.ABSTL(4,3,2);
+      this.ABSTL(5,3,1);
+      this.ABSTL(4,3,2);
+      this.ABSTL(5,4,1);
+      this.ABSTL(12,4,2);
+      this.ABSTL(5,4,1);
+      this.ABSTL(12,4,2);
+      this.ABSTL(10,5,1);
+      this.ABSTL(8,5,2);
+      this.ABSTL(12,5,1);
+      this.ABSTL(20,5,2);
+      this.ABSTL(13,6,1);
+      this.ABSTL(7,6,3);
+      this.ABSTL(50,7,2);
+      this.ABSTL(9,8,1);
+      this.ABSTL(16,8,2);
+      this.ABSTL(9,8,1);
+      this.ABSTL(7,8,2);
+      this.ABSTL(9,8,1);
+      this.ABSTL(7,8,2);
+      this.ABSTL(8,6,3);
+      this.ABSTL(20,9,2);
+      this.ABSTL(15,9,3);
+      this.ABSTL(12,9,2);
+      this.ABSTL(32,10,3);
+      this.ABSTL(12,11,3);
+      this.ABSTL(7,11,4);
+      this.ABSTL(1,12,8);
+      this.ABSTL(4,11,4);
+      this.ABSTL(18,13,2);
+      this.ABSTL(18,13,1);
+      this.ABSTL(30,13,3);
+      this.ABSTL(20,13,2);
+      this.ABSTL(23,14,4);
+      this.ABSTL(6,15,4);
+      this.ABSTL(6,15,3);
+      this.ABSTL(4,15,4);
+      this.ABSTL(8,15,3);
+      this.ABSTL(3,15,4);
+      this.ABSTL(45,16,2);
+      this.ABSTL(25,16,3);
+      this.ABSTL(9,16,2);
+      this.ABSTL(25,16,3);
+      this.ABSTL(20,17,2);
+      this.ABSTL(55,17,3);
+      this.ABSTL(20,17,2);
+      this.ABSTL(30,18,2);
+      this.ABSTL(22,18,4);
+      this.ABSTL(24,18,3);
+      this.ABSTL(75,19,3);
+      this.ABSTL(1,20,7);
+      this.ABSTL(14,21,4);
+      this.ABSTL(10,21,2);
+      this.ABSTL(23,21,4);
+      this.ABSTL(10,21,3);
+      this.ABSTL(30,21,3);
+      this.ABSTL(50,22,4);
+      this.ABSTL(30,23,4);
+      this.ABSTL(35,23,3);
+      this.ABSTL(30,23,4);
+      this.ABSTL(30,24,3);
+      this.ABSTL(45,24,4);
+      this.ABSTL(26,24,3);
+      this.ABSTL(20,24,2);
+      this.ABSTL(20,25,4);
+      this.ABSTL(15,25,5);
+      this.ABSTL(22,25,4);
+      this.ABSTL(80,26,4);
+      this.ABSTL(28,27,5);
+      this.ABSTL(12,28,5);
+      this.ABSTL(10,28,6);
+      this.ABSTL(22,26,4);
+      this.ABSTL(4,29,7);
+      this.ABSTL(11,29,5);
+      this.ABSTL(9,29,6);
+      this.ABSTL(120,30,4);
+      this.ABSTL(11,31,7);
+      this.ABSTL(20,32,4);
+      this.ABSTL(8,32,6);
+      this.ABSTL(10,32,5);
+      this.ABSTL(55,33,5);
+      this.ABSTL(25,34,5);
+      this.ABSTL(23,34,6);
+      this.ABSTL(50,34,4);
+      this.ABSTL(7,35,8);
+      this.ABSTL(11,36,5);
+      this.ABSTL(12,36,4);
+      this.ABSTL(10,36,5);
+      this.ABSTL(4,36,7);
+      this.ABSTL(10,36,6);
+      this.ABSTL(6,36,5);
+      this.ABSTL(20,37,7);
+      this.ABSTL(200,38,4);
+      this.ABSTL(50,39,4);
+      this.ABSTL(15,39,5);
+      this.ABSTL(13,39,6);
+      this.ABSTL(8,39,7);
+      this.ABSTL(5,39,8);
+      this.ABSTL(60,40,5);
+      this.ABSTL(20,39,6);
+      this.ABSTL(18,41,6);
+      this.ABSTL(10,41,7);
+      this.ABSTL(10,41,8);
+      this.ABSTL(120,42,4);
+      this.ABSTL(50,42,5);
+      this.ABSTL(40,42,6);
+      this.ABSTL(20,43,8);
+      this.ABSTL(20,43,7);
+      this.ABSTL(130,44,5);
+      this.ABSTL(110,45,6);
+      this.ABSTL(35,46,7);
+      this.ABSTL(30,47,5);
+      this.ABSTL(40,47,6);
+      this.ABSTL(13,47,7);
+      this.ABSTL(8,47,8);
+      this.ABSTL(20,48,7);
+      this.ABSTL(30,48,6);
+      this.ABSTL(40,48,5);
+      this.ABSTL(12,48,7);
+      this.ABSTL(30,49,8);
+      this.ABSTL(7,50,8);
+      this.ABSTL(10,50,7);
+      this.ABSTL(7,50,8);
+      this.ABSTL(7,50,7);
+      this.ABSTL(7,50,8);
+      this.ABSTL(7,50,7);
+      this.ABSTL(7,50,8);
+      this.ABSTL(4,50,7);
+      this.ABSTL(7,50,8);
+   }
+   function ABSTL(pnum, plevel, ptype)
+   {
+      var _loc2_ = 0;
+      while(_loc2_ < pnum)
+      {
+         this.ABTL(plevel,ptype);
+         _loc2_ = _loc2_ + 1;
+      }
+   }
+   function ABTL(plevel, ptype)
+   {
+      if(!this.levelsArray[plevel - 1])
+      {
+         var _loc2_ = new Array();
+         this.levelsArray[plevel - 1] = _loc2_;
+      }
+      this.levelsArray[plevel - 1].push(ptype);
+   }
+   function GetNextLevelHint()
+   {
+      return this.levelHints[this.curLevel];
+   }
+   function BuildLevelHints()
+   {
+      this.levelHints[0] = "";
+      this.levelHints[1] = "Easy as pie, press \'Start Round\' to play the next round.";
+      this.levelHints[2] = "If this is your first time playing Bloons Tower Defense, have a go at the first version as well.";
+      this.levelHints[3] = "Use road spikes to pop any bloons that look like they\'re going to escape.";
+      this.levelHints[4] = "In Bloons TD 1, you could pass with only dart towers. In TD 2, I promise you that is no longer possible...";
+      this.levelHints[5] = "Boomerangs sonic boom upgrade allows boomerangs to pop frozen bloons.";
+      this.levelHints[6] = "Monkey glue is useful for buying yourself some time.";
+      this.levelHints[7] = "The dart tower piercing upgrade allows darts to pop up to 2 bloons each.";
+      this.levelHints[8] = "Ice towers work best with bomb towers or sonic boom boomerangs nearby.";
+      this.levelHints[9] = "Are you ready for a whole bunch of greens?";
+      this.levelHints[10] = "If a bloon escapes, you lose as many lives as the bloon had bloons inside it plus 1.";
+      this.levelHints[11] = "Check out this pretty bloon coming up...";
+      this.levelHints[12] = "Tower defense is a strategic game. Bloons tower defense is about monkeys with darts. Go figure.";
+      this.levelHints[13] = "23 yellows on their merry way.";
+      this.levelHints[14] = "Yellows and greens, greens and yellows.";
+      this.levelHints[15] = "The game is paused at the end of each level, so take a moment to eat a piece of toast or have a cup of tea.";
+      this.levelHints[16] = "Relax a bit, there are no yellow bloons in the next level.";
+      this.levelHints[17] = "Have you played Bloons?";
+      this.levelHints[18] = "Bomb towers are actually pretty good, in fact you might need one in the next couple of rounds. Hint hint.";
+      this.levelHints[19] = "\'A man walks into a bar.... DONK.\' Ok that joke went down like a lead balloon...";
+      this.levelHints[20] = "Place your towers so that they can be shooting at something for a long time, corners are good.";
+      this.levelHints[21] = "Ready for 50 straight yellows?";
+      this.levelHints[22] = "Boomerangs multi-target upgrade increases the bloons popped up to 5 per throw.";
+      this.levelHints[23] = "On medium and hard difficulties, the cost of stuff is higher.";
+      this.levelHints[24] = "There are no cheats in this game, last time I was lying.";
+      this.levelHints[25] = "Half way through, well done. Now lets step things up a bit.";
+      this.levelHints[26] = "Remember, black bloons are immune to bombs, white immune to ice, and lead immune to anything spikey...";
+      this.levelHints[27] = "When you sell a tower, you get 80% of what you paid for it, including all the upgrade money you spent.";
+      this.levelHints[28] = "Monochrome level. Leads, blacks, and whites.";
+      this.levelHints[29] = "120 yellows for fun. Yellows shouldn\'t be any threat to you any more. Right?";
+      this.levelHints[30] = "There are no left handed monkeys, sorry just live with it.";
+      this.levelHints[31] = "The good thing about black bloons is that they move slower than yellows.";
+      this.levelHints[32] = "55 black bloons.";
+      this.levelHints[33] = "The moon landing was not a hoax.";
+      this.levelHints[34] = "You might not need to use every tower type. But think of the wasted programming and graphic drawing if you don\'t";
+      this.levelHints[35] = "You can improve frame rate a bit by having no towers selected during the round.";
+      this.levelHints[36] = "20 lead bloons.";
+      this.levelHints[37] = "All bloons in bloons games and related products use a biodegradable material. Imagine that.";
+      this.levelHints[38] = "Yellows, whites, blacks, leads, and rainbows for your popping pleasure.";
+      this.levelHints[39] = "Monkey glue. Yeah I don\'t know where we come up with this stuff either.";
+      this.levelHints[40] = "Consistency is the hallmark of a small mind.";
+      this.levelHints[41] = "Get ready to spam some road spikes down.";
+      this.levelHints[42] = "Complete this line: \'sunshine, lollipops and...\'";
+      this.levelHints[43] = "Letting a raindbow bloon escape will cost you the princely sum of 37 lives!";
+      this.levelHints[44] = "Liking the white bloons? Good, heres a present for you.";
+      this.levelHints[45] = "Its probably lagging a bit by now. Sorry. By the way, get ready for tons of lead bloons.";
+      this.levelHints[46] = "If you\'re wondering what laser vision does, its like piercing darts only it can pop frozen bloons as well.";
+      this.levelHints[47] = "You got any super monkeys yet?";
+      this.levelHints[48] = "The LAST LEVEL.............. is coming up if you get past this one.";
+      this.levelHints[49] = "This is the last level. If you are playing on hard then I salute you.";
+   }
+}

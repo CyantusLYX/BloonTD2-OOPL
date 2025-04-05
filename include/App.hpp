@@ -4,6 +4,7 @@
 #include "Util/Renderer.hpp"
 #include "manager.hpp"
 #include "pch.hpp" // IWYU pragma: export
+#include <memory>
 
 class App {
 public:
@@ -23,8 +24,8 @@ public:
 
 private:
     void ValidTask();
-    Util::Renderer m_Renderer;
-    Manager manager;
+    std::shared_ptr<Util::Renderer> m_Renderer = std::make_shared<Util::Renderer>() ;
+    std::shared_ptr<Manager> manager = std::make_shared<Manager>(m_Renderer);
 private:
     State m_CurrentState = State::START;
 };

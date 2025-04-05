@@ -1,11 +1,7 @@
 #ifndef BLOON_HPP
 #define BLOON_HPP
-#include "Util/GameObject.hpp"
-#include "Util/Input.hpp"
-#include "Util/Time.hpp"
 #include "collapsible.hpp"
 #include "interfaces.hpp"
-#include "pch.hpp"
 #include <memory>
 #include <vector>
 // class Bloon: public Collapsible{
@@ -25,7 +21,7 @@ private:
   std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
 
 public:
-  Bloon(Type type, const glm::vec2 &pos);
+  Bloon(Type type, const Util::PTSDPosition pos);
 
   void update() override;
 

@@ -1,11 +1,11 @@
 #include "bloon.hpp"
-#include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Position.hpp"
 #include "Util/Time.hpp"
 #include "collapsible.hpp"
 #include <memory>
-Bloon::Bloon(Bloon::Type type, const glm::vec2 &pos)
-    : Collapsible(nullptr, 10, pos, 15, true), m_Type(type) {
+Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
+    : Collapsible(nullptr, 10, pos.ToVec2(), 15, true), m_Type(type) {
   // Bloon::Bloon(Bloon::Type type)
   //     :  m_Type(type) {
   switch (type) {

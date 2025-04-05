@@ -1,7 +1,7 @@
 #include "collapsible.hpp"
 #include "Util/Logger.hpp"
+#include "Util/Position.hpp"
 #include <glm/fwd.hpp>
-#include <iostream>
 
 // ColType to ColType
 // wait to be implement
@@ -11,12 +11,14 @@ bool Collapsible::rec_to_oval(const Collapsible &rec,
       oval.m_col_type != ColType::OVAL) {
     throw std::invalid_argument("err on collapsible::rec_to_oval");
   } else {
-    glm::vec2 r = rec.get_position();
-    glm::vec2 ur = {rec.get_position().x + std::get<glm::vec2>(rec.m_col_parm).x / 2,
-                    rec.get_position().y + std::get<glm::vec2>(rec.m_col_parm).y / 2};
-    glm::vec2 dl = {rec.get_position().x - std::get<glm::vec2>(rec.m_col_parm).x / 2,
-                    rec.get_position().y - std::get<glm::vec2>(rec.m_col_parm).y / 2};
-    glm::vec2 c = oval.get_position();
+    glm::vec2 r = rec.get_position().ToVec2();
+    glm::vec2 ur = {
+        rec.get_position().x + std::get<glm::vec2>(rec.m_col_parm).x / 2,
+        rec.get_position().y + std::get<glm::vec2>(rec.m_col_parm).y / 2};
+    glm::vec2 dl = {
+        rec.get_position().x - std::get<glm::vec2>(rec.m_col_parm).x / 2,
+        rec.get_position().y - std::get<glm::vec2>(rec.m_col_parm).y / 2};
+    glm::vec2 c = oval.get_position().ToVec2();
     int cr = std::get<int>(oval.m_col_parm);
     int min_x = std::min(abs(dl.x - c.x), abs(ur.x - c.x));
     int min_y = std::min(abs(dl.y - c.y), abs(ur.y - c.y));
@@ -96,14 +98,15 @@ bool Collapsible::isCollide(const Collapsible &that) const {
 // ColType to dot
 // if it trigger every object's isCollide when mouse click
 // it will be so odd, doesn't it?
-bool Collapsible::isCollide(const glm::vec2 pt) const {
+bool Collapsible::isCollide(const Util::PTSDPosition pt) const {
   // return false;
   switch (m_col_type) {
   case ColType::OVAL:
-    LOG_INFO("object({},{}) collide with point: ({}, {})", get_position().x, get_position().y, pt.x, pt.y);
+    LOG_INFO("object({},{}) collide with point: ({}, {})", get_position().x,
+             get_position().y, pt.x, pt.y);
     return (pow(pt.x - get_position().x, 2) + pow(pt.y - get_position().y, 2)) <
            pow(std::get<int>(m_col_parm), 2);
-           LOG_INFO("not collide with point: ({}, {})", pt.x, pt.y);
+    LOG_INFO("not collide with point: ({}, {})", pt.x, pt.y);
     return false;
   case ColType::RECTANGLE:
     return (pt.x < get_position().x + std::get<glm::vec2>(m_col_parm).x / 2) &&
@@ -116,10 +119,12 @@ bool Collapsible::isCollide(const glm::vec2 pt) const {
   }
 }
 
-void Collapsible::set_position(const glm::vec2 &position) {
-  m_Transform.translation = position;
+void Collapsible::set_position(const Util::PTSDPosition &position) {
+  m_Transform.translation = glm::vec2(position.x,position.y);
 }
 
-Util::PTSDPosition Collapsible::get_position()const {
-  return m_Transform.translation + m_Pivot;
+Util::PTSDPosition Collapsible::get_position() const {
+  // return m_Transform.translation + m_Pivot;
+  return Util::PTSDPosition(m_Transform.translation.x,
+                            m_Transform.translation.y);
 }
