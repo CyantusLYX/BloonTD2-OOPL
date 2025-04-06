@@ -5,6 +5,7 @@ set(SRC_FILES
     collapsible.cpp
     manager.cpp
     map.cpp
+    path.cpp
     )
 set(INCLUDE_FILES
     App.hpp
@@ -14,6 +15,8 @@ set(INCLUDE_FILES
     interface.hpp
     manager.hpp
     map.hpp
+    path.hpp
+    move.hpp
 )
 
 set(TEST_FILES

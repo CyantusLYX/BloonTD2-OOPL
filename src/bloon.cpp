@@ -5,7 +5,7 @@
 #include "collapsible.hpp"
 #include <memory>
 Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
-    : Collapsible(nullptr, 10, pos.ToVec2(), 0, true), m_Type(type), m_State(State::alive){
+    : Collapsible(nullptr, 10, pos, 0, true), m_Type(type), m_State(State::alive){
   // Bloon::Bloon(Bloon::Type type)
   //     :  m_Type(type) {
   switch (type) {
@@ -56,7 +56,7 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
     break;
   }
   m_Drawable = std::make_shared<Util::Image>(
-      RESOURCE_DIR "/bloons/b" + std::to_string(static_cast<int>(m_Type)) +
+      RESOURCE_DIR "/bloons/b" + std::to_string(static_cast<int>(m_Type)+1) +
       ".png");
   set_col_parm(static_cast<int>(m_Drawable->GetSize().x / 2));
 }

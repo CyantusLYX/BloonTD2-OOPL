@@ -3,7 +3,10 @@
 #include "collapsible.hpp"
 #include <memory>
 #include <vector>
-class Bloon final : public Collapsible {
+class Bloon final : public Collapsible{
+  // Bloon is a subclass of Collapsible and I_move
+  // It represents a moving object in the game, like a bloon in BTD
+  // It has its own type, state, speed, and other properties
 public:
   enum class State { alive, frozed, glued, pop };
   enum class Type { red, blue, green, yellow, black, white, lead, rainbow };

@@ -4,8 +4,8 @@
 #include "Util/Position.hpp"
 #include <glm/fwd.hpp>
 
-Button::Button(const std::string &name, const Util::PTSDPosition pos, const std::variant<glm::vec2, int> col_parm = 0, bool can_click = true)
-: Collapsible(nullptr, 10, pos.ToVec2(), col_parm){
+Button::Button(const std::string &name, const Util::PTSDPosition &pos, const std::variant<glm::vec2, int> col_parm = 0, bool can_click = true)
+: Collapsible(nullptr, 10, pos, col_parm){
   this->name = name;
   m_Drawable = std::make_shared<Util::Image>(
     RESOURCE_DIR "/buttons/b" + name +

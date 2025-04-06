@@ -7,7 +7,7 @@
 //enum class State {non_clickable, clickable, clicked};
 class Button final: public Collapsible {
   public:
-    Button(const std::string &name, const Util::PTSDPosition pos, std::variant<glm::vec2, int> col_parm, bool can_click);
+    Button(const std::string &name, const Util::PTSDPosition &pos, std::variant<glm::vec2, int> col_parm, bool can_click);
     ~Button() override = default;
   private:
     //State m_State = State::non_clickable;
