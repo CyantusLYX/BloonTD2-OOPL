@@ -19,6 +19,7 @@ void App::Start() {
   manager->set_map(0);
   manager->add_bloon(Bloon::Type::red, 10);
   manager->add_bloon(Bloon::Type::green, 10);
+  manager->add_bloon(Bloon::Type::rainbow, 10);
   
 }
 

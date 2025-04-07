@@ -3,12 +3,12 @@
 #include "collapsible.hpp"
 #include <memory>
 #include <vector>
-class Bloon final : public Collapsible{
+class Bloon final : public Collapsible {
   // Bloon is a subclass of Collapsible and I_move
   // It represents a moving object in the game, like a bloon in BTD
   // It has its own type, state, speed, and other properties
 public:
-  enum class State { alive, frozed, glued, pop };
+  enum class State { alive, frozed, glued, pop, died };
   enum class Type { red, blue, green, yellow, black, white, lead, rainbow };
 
 private:
@@ -25,7 +25,7 @@ public:
   Bloon(Type type, Util::PTSDPosition pos);
 
   void setFrozed(float froze_time);
-
+  void set_died() { m_State = State::died; }
   [[nodiscard]] State GetCurrentState() const { return m_CurrentState; }
 
   [[nodiscard]] float GetSpeed() const { return baseSpeed * m_SpeedMult; }
@@ -36,11 +36,14 @@ public:
 
   [[nodiscard]] State GetState() const { return m_State; }
 
-  [[nodiscard]] std::vector<std::shared_ptr<Bloon::Type>> GetChildBloons() const {
+  [[nodiscard]] std::vector<std::shared_ptr<Bloon::Type>>
+  GetChildBloons() const {
     return m_ChildBloons;
   }
-  void be_clicked() override{
-    m_State = State::pop;
+  void be_clicked() override {
+    if (m_State != State::died) {
+      m_State = State::pop;
+    }
   }
   State get_state() const { return m_State; }
 };

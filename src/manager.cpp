@@ -109,7 +109,7 @@ void Manager::add_bloon(Bloon::Type type, float distance) {
 }
 
 void Manager::pop_bloon(bloon_holder *bloon) {
-  bloon->get_bloon()->SetVisible(false);
+  {bloon->get_bloon()->SetVisible(false);
   // 產生一個不重複的 1~4 順序
   std::vector<int> values = {1, 2, 3, 4};
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -119,6 +119,7 @@ void Manager::pop_bloon(bloon_holder *bloon) {
     float distance = bloon->get_distance() - values[i] * 2;
     this->add_bloon(*sub_bloons[i], distance);
   }
+  bloon->get_bloon()->set_died();}
 }
 
 Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
