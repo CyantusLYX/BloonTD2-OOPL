@@ -35,5 +35,13 @@ public:
   [[nodiscard]] Type GetType() const { return m_Type; }
 
   [[nodiscard]] State GetState() const { return m_State; }
+
+  [[nodiscard]] std::vector<std::shared_ptr<Bloon::Type>> GetChildBloons() const {
+    return m_ChildBloons;
+  }
+  void be_clicked() override{
+    m_State = State::pop;
+  }
+  State get_state() const { return m_State; }
 };
 #endif // BLOON_HPP

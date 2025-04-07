@@ -19,12 +19,18 @@ void App::Start() {
   manager->set_map(0);
   manager->add_bloon(Bloon::Type::red, 10);
   manager->add_bloon(Bloon::Type::green, 10);
+  
 }
 
 void App::Update() {
 
   if (manager->get_mouse_status() == Manager::mouse_status::drag) {
     manager->get_dragging()->set_position(Util::Input::GetCursorPosition());
+  }
+  for (auto &bloon : manager->get_bloons()){
+    if (bloon->get_bloon()->get_state() == Bloon::State::pop) {
+      manager->pop_bloon(bloon.get());
+    }
   }
   for (auto &move : manager->get_movings()) {
     move->move();
@@ -48,6 +54,10 @@ void App::Update() {
             manager->set_dragging(click);
             drag_cd = true;
           }
+        }
+      if(click->get_can_click()) {
+          click->be_clicked();
+          LOG_INFO("Clicked");
         }
       }
     }
