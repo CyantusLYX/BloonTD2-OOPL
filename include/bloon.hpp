@@ -35,5 +35,9 @@ public:
   [[nodiscard]] Type GetType() const { return m_Type; }
 
   [[nodiscard]] State GetState() const { return m_State; }
+
+  [[nodiscard]] std::vector<std::shared_ptr<Bloon::Type>> GetChildBloons() const {
+    return m_ChildBloons;
+  }
 };
 #endif // BLOON_HPP

@@ -5,8 +5,12 @@
 #include "Util/Renderer.hpp"
 #include "bloon.hpp"
 #include "move.hpp"
+#include <algorithm> // for std::shuffle
+#include <chrono>    // for seeding with time
 #include <glm/fwd.hpp>
 #include <memory>
+#include <random>
+#include <vector>
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2, GORGIOUS.
   auto pos = Util::PTSDPosition::FromSDL(vec.x, vec.y);
   return pos.ToVec2();
@@ -95,11 +99,26 @@ void Manager::set_map(int diff) {
 void Manager::add_bloon(Bloon::Type type, float distance) {
   auto bloon = std::make_shared<Bloon>(
       type, current_path->getPositionAtDistance(distance));
+  bloon->set_can_click(true);//just for test
   auto bloon_holder =
       std::make_shared<Manager::bloon_holder>(bloon, distance, current_path);
   m_Renderer->AddChild(bloon);
   movings.push_back(bloon_holder);
 }
+
+void Manager::pop_bloon(bloon_holder *bloon) {
+  bloon->get_bloon()->SetVisible(false);
+  // 產生一個不重複的 1~4 順序
+  std::vector<int> values = {1, 2, 3, 4};
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::shuffle(values.begin(), values.end(), std::default_random_engine(seed));
+  auto sub_bloons = bloon->get_bloon()->GetChildBloons();
+  for (size_t i = 0; i < sub_bloons.size() && i < values.size(); ++i) {
+    float distance = bloon->get_distance() - values[i] * 2;
+    this->add_bloon(*sub_bloons[i], distance);
+  }
+}
+
 Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
                                     float distance,
                                     const std::shared_ptr<Path> path) {

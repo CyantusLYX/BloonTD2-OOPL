@@ -39,10 +39,12 @@ private:
     float get_distance();
     Util::PTSDPosition next_position(int frames) override;
     void move() override;
+    auto get_bloon() const { return m_bloon; }
   };
 
 protected:
 public:
+  void pop_bloon(bloon_holder *bloon);
   explicit Manager(std::shared_ptr<Util::Renderer> &renderer);
   ~Manager() = default;
   void add_bloon(Bloon::Type type, float distance);
