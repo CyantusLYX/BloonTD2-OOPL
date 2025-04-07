@@ -9,6 +9,7 @@ enum class ColType { OVAL, RECTANGLE };
 class Collapsible : public Util::GameObject {
 private:
   bool can_click = false;
+  bool can_drag = false;
 
 public:
   Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
@@ -45,6 +46,8 @@ public:
   void set_can_click(const bool can_click) { this->can_click = can_click; }
   [[nodiscard]] bool get_can_click() const { return this->can_click; }
   [[nodiscard]] Util::PTSDPosition get_position()const;
+  bool get_can_drag() const { return can_drag; }
+  virtual void be_clicked(){};
 };
 
 #endif // COLLAPSIBLE_HPP

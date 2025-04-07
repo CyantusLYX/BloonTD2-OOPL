@@ -100,10 +100,12 @@ void Manager::add_bloon(Bloon::Type type, float distance) {
   auto bloon = std::make_shared<Bloon>(
       type, current_path->getPositionAtDistance(distance));
   bloon->set_can_click(true);//just for test
+  this->add_click(bloon);
   auto bloon_holder =
       std::make_shared<Manager::bloon_holder>(bloon, distance, current_path);
   m_Renderer->AddChild(bloon);
   movings.push_back(bloon_holder);
+  bloons.push_back(bloon_holder);
 }
 
 void Manager::pop_bloon(bloon_holder *bloon) {
