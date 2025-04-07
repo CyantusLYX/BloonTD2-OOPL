@@ -7,7 +7,6 @@
 #include "manager.hpp"
 #include <cmath>
 #include <glm/fwd.hpp>
-#include <memory>
 
 bool drag_cd = false;
 void App::Start() {
@@ -18,7 +17,7 @@ void App::Start() {
   // auto test = std::make_shared<Collapsible>(nullptr, 10, glm::vec2{0,0},
   // true);
   manager->set_map(0);
-  manager->add_bloon(Bloon::Type::red,  10);
+  manager->add_bloon(Bloon::Type::red, 10);
   manager->add_bloon(Bloon::Type::green, 10);
 }
 
@@ -33,18 +32,25 @@ void App::Update() {
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
     LOG_INFO("Mouse Left Button Pressed");
     drag_cd = false;
-    if (manager->get_mouse_status()==Manager::mouse_status::drag && !drag_cd) {
+    if (manager->get_mouse_status() == Manager::mouse_status::drag &&
+        !drag_cd) {
       manager->end_dragging();
       drag_cd = true;
     }
-    /* for (auto &move : manager->get_movings()) { //iterating over all moving
-      if (move->get_can_click()&&manager->get_mouse_status()==Manager::mouse_status::free && !drag_cd) {
-        if (move->isCollide(Util::Input::GetCursorPosition())) {
-          manager->set_dragging(move);
-          drag_cd = true;
+    for (auto &click : manager->get_clicks()) { // iterating over all moving
+      if (!(click->get_can_click()&&!drag_cd)) {
+        continue;
+      }
+      if (click->isCollide(Util::Input::GetCursorPosition())) {
+        if (click->get_can_drag()) {
+          if (manager->get_mouse_status() == Manager::mouse_status::free &&
+              !drag_cd) {
+            manager->set_dragging(click);
+            drag_cd = true;
+          }
         }
       }
-    } */
+    }
   }
   if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
     m_CurrentState = State::END;

@@ -3,7 +3,6 @@
 #include "Util/Renderer.hpp"
 #include "bloon.hpp"
 #include "collapsible.hpp"
-#include "interfaces.hpp"
 #include "map.hpp"
 #include "move.hpp"
 #include <memory>
@@ -27,6 +26,7 @@ private:
   int current_waves = -1;
   std::shared_ptr<Map> current_map;
   std::shared_ptr<Path> current_path;
+  std::vector<std::shared_ptr<Collapsible>> clicks;
   class bloon_holder : public Interface::I_move {
   private:
     std::shared_ptr<Bloon> m_bloon;
@@ -50,6 +50,10 @@ public:
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   auto get_movings() { return movings; };
   [[nodiscard]] mouse_status get_mouse_status() const { return m_mouse_status; }
+  void add_click(const std::shared_ptr<Collapsible> &click) {
+    clicks.push_back(click);
+  }
+  auto get_clicks() { return clicks; }
   void set_dragging(const std::shared_ptr<Collapsible> &dragging);
   auto get_dragging() { return dragging; }
   void end_dragging(); // ender_dragon()

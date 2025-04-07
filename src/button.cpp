@@ -1,6 +1,5 @@
 #include "button.hpp"
 #include "Util/Image.hpp"
-#include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include <glm/fwd.hpp>
 
