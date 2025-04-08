@@ -1,9 +1,10 @@
 #ifndef BLOON_HPP
 #define BLOON_HPP
 #include "collapsible.hpp"
+#include "mortal.hpp"
 #include <memory>
 #include <vector>
-class Bloon final : public Collapsible {
+class Bloon final : public Collapsible,public Mortal {
   // Bloon is a subclass of Collapsible and I_move
   // It represents a moving object in the game, like a bloon in BTD
   // It has its own type, state, speed, and other properties
@@ -15,9 +16,9 @@ private:
   Bloon::State m_CurrentState = Bloon::State::alive;
   Type m_Type;
   State m_State;
-  float baseSpeed = 1.0f; // Base speed of the bloon
+  const float baseSpeed = 0.5f; // Base speed of the bloon
   float m_SpeedMult;      // real speed = baseSpeed*m_SpeedMult
-  int m_RBE;              // Red Bloon Equivalent
+  int m_RBE;              // Red Bloon Equivalent(for life calculation)
   float meltTime{};
   std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
 
@@ -26,17 +27,17 @@ public:
 
   void setFrozed(float froze_time);
   void set_died() { m_State = State::died; }
-  [[nodiscard]] State GetCurrentState() const { return m_CurrentState; }
+  State GetCurrentState() const { return m_CurrentState; }
 
-  [[nodiscard]] float GetSpeed() const { return baseSpeed * m_SpeedMult; }
+  float GetSpeed() const { return baseSpeed * m_SpeedMult; }
 
-  [[nodiscard]] int GetRBE() const { return m_RBE; }
+  int GetRBE() const { return m_RBE; }
 
-  [[nodiscard]] Type GetType() const { return m_Type; }
+  Type GetType() const { return m_Type; }
 
-  [[nodiscard]] State GetState() const { return m_State; }
+  State GetState() const { return m_State; }
 
-  [[nodiscard]] std::vector<std::shared_ptr<Bloon::Type>>
+  std::vector<std::shared_ptr<Bloon::Type>>
   GetChildBloons() const {
     return m_ChildBloons;
   }

@@ -6,6 +6,7 @@ set(SRC_FILES
     manager.cpp
     map.cpp
     path.cpp
+    mortal.cpp
     )
 set(INCLUDE_FILES
     App.hpp
@@ -17,6 +18,8 @@ set(INCLUDE_FILES
     map.hpp
     path.hpp
     move.hpp
+    mortal.hpp
+    uuid.hpp
 )
 
 set(TEST_FILES
