@@ -4,7 +4,6 @@
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
 #include "bloon.hpp"
-#include "manager.hpp"
 #include <cmath>
 #include <glm/fwd.hpp>
 
@@ -66,22 +65,22 @@ void App::Start() {
 
 void App::Update() {
   // 更新遊戲邏輯
-  manager->cleanup_dead_objects();
   manager->updateDraggingObject(Util::Input::GetCursorPosition());
   manager->processBloonsState();
   manager->updateAllMovingObjects();
-  
+  manager->cleanup_dead_objects();
+
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
     LOG_INFO("Mouse Left Button Pressed");
     manager->handleClickAt(Util::Input::GetCursorPosition());
   }
-  
+
   // 檢查遊戲結束條件
   if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
     m_CurrentState = State::END;
   }
-  
+
   // 更新渲染
   m_Renderer->Update();
 }

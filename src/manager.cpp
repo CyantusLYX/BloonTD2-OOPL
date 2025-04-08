@@ -296,7 +296,6 @@ void Manager::cleanup_dead_objects() {
                clicks.end());
 }
 
-
 // bloon_holder 內部類別實現
 Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
                                     float distance,

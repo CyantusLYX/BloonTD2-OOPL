@@ -4,7 +4,7 @@
 #include "mortal.hpp"
 #include <memory>
 #include <vector>
-class Bloon final : public Collapsible,public Mortal {
+class Bloon final : public Collapsible, public Mortal {
   // Bloon is a subclass of Collapsible and I_move
   // It represents a moving object in the game, like a bloon in BTD
   // It has its own type, state, speed, and other properties
@@ -17,8 +17,8 @@ private:
   Type m_Type;
   State m_State;
   const float baseSpeed = 0.5f; // Base speed of the bloon
-  float m_SpeedMult;      // real speed = baseSpeed*m_SpeedMult
-  int m_RBE;              // Red Bloon Equivalent(for life calculation)
+  float m_SpeedMult;            // real speed = baseSpeed*m_SpeedMult
+  int m_RBE;                    // Red Bloon Equivalent(for life calculation)
   float meltTime{};
   std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
 
@@ -37,8 +37,7 @@ public:
 
   State GetState() const { return m_State; }
 
-  std::vector<std::shared_ptr<Bloon::Type>>
-  GetChildBloons() const {
+  std::vector<std::shared_ptr<Bloon::Type>> GetChildBloons() const {
     return m_ChildBloons;
   }
   void be_clicked() override {
