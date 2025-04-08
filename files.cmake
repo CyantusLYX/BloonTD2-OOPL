@@ -7,6 +7,7 @@ set(SRC_FILES
     map.cpp
     path.cpp
     mortal.cpp
+    uuid.cpp
     )
 set(INCLUDE_FILES
     App.hpp
