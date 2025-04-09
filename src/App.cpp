@@ -3,10 +3,11 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
+#include "Util/Time.hpp"
 #include "bloon.hpp"
 #include <cmath>
 #include <glm/fwd.hpp>
-
+#include <Util/Time.hpp>
 bool drag_cd = false;
 void App::Start() {
   LOG_TRACE("Start");
@@ -80,7 +81,6 @@ void App::Update() {
   if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
     m_CurrentState = State::END;
   }
-
   // 更新渲染
   m_Renderer->Update();
 }

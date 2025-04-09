@@ -1,6 +1,5 @@
 #ifndef PATH_HPP
 #define PATH_HPP
-#include "collapsible.hpp"
 #include <glm/vec2.hpp>
 #include <vector>
 #include "Util/Position.hpp"
