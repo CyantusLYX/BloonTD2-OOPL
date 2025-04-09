@@ -48,6 +48,7 @@ public:
   [[nodiscard]] Util::PTSDPosition get_position()const;
   bool get_can_drag() const { return can_drag; }
   virtual void be_clicked(){};
+  virtual void be_focus(){};
 };
 
 #endif // COLLAPSIBLE_HPP

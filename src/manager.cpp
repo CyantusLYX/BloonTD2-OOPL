@@ -4,6 +4,7 @@
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
 #include "bloon.hpp"
+#include "loader.hpp"
 #include "move.hpp"
 #include <algorithm>
 #include <chrono>
@@ -126,7 +127,7 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
     this->add_bloon(*sub_bloons[i], distance);
   }
 
-  bloon->get_bloon()->kill();
+  bloon->kill();
 }
 
 // 拖曳相關函數
@@ -257,29 +258,16 @@ void Manager::cleanup_dead_objects() {
 
   // 2. 清理 movings 容器
   movings.erase(
-      std::remove_if(
-          movings.begin(), movings.end(),
-          [&dead_uuids](const auto &moving) {
-            auto mortal = std::dynamic_pointer_cast<Mortal>(moving);
-            if (mortal) {
-              return std::find(dead_uuids.begin(), dead_uuids.end(),
-                               mortal->get_uuid()) != dead_uuids.end();
-            }
-
-            // 特殊處理 bloon_holder 類型
-            std::shared_ptr<bloon_holder> bloon_holder =
-                std::dynamic_pointer_cast<Manager::bloon_holder>(moving);
-            if (bloon_holder) {
-              auto bloon =
-                  std::dynamic_pointer_cast<Mortal>(bloon_holder->get_bloon());
-              if (bloon) {
-                return std::find(dead_uuids.begin(), dead_uuids.end(),
-                                 bloon->get_uuid()) != dead_uuids.end();
-              }
-            }
-
-            return false;
-          }),
+      std::remove_if(movings.begin(), movings.end(),
+                     [&dead_uuids](const auto &moving) {
+                       auto mortal = std::dynamic_pointer_cast<Mortal>(moving);
+                       if (mortal) {
+                         return std::find(dead_uuids.begin(), dead_uuids.end(),
+                                          mortal->get_uuid()) !=
+                                dead_uuids.end();
+                       }
+                       return false;
+                     }),
       movings.end());
 
   // 3. 清理 clicks 容器
@@ -294,6 +282,52 @@ void Manager::cleanup_dead_objects() {
                      return false;
                    }),
                clicks.end());
+}
+
+// 流程相關
+void Manager::next_wave() {
+  if (m_game_state == game_state::menu && current_waves == -1) {
+    set_gap();
+    current_waves = 0;
+  } else if (m_game_state == game_state::playing) {
+    set_gap();
+    current_waves++;
+    bloons_gen_list = loader::load_bloons(current_waves);
+  } else if (m_game_state == game_state::playing && current_waves == 50) {
+    set_menu();
+    current_waves = -1;
+  } else {
+    LOG_ERROR("Invalid game state");
+    // throw std::runtime_error("Invalid game state or wrong waves");
+  }
+}
+
+void Manager::start_wave() {
+  if (m_game_state == game_state::gap &&
+      (current_waves != -1 || current_waves <= 50)) {
+    set_playing();
+    current_waves++;
+  } else {
+    LOG_ERROR("Invalid game state");
+    // throw std::runtime_error("Invalid game state or wrong waves");
+  }
+  // start generate bloons
+}
+void Manager::wave_check() {
+  if (bloons.size() == 0 && bloons_gen_list.size() == 0) {
+    // set_gap();
+    next_wave();
+  } else if (bloons_gen_list.size() > 0) {
+    // 產生氣球
+    auto bloon_type = bloons_gen_list.back();
+    bloons_gen_list.pop_back();
+    add_bloon(bloon_type, 0);
+  }
+}
+
+void Manager::update(){
+  m_Renderer->Update();
+  m_frame_count++;
 }
 
 // bloon_holder 內部類別實現
