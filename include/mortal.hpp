@@ -11,7 +11,8 @@ public:
     // 生命狀態管理
     bool is_alive() const { return m_life_status == LifeStatus::Alive; }
     bool is_dead() const { return m_life_status == LifeStatus::Dead; }
-    void kill() { m_life_status = LifeStatus::Dead; }
+    void kill();
+    virtual void pre_kill(){};
     
     // 獲取唯一識別碼
     const std::string& get_uuid() const { return m_uuid; }

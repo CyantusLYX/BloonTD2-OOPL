@@ -3,5 +3,5 @@
     "window_width": 640,
     "window_height": 480,
     "default_log_level": 2,
-    "fps_cap": 180
+    "fps_cap": 60
 }

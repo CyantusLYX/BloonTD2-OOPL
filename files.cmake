@@ -8,6 +8,9 @@ set(SRC_FILES
     path.cpp
     mortal.cpp
     uuid.cpp
+    loader.cpp
+    shape.cpp
+    test.cpp
     )
 set(INCLUDE_FILES
     App.hpp
@@ -21,6 +24,9 @@ set(INCLUDE_FILES
     move.hpp
     mortal.hpp
     uuid.hpp
+    loader.hpp
+    shape.hpp
+    test.hpp
 )
 
 set(TEST_FILES

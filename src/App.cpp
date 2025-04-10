@@ -3,73 +3,33 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
-#include "Util/Time.hpp"
-#include "bloon.hpp"
+#include "shape.hpp"
+#include "test.hpp"
+#include <Util/Time.hpp>
 #include <cmath>
 #include <glm/fwd.hpp>
-#include <Util/Time.hpp>
+#include <memory>
 bool drag_cd = false;
 void App::Start() {
   LOG_TRACE("Start");
   m_CurrentState = State::UPDATE;
   manager->set_map(0);
-  manager->add_bloon(Bloon::Type::red, 10);
-  manager->add_bloon(Bloon::Type::green, 10);
-  manager->add_bloon(Bloon::Type::rainbow, 10);
+  manager->next_wave();
+  auto test_drawable = std::make_shared<Util::Shape>(Util::ShapeType::Circle,
+                                                     glm::vec2(100.0f, 100.0f));
+  test_drawable->SetColorHSV(0.0f, 1.0f, 1.0f, 0.3f);
+  auto test = std::make_shared<coshader>(test_drawable, 5);
+  manager->add_object(test);
 }
 
-/* void App::Update() {
-
-  if (manager->get_mouse_status() == Manager::mouse_status::drag) {
-    manager->get_dragging()->set_position(Util::Input::GetCursorPosition());
-  }
-  for (auto &bloon : manager->get_bloons()){
-    if (bloon->get_bloon()->get_state() == Bloon::State::pop) {
-      manager->pop_bloon(bloon);
-    }
-  }
-  for (auto &move : manager->get_movings()) {
-    move->move();
-  }
-  if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
-    LOG_INFO("Mouse Left Button Pressed");
-    drag_cd = false;
-    if (manager->get_mouse_status() == Manager::mouse_status::drag &&
-        !drag_cd) {
-      manager->end_dragging();
-      drag_cd = true;
-    }
-    for (auto &click : manager->get_clicks()) { // iterating over all moving
-      if (!(click->get_can_click()&&!drag_cd)) {
-        continue;
-      }
-      if (click->isCollide(Util::Input::GetCursorPosition())) {
-        if (click->get_can_drag()) {
-          if (manager->get_mouse_status() == Manager::mouse_status::free &&
-              !drag_cd) {
-            manager->set_dragging(click);
-            drag_cd = true;
-          }
-        }
-      if(click->get_can_click()) {
-          click->be_clicked();
-          LOG_INFO("Clicked");
-        }
-      }
-    }
-  }
-  if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
-    m_CurrentState = State::END;
-  }
-  m_Renderer->Update();
-} */
-
 void App::Update() {
-  // 更新遊戲邏輯
-  manager->updateDraggingObject(Util::Input::GetCursorPosition());
-  manager->processBloonsState();
-  manager->updateAllMovingObjects();
   manager->cleanup_dead_objects();
+  if (manager->get_game_state() != Manager::game_state::menu) {
+    // 更新遊戲邏輯
+    manager->updateDraggingObject(Util::Input::GetCursorPosition());
+    manager->processBloonsState();
+    manager->updateAllMovingObjects();
+  }
 
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
@@ -81,8 +41,8 @@ void App::Update() {
   if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
     m_CurrentState = State::END;
   }
-  // 更新渲染
-  m_Renderer->Update();
+  manager->wave_check();
+  manager->update();
 }
 
 void App::End() { // NOLINT(this method will mutate members in the future)
