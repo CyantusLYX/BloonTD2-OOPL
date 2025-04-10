@@ -3,29 +3,32 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
-#include "Util/Time.hpp"
-#include "bloon.hpp"
+#include "shape.hpp"
+#include "test.hpp"
+#include <Util/Time.hpp>
 #include <cmath>
 #include <glm/fwd.hpp>
-#include <Util/Time.hpp>
+#include <memory>
 bool drag_cd = false;
 void App::Start() {
   LOG_TRACE("Start");
   m_CurrentState = State::UPDATE;
   manager->set_map(0);
-  manager->add_bloon(Bloon::Type::red, 10);
-  manager->add_bloon(Bloon::Type::green, 10);
-  manager->add_bloon(Bloon::Type::rainbow, 10);
   manager->next_wave();
+  auto test_drawable = std::make_shared<Util::Shape>(Util::ShapeType::Circle,
+                                                     glm::vec2(100.0f, 100.0f));
+  test_drawable->SetColorHSV(0.0f, 1.0f, 1.0f, 0.3f);
+  auto test = std::make_shared<coshader>(test_drawable, 5);
+  manager->add_object(test);
 }
 
 void App::Update() {
+  manager->cleanup_dead_objects();
   if (manager->get_game_state() != Manager::game_state::menu) {
     // 更新遊戲邏輯
     manager->updateDraggingObject(Util::Input::GetCursorPosition());
     manager->processBloonsState();
     manager->updateAllMovingObjects();
-    manager->cleanup_dead_objects();
   }
 
   // 處理輸入
@@ -38,8 +41,8 @@ void App::Update() {
   if (Util::Input::IsKeyUp(Util::Keycode::ESCAPE) || Util::Input::IfExit()) {
     m_CurrentState = State::END;
   }
-  // 更新渲染
-  m_Renderer->Update();
+  manager->wave_check();
+  manager->update();
 }
 
 void App::End() { // NOLINT(this method will mutate members in the future)

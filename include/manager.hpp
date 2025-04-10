@@ -41,7 +41,6 @@ public:
     auto get_bloon() const { return m_bloon; }
     void pre_kill() override {
       m_bloon->kill();
-      m_bloon = nullptr;
     }
   };
 

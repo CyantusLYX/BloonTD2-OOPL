@@ -217,6 +217,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
         clickable->be_clicked();
         LOG_INFO("Clicked");
       }
+      break;
     }
   }
 }
@@ -242,46 +243,32 @@ void Manager::cleanup_dead_objects() {
 
   // 從其他容器中移除死亡物件，使用 UUID 匹配
 
-  // 1. 清理 bloons 容器
-  bloons.erase(std::remove_if(
-                   bloons.begin(), bloons.end(),
-                   [&dead_uuids](const auto &bloon) {
-                     auto mortal =
-                         std::dynamic_pointer_cast<Mortal>(bloon->get_bloon());
-                     if (mortal) {
-                       return std::find(dead_uuids.begin(), dead_uuids.end(),
-                                        mortal->get_uuid()) != dead_uuids.end();
-                     }
-                     return false;
-                   }),
-               bloons.end());
+  auto cleanup_container = [&dead_uuids](auto &container, auto extractor) {
+    container.erase(std::remove_if(container.begin(), container.end(),
+                                   [&dead_uuids, &extractor](const auto &item) {
+                                     auto mortal = extractor(item);
+                                     if (mortal) {
+                                       return std::find(dead_uuids.begin(),
+                                                        dead_uuids.end(),
+                                                        mortal->get_uuid()) !=
+                                              dead_uuids.end();
+                                     }
+                                     return false;
+                                   }),
+                    container.end());
+  };
+  // 使用通用函數清理各個容器
+  cleanup_container(bloons, [](const auto &bloon) {
+    return std::dynamic_pointer_cast<Mortal>(bloon->get_bloon());
+  });
 
-  // 2. 清理 movings 容器
-  movings.erase(
-      std::remove_if(movings.begin(), movings.end(),
-                     [&dead_uuids](const auto &moving) {
-                       auto mortal = std::dynamic_pointer_cast<Mortal>(moving);
-                       if (mortal) {
-                         return std::find(dead_uuids.begin(), dead_uuids.end(),
-                                          mortal->get_uuid()) !=
-                                dead_uuids.end();
-                       }
-                       return false;
-                     }),
-      movings.end());
+  cleanup_container(movings, [](const auto &moving) {
+    return std::dynamic_pointer_cast<Mortal>(moving);
+  });
 
-  // 3. 清理 clicks 容器
-  clicks.erase(std::remove_if(
-                   clicks.begin(), clicks.end(),
-                   [&dead_uuids](const auto &click) {
-                     auto mortal = std::dynamic_pointer_cast<Mortal>(click);
-                     if (mortal) {
-                       return std::find(dead_uuids.begin(), dead_uuids.end(),
-                                        mortal->get_uuid()) != dead_uuids.end();
-                     }
-                     return false;
-                   }),
-               clicks.end());
+  cleanup_container(clicks, [](const auto &click) {
+    return std::dynamic_pointer_cast<Mortal>(click);
+  });
 }
 
 // 流程相關
@@ -289,6 +276,7 @@ void Manager::next_wave() {
   if (m_game_state == game_state::menu && current_waves == -1) {
     set_gap();
     current_waves = 0;
+    bloons_gen_list = loader::load_bloons(current_waves);
   } else if (m_game_state == game_state::playing) {
     set_gap();
     current_waves++;
@@ -314,18 +302,38 @@ void Manager::start_wave() {
   // start generate bloons
 }
 void Manager::wave_check() {
+  static int counter = 0;
+  int bloonInterval = 0;
+  
   if (bloons.size() == 0 && bloons_gen_list.size() == 0) {
-    // set_gap();
+    counter = 0;
     next_wave();
-  } else if (bloons_gen_list.size() > 0) {
-    // 產生氣球
-    auto bloon_type = bloons_gen_list.back();
-    bloons_gen_list.pop_back();
-    add_bloon(bloon_type, 0);
+    return;
+  }
+  
+  if (current_waves >= 0) {
+    bloonInterval = 15 - current_waves;
+    if (bloonInterval < 5) {
+      bloonInterval = std::ceil(5 - current_waves / 20.0);
+    }
+    // 確保最小間隔
+    bloonInterval = std::max(1, bloonInterval);
+    bloonInterval*=5;
+  }
+  
+  // 檢查是否應該產生新氣球
+  if (bloons_gen_list.size() > 0) {
+    counter++;
+    if (counter >= bloonInterval) {
+      counter = 0;
+      auto bloon_type = bloons_gen_list.back();
+      bloons_gen_list.pop_back();
+      add_bloon(bloon_type, 0);
+    }
   }
 }
 
-void Manager::update(){
+void Manager::update() {
   m_Renderer->Update();
   m_frame_count++;
 }
@@ -338,11 +346,13 @@ Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
 
 float Manager::bloon_holder::get_distance() { return distance; }
 
-Util::PTSDPosition Manager::bloon_holder::next_position(int frames) {
+Util::PTSDPosition Manager::bloon_holder::next_position(int frames = 1) {
   return m_path->getPositionAtDistance(m_bloon->GetSpeed() * frames + distance);
 }
 
 void Manager::bloon_holder::move() {
+  if (m_bloon == nullptr)
+    return;
   distance += m_bloon->GetSpeed();
-  m_bloon->set_position(m_path->getPositionAtDistance(distance));
+  m_bloon->set_position(next_position(0));
 }
