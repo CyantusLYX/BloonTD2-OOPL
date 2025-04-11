@@ -19,19 +19,6 @@ FetchContent_Declare(
 
     SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/PTSD
 )
-
-FetchContent_Declare(
-    jsoncpp
-    #GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
-    #GIT_TAG master
-    URL https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.3.zip
-)
-set(JSONCPP_WITH_TESTS OFF CACHE BOOL "")
-set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE BOOL "")
-set(JSONCPP_WITH_PKGCONFIG_SUPPORT OFF CACHE BOOL "")
-
-
-FetchContent_MakeAvailable(jsoncpp)
 FetchContent_MakeAvailable(ptsd)
 
 
@@ -70,5 +57,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i
 target_link_libraries(${PROJECT_NAME}
     SDL2::SDL2main
     PTSD
-    jsoncpp_lib 
 )

@@ -288,13 +288,13 @@ void Manager::next_wave() {
     LOG_ERROR("Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
+  start_wave();
 }
 
 void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
       (current_waves != -1 || current_waves <= 50)) {
     set_playing();
-    current_waves++;
   } else {
     LOG_ERROR("Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
@@ -304,7 +304,9 @@ void Manager::start_wave() {
 void Manager::wave_check() {
   static int counter = 0;
   int bloonInterval = 0;
-  
+  if (m_game_state == game_state::gap || m_game_state == game_state::menu) {
+    return;
+  }
   if (bloons.size() == 0 && bloons_gen_list.size() == 0) {
     counter = 0;
     next_wave();
