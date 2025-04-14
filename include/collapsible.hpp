@@ -14,13 +14,13 @@ private:
 public:
   Collapsible(const std::shared_ptr<Core::Drawable> &drawable,
               const float zIndex, const Util::PTSDPosition &pos = {0, 0},
-              const std::variant<glm::vec2, int>  circle_r_or_rectangle_xy = 0, const bool visible = true,
+              const std::variant<glm::vec2, int>  circle_r_or_rectangle_xy_variant = 0, const bool visible = true,
               const std::vector<std::shared_ptr<GameObject>> &children =
                   std::vector<std::shared_ptr<GameObject>>())
       : Util::GameObject(drawable, zIndex, {0,0}, visible, children),
-        m_col_parm(circle_r_or_rectangle_xy) {
+        m_col_parm(circle_r_or_rectangle_xy_variant) {
           this->m_Transform.translation = pos.ToVec2();
-          m_col_type = circle_r_or_rectangle_xy.index() == 1 ? ColType::OVAL : ColType::RECTANGLE;
+          m_col_type = circle_r_or_rectangle_xy_variant.index() == 1 ? ColType::OVAL : ColType::RECTANGLE;
         }
 
   Collapsible() = default;

@@ -7,7 +7,7 @@ class coshader : public Util::GameObject{
 public:
   coshader(const std::shared_ptr<Core::Drawable> &drawable,
           const float zIndex, const Util::PTSDPosition &pos = {0, 0},
-          const std::variant<glm::vec2, int> circle_r_or_rectangle_xy = 0,
+          const std::variant<glm::vec2, int> circle_r_or_rectangle_xy_variant = 0,
           const bool visible = true,
           const std::vector<std::shared_ptr<GameObject>> &children =
               std::vector<std::shared_ptr<GameObject>>())

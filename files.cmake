@@ -1,10 +1,10 @@
 set(SRC_FILES
     App.cpp
-    bloon.cpp
-    button.cpp
+    Game_objects/bloon.cpp
+    Game_objects/button.cpp
     collapsible.cpp
     manager.cpp
-    map.cpp
+    Game_objects/map.cpp
     path.cpp
     mortal.cpp
     uuid.cpp
@@ -14,12 +14,12 @@ set(SRC_FILES
     )
 set(INCLUDE_FILES
     App.hpp
-    bloon.hpp
-    button.hpp
+    Game_objects/bloon.hpp
+    Game_objects/button.hpp
     collapsible.hpp
     interface.hpp
     manager.hpp
-    map.hpp
+    Game_objects/map.hpp
     path.hpp
     move.hpp
     mortal.hpp

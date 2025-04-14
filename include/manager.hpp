@@ -2,10 +2,10 @@
 #define MANAGER_HPP
 
 #include "Util/Renderer.hpp"
-#include "bloon.hpp"
+#include "Game_objects/bloon.hpp"
 #include "collapsible.hpp"
 #include "loader.hpp"
-#include "map.hpp"
+#include "Game_objects/map.hpp"
 #include "mortal.hpp"
 #include "move.hpp"
 #include <cstdint>
@@ -93,8 +93,8 @@ private:
 
   // 遊戲資源
   std::vector<Bloon::Type> bloons_gen_list;
-  int life;
-  int money;
+  int life{};
+  int money{};
 
   // 地圖和路徑
   std::vector<std::shared_ptr<Map>> maps;
