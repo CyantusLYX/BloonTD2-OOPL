@@ -5,7 +5,7 @@
 #include "Util/Position.hpp"
 
 enum class ColType { OVAL, RECTANGLE };
-
+[[deprecated("ready to remove")]];
 class Collapsible : public Util::GameObject {
 private:
   bool can_click = false;

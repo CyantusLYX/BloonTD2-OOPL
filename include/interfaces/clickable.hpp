@@ -1,8 +1,7 @@
-#ifndef CLICKABLE_HPP
-#define CLICKABLE_HPP
-namespace Interfcace {
-namespace Components {
-namespace Interaction {
+#ifndef I_CLICKABLE_HPP
+#define I_CLICKABLE_HPP
+
+namespace Interface {
 
 class I_clickable {
 public:
@@ -15,7 +14,5 @@ public:
     virtual void setClickable(bool clickable) = 0;
 };
 
-} // namespace Interaction
-} // namespace Components
-} // namespace Interfcace
-#endif // ICLICKABLE_HPP
+} // namespace Interface
+#endif

@@ -3,13 +3,20 @@
 
 namespace Components {
 
+CollisionComponent::CollisionComponent(
+    const Util::PTSDPosition& position,
+    const std::variant<glm::vec2, int>& colParam
+) : m_colParam(colParam), m_position(position) {
+    m_colType = colParam.index() == 0 ? Interface::ColType::RECTANGLE : Interface::ColType::OVAL;
+}
+    
 void CollisionComponent::setColParam(const std::variant<glm::vec2, int>& colParam) {
     if (m_colParam.index() == colParam.index())
         this->m_colParam = colParam;
 }
 
 bool CollisionComponent::recToOval(const CollisionComponent& rec, const CollisionComponent& oval) {
-    if (rec.getColType() != ColType::RECTANGLE || oval.getColType() != ColType::OVAL) {
+    if (rec.getColType() != Interface::ColType::RECTANGLE || oval.getColType() !=Interface::ColType::OVAL) {
         throw std::invalid_argument("err on CollisionComponent::recToOval");
     } else {
         const glm::vec2 r = rec.getPosition().ToVec2();
@@ -24,32 +31,32 @@ bool CollisionComponent::recToOval(const CollisionComponent& rec, const Collisio
         };
         glm::vec2 c = oval.getPosition().ToVec2();
         int cr = std::get<int>(oval.getColParam());
-        int min_x = std::min(fabs(dl.x - c.x), fabs(ur.x - c.x));
-        int min_y = std::min(fabs(dl.y - c.y), fabs(ur.y - c.y));
+        float min_x = std::min(std::fabs(dl.x - c.x), std::fabs(ur.x - c.x));
+        float min_y = std::min(std::fabs(dl.y - c.y), std::fabs(ur.y - c.y));
         return min_x * min_x + min_y * min_y < cr * cr ||
-            ((fabs(r.x - c.x) < fabs(ur.x - dl.x) / 2 + cr) &&
-             fabs(c.y - r.y) < fabs(ur.y - dl.y) / 2) ||
-            ((fabs(r.x - c.x) < fabs(ur.x - dl.x) / 2) &&
-             fabs(c.y - r.y) < fabs(ur.y - dl.y) / 2 + cr);
+            ((std::fabs(r.x - c.x) < std::fabs(ur.x - dl.x) / 2 + cr) &&
+             std::fabs(c.y - r.y) < std::fabs(ur.y - dl.y) / 2) ||
+            ((std::fabs(r.x - c.x) < std::fabs(ur.x - dl.x) / 2) &&
+             std::fabs(c.y - r.y) < std::fabs(ur.y - dl.y) / 2 + cr);
     }
     return false;
 }
 
 bool CollisionComponent::recToRec(const CollisionComponent& rec1, const CollisionComponent& rec2) {
-    if (rec1.getColType() != ColType::RECTANGLE || rec2.getColType() != ColType::RECTANGLE) {
+    if (rec1.getColType() !=Interface::ColType::RECTANGLE || rec2.getColType() !=Interface::ColType::RECTANGLE) {
         throw std::invalid_argument("err on CollisionComponent::recToRec");
     } else {
         const glm::vec2& rec1Size = std::get<glm::vec2>(rec1.getColParam());
         const glm::vec2& rec2Size = std::get<glm::vec2>(rec2.getColParam());
         
-        return fabs(rec1.getPosition().x - rec2.getPosition().x) <= (rec1Size.x + rec2Size.x) / 2 &&
-               fabs(rec1.getPosition().y - rec2.getPosition().y) <= (rec1Size.y + rec2Size.y) / 2;
+        return std::fabs(rec1.getPosition().x - rec2.getPosition().x) <= (rec1Size.x + rec2Size.x) / 2 &&
+               std::fabs(rec1.getPosition().y - rec2.getPosition().y) <= (rec1Size.y + rec2Size.y) / 2;
     }
     return false;
 }
 
 bool CollisionComponent::ovalToOval(const CollisionComponent& oval1, const CollisionComponent& oval2) {
-    if (oval1.getColType() != ColType::OVAL || oval2.getColType() != ColType::OVAL) {
+    if (oval1.getColType() !=Interface::ColType::OVAL || oval2.getColType() !=Interface::ColType::OVAL) {
         throw std::invalid_argument("err on CollisionComponent::ovalToOval");
     } else {
         int r1 = std::get<int>(oval1.getColParam());
@@ -69,25 +76,27 @@ bool CollisionComponent::isCollide(const I_collider& other) const {
     }
     
     switch (m_colType) {
-        case ColType::OVAL:
+        case Interface::ColType::OVAL:
             switch (otherComponent->getColType()) {
-                case ColType::OVAL:
+                case Interface::ColType::OVAL:
                     return ovalToOval(*this, *otherComponent);
-                case ColType::RECTANGLE:
+                case Interface::ColType::RECTANGLE:
                     return recToOval(*otherComponent, *this);
                 default:
                     throw std::invalid_argument("err on CollisionComponent::isCollide switch");
             }
+            break;
             
-        case ColType::RECTANGLE:
+        case Interface::ColType::RECTANGLE:
             switch (otherComponent->getColType()) {
-                case ColType::OVAL:
+                case Interface::ColType::OVAL:
                     return recToOval(*this, *otherComponent);
-                case ColType::RECTANGLE:
+                case Interface::ColType::RECTANGLE:
                     return recToRec(*this, *otherComponent);
                 default:
                     throw std::invalid_argument("err on CollisionComponent::isCollide switch");
             }
+            break;
             
         default:
             throw std::invalid_argument("err on CollisionComponent::isCollide switch");
@@ -96,14 +105,14 @@ bool CollisionComponent::isCollide(const I_collider& other) const {
     return false;
 }
 
-bool CollisionComponent::isCollidePoint(const Util::PTSDPosition& point) const {
+bool CollisionComponent::isCollide(const Util::PTSDPosition& point) const {
     switch (m_colType) {
-        case ColType::OVAL: {
+        case Interface::ColType::OVAL: {
             int radius = std::get<int>(m_colParam);
             return (pow(point.x - m_position.x, 2) + pow(point.y - m_position.y, 2)) < pow(radius, 2);
         }
         
-        case ColType::RECTANGLE: {
+        case Interface::ColType::RECTANGLE: {
             const glm::vec2& size = std::get<glm::vec2>(m_colParam);
             return (point.x < m_position.x + size.x / 2) &&
                    (point.x > m_position.x - size.x / 2) &&
@@ -112,8 +121,9 @@ bool CollisionComponent::isCollidePoint(const Util::PTSDPosition& point) const {
         }
         
         default:
-            throw std::invalid_argument("err on CollisionComponent::isCollidePoint switch");
+            throw std::invalid_argument("err on CollisionComponent::isCollide point switch");
     }
+    
     return false;
 }
 

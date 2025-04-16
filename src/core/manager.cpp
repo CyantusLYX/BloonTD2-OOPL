@@ -3,8 +3,12 @@
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
-#include "entities/bloon.hpp"
+#include "components/collisionComp.hpp"
 #include "core/loader.hpp"
+#include "entities/bloon.hpp"
+#include "interfaces/clickable.hpp"
+#include "interfaces/collision.hpp"
+#include "interfaces/draggable.hpp"
 #include "interfaces/move.hpp"
 #include <algorithm>
 #include <chrono>
@@ -99,8 +103,8 @@ void Manager::add_moving(const std::shared_ptr<Interface::I_move> &moving) {
 void Manager::add_bloon(Bloon::Type type, float distance) {
   auto bloon = std::make_shared<Bloon>(
       type, current_path->getPositionAtDistance(distance));
-  bloon->set_can_click(true); // 僅供測試
-  this->add_click(bloon);
+  bloon->setClickable(true);  // 更改為使用新介面方法
+  this->add_clickable(bloon); // 使用新的方法
 
   register_mortal(bloon);
 
@@ -131,17 +135,30 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
 }
 
 void Manager::add_popper(const std::shared_ptr<popper> &popper) {
-  m_Renderer->AddChild(popper);
+  if (popper->get_object())
+    m_Renderer->AddChild(popper->get_object());
+  poppers.push_back(popper);
   register_mortal(popper);
-  this->add_click(popper);
+
+  // 若 popper 實現了 I_clickable 介面，則加入可點擊物件列表
+  auto clickable_popper =
+      std::dynamic_pointer_cast<Interface::I_clickable>(popper);
+  if (clickable_popper) {
+    this->add_clickable(clickable_popper);
+  }
 }
 
 // 拖曳相關函數
-void Manager::set_dragging(const std::shared_ptr<Collapsible> &dragging) {
+void Manager::set_dragging(
+    const std::shared_ptr<Interface::I_draggable> &draggable) {
   if (m_mouse_status == mouse_status::free) {
     LOG_INFO("start dragging");
-    this->dragging = dragging;
+    this->dragging = draggable;
     m_mouse_status = mouse_status::drag;
+    // 通知物件開始拖曳
+    if (dragging) {
+      dragging->onDragStart();
+    }
   }
 }
 
@@ -151,6 +168,10 @@ void Manager::set_dragging(const std::shared_ptr<Collapsible> &dragging) {
 void Manager::end_dragging() {
   if (m_mouse_status == mouse_status::drag) {
     LOG_INFO("ender dragoned");
+    // 通知物件結束拖曳
+    if (dragging) {
+      dragging->onDragEnd();
+    }
     dragging = nullptr;
     m_mouse_status = mouse_status::free;
   }
@@ -159,7 +180,7 @@ void Manager::end_dragging() {
 // 更新被拖曳的物件
 void Manager::updateDraggingObject(const Util::PTSDPosition &cursor_position) {
   if (m_mouse_status == mouse_status::drag && dragging != nullptr) {
-    dragging->set_position(cursor_position);
+    dragging->onDrag(cursor_position);
   }
 }
 
@@ -168,7 +189,7 @@ void Manager::processBloonsState() {
   std::vector<std::shared_ptr<bloon_holder>> popped_bloons;
 
   for (auto &bloon : bloons) {
-    if (bloon->get_bloon()->get_state() == Bloon::State::pop) {
+    if (bloon->get_bloon()->GetState() == Bloon::State::pop) {
       popped_bloons.push_back(bloon);
     }
   }
@@ -203,27 +224,87 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
   }
 
   // 檢查是否點擊了可互動物件
-  for (auto &clickable : clicks) {
+  for (auto &clickable : clickables) {
     // 跳過不可點擊或已在冷卻的物件
-    if (!(clickable->get_can_click() && !drag_cooldown)) {
+    if (!(clickable->isClickable() && !drag_cooldown)) {
       continue;
     }
+    LOG_INFO("clickable");
+    // 獲取具有碰撞功能的 GameObject
+    /* auto gameObject = std::dynamic_pointer_cast<Util::GameObject>(clickable);
+    if (!gameObject)
+      continue; */
 
-    // 檢查點擊碰撞
-    if (clickable->isCollide(cursor_position)) {
+    // 檢查物件是否能夠進行碰撞檢測
+    bool isCollided = false;
+
+    // 透過介面來檢查碰撞，而不是強制轉換為特定類型
+    auto collidable =
+        std::dynamic_pointer_cast<Interface::I_collider>(clickable);
+    if (collidable) {
+      isCollided = collidable->isCollide(cursor_position);
+    }
+
+    if (isCollided) {
       // 處理可拖曳物件
-      if (clickable->get_can_drag() && m_mouse_status == mouse_status::free &&
-          !drag_cooldown) {
-        set_dragging(clickable);
+      LOG_INFO("clicked");
+      auto draggable =
+          std::dynamic_pointer_cast<Interface::I_draggable>(clickable);
+      if (draggable && draggable->isDraggable() &&
+          m_mouse_status == mouse_status::free && !drag_cooldown) {
+        set_dragging(draggable);
         drag_cooldown = true;
       }
 
       // 處理點擊事件
-      if (clickable->get_can_click()) {
-        clickable->be_clicked();
+      if (clickable->isClickable()) {
+        clickable->onClick();
         LOG_INFO("Clicked");
       }
       break;
+    }
+  }
+}
+
+// 處理 popper 物件
+void Manager::handlePoppers() {
+  for (auto &popper : poppers) {
+    // 檢查 popper 是否存活且在路徑上
+    if (popper->is_alive() && current_path->isOnPath(popper->get_position())) {
+      // 收集與 popper 碰撞的氣球
+      std::vector<std::shared_ptr<Bloon>> collided_bloons;
+      std::vector<std::shared_ptr<bloon_holder>> collided_holders;
+
+      // 檢查所有氣球是否與 popper 碰撞
+      for (auto &holder : bloons) {
+        auto bloon = holder->get_bloon();
+
+        LOG_INFO("Checking collision with bloon at {}, {} ,{},{}",
+                 bloon->getPosition().x, bloon->getPosition().y,
+                 popper->getPosition().x, popper->getPosition().y);
+        // 使用氣球的碰撞檢測與 popper 的位置進行碰撞檢測
+        if (bloon->isCollide(popper->get_position())) {
+          collided_bloons.push_back(bloon);
+          collided_holders.push_back(holder);
+        }
+      }
+
+      // 如果有碰撞的氣球，調用 hit() 函數
+      if (!collided_bloons.empty()) {
+        auto hit_results = popper->hit(collided_bloons);
+
+        // 處理被擊中的氣球
+        for (size_t i = 0; i < hit_results.size(); ++i) {
+          if (hit_results[i]) {
+            // 使用 pop_bloon 來處理被擊中的氣球，而不是僅設置狀態
+            pop_bloon(collided_holders[i]);
+          }
+        }
+      }
+      if(popper->is_dead()) {
+        //popper->get_object()->SetVisible(false);
+        m_Renderer->RemoveChild(popper->get_object());
+      }
     }
   }
 }
@@ -272,8 +353,8 @@ void Manager::cleanup_dead_objects() {
     return std::dynamic_pointer_cast<Mortal>(moving);
   });
 
-  cleanup_container(clicks, [](const auto &click) {
-    return std::dynamic_pointer_cast<Mortal>(click);
+  cleanup_container(clickables, [](const auto &clickable) {
+    return std::dynamic_pointer_cast<Mortal>(clickable);
   });
 }
 
@@ -318,7 +399,7 @@ void Manager::wave_check() {
     next_wave();
     return;
   }
-  
+
   if (current_waves >= 0) {
     bloonInterval = 15 - current_waves;
     if (bloonInterval < 5) {
@@ -326,9 +407,9 @@ void Manager::wave_check() {
     }
     // 確保最小間隔
     bloonInterval = std::max(1, bloonInterval);
-    bloonInterval*=5;
+    bloonInterval *= 1;
   }
-  
+
   // 檢查是否應該產生新氣球
   if (bloons_gen_list.size() > 0) {
     counter++;
@@ -362,5 +443,5 @@ void Manager::bloon_holder::move() {
   if (m_bloon == nullptr)
     return;
   distance += m_bloon->GetSpeed();
-  m_bloon->set_position(next_position(0));
+  m_bloon->setPosition(next_position(0));
 }

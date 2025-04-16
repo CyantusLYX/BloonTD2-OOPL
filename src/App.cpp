@@ -3,6 +3,7 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
+#include "entities/bloon.hpp"
 #include "entities/poppers/spike.hpp"
 #include "core/shape.hpp"
 #include "test/test.hpp"
@@ -22,7 +23,11 @@ void App::Start() {
   manager->add_object(test);
   manager->add_bloon(Bloon::Type::red, 0);
   manager->set_playing();
-  //manager->add_popper(std::make_shared<spike>(Util::PTSDPosition(0, 0)));
+  auto first_bloon = manager->get_bloons()[0];
+  manager->pop_bloon(first_bloon);
+  auto first_spike = std::make_shared<spike>(Util::PTSDPosition(-135,4));
+  //auto first_spike = std::make_shared<spike>(Util::PTSDPosition(0,0));
+  manager->add_popper(first_spike);
 }
 
 void App::Update() {
@@ -32,6 +37,7 @@ void App::Update() {
     manager->updateDraggingObject(Util::Input::GetCursorPosition());
     manager->processBloonsState();
     manager->updateAllMovingObjects();
+    manager->handlePoppers();
   }
 
   // 處理輸入

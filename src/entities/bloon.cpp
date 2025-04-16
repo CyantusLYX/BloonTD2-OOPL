@@ -2,13 +2,14 @@
 #include "Util/Image.hpp"
 #include "Util/Position.hpp"
 #include "Util/Time.hpp"
-#include "collapsible.hpp"
+#include "components/collisionComp.hpp"
 #include <memory>
+
 Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
-    : Collapsible(nullptr, 10, pos, 0, true), m_Type(type),
-      m_State(State::alive) {
-  // Bloon::Bloon(Bloon::Type type)
-  //     :  m_Type(type) {
+    : Util::GameObject(nullptr, 10, {0,0}, true),
+      Components::CollisionComponent(pos, static_cast<int>(10)), // Initialize base class
+      m_Type(type), m_State(State::alive) {
+  m_Transform.translation = pos.ToVec2();
   switch (type) {
   case Type::red:
     m_SpeedMult = 1.0f;
@@ -56,27 +57,36 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
     }
     break;
   }
+  
+  // 設置可繪製資源
   m_Drawable = std::make_shared<Util::Image>(
       RESOURCE_DIR "/bloons/b" + std::to_string(static_cast<int>(m_Type) + 1) +
       ".png");
-  set_col_parm(static_cast<int>(m_Drawable->GetSize().x / 2));
+  
+  // 建立圓形碰撞組件
+  int radius = static_cast<int>(m_Drawable->GetSize().x / 2);
+  m_collisionComponent = std::make_shared<Components::CollisionComponent>(pos, radius);
 }
+
 void Bloon::setFrozed(const float froze_time) {
   m_State = State::frozed;
   meltTime = Util::Time::GetElapsedTimeMs() + froze_time;
 }
 
-// void Bloon::update() {
-//   if (m_State == State::frozed) {
-//     if (meltTime < Util::Time::GetElapsedTimeMs()) {
-//       m_State = State::alive;
-//     }
-//   }
-//   if (m_State == State::alive) {
-//   }
-//   if (m_State == State::pop) {
-//     for (auto &bloon : m_ChildBloons) {
-//       // std::make_shared<Bloon>(*bloon, m_Pivot);
-//     }
-//   }
-// }
+void Bloon::setPosition(const Util::PTSDPosition& position) {
+  m_Transform.translation = position.ToVec2();
+  CollisionComponent::setPosition(position);
+  if (m_collisionComponent) {
+    m_collisionComponent->setPosition(position);
+  }
+}
+
+Util::PTSDPosition Bloon::getPosition() const {
+  return {m_Transform.translation.x, m_Transform.translation.y};
+}
+
+void Bloon::onClick() {
+  if (m_State != State::died) {
+    m_State = State::pop;
+  }
+}

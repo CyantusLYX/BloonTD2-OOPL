@@ -3,7 +3,10 @@
 
 #include "Util/Renderer.hpp"
 #include "entities/bloon.hpp"
-#include "collapsible.hpp"
+// 替換 Collapsible 引用
+#include "components/collisionComp.hpp"
+#include "interfaces/clickable.hpp"
+#include "interfaces/draggable.hpp"
 #include "map.hpp"
 #include "components/mortal.hpp"
 #include "interfaces/move.hpp"
@@ -22,6 +25,7 @@ public:
   void processBloonsState();
   void updateAllMovingObjects();
   void handleClickAt(const Util::PTSDPosition &cursor_position);
+  void handlePoppers();
   // 生命週期管理
   void register_mortal(std::shared_ptr<Mortal> mortal);
   void cleanup_dead_objects();
@@ -68,17 +72,18 @@ public:
   void update();
 
   // 點擊和拖曳相關
-  void add_click(const std::shared_ptr<Collapsible> &click) {
-    clicks.push_back(click);
+  void add_clickable(const std::shared_ptr<Interface::I_clickable> &clickable) {
+    clickables.push_back(clickable);
   }
-  void set_dragging(const std::shared_ptr<Collapsible> &dragging);
+  void set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable);
   void end_dragging(); // ender_dragon()
+
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }
   game_state get_game_state() const { return m_game_state; }
   auto get_movings() { return movings; }
-  auto get_clicks() { return clicks; }
+  auto get_clicks() { return clickables; }
   auto get_dragging() { return dragging; }
   auto get_bloons() { return bloons; }
   std::shared_ptr<Map> get_curr_map();
@@ -114,8 +119,8 @@ private:
 
   // 互動物件
   std::vector<std::shared_ptr<Interface::I_move>> movings;
-  std::vector<std::shared_ptr<Collapsible>> clicks;
-  std::shared_ptr<Collapsible> dragging = nullptr;
+  std::vector<std::shared_ptr<Interface::I_clickable>> clickables;
+  std::shared_ptr<Interface::I_draggable> dragging = nullptr;
   std::vector<std::shared_ptr<bloon_holder>> bloons;
   std::vector<std::shared_ptr<popper>> poppers;
 };

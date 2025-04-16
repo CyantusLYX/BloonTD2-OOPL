@@ -3,8 +3,6 @@
 
 #include "Util/Position.hpp"
 namespace Interface {
-namespace Components {
-namespace Interaction {
 
 class I_draggable {
 public:
@@ -18,7 +16,5 @@ public:
     virtual void setDraggable(bool draggable) = 0;
 };
 
-} // namespace Interaction
-} // namespace Components
 } // namespace Interface
 #endif
