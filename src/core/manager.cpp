@@ -1,11 +1,11 @@
-#include "manager.hpp"
+#include "core/manager.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
-#include "bloon.hpp"
-#include "loader.hpp"
-#include "move.hpp"
+#include "entities/bloon.hpp"
+#include "core/loader.hpp"
+#include "interfaces/move.hpp"
 #include <algorithm>
 #include <chrono>
 #include <glm/fwd.hpp>
@@ -128,6 +128,12 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   }
 
   bloon->kill();
+}
+
+void Manager::add_popper(const std::shared_ptr<popper> &popper) {
+  m_Renderer->AddChild(popper);
+  register_mortal(popper);
+  this->add_click(popper);
 }
 
 // 拖曳相關函數

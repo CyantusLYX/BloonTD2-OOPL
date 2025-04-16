@@ -27,6 +27,8 @@ set(INCLUDE_FILES
     loader.hpp
     shape.hpp
     test.hpp
+    poppers/popper.hpp
+    poppers/spike.hpp
 )
 
 set(TEST_FILES

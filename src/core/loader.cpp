@@ -1,5 +1,5 @@
-#include "bloon.hpp"
-#include "loader.hpp"
+#include "entities/bloon.hpp"
+#include "core/loader.hpp"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>

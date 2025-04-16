@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(BloonsTD2)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 
 cmake_policy(SET CMP0135 NEW)
@@ -25,11 +26,11 @@ FetchContent_MakeAvailable(ptsd)
 include(files.cmake)
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-list(TRANSFORM SRC_FILES PREPEND ${SRC_DIR}/)
-list(TRANSFORM INCLUDE_FILES PREPEND ${INCLUDE_DIR}/)
+#list(TRANSFORM SRC_FILES PREPEND ${SRC_DIR}/)
+#list(TRANSFORM INCLUDE_FILES PREPEND ${INCLUDE_DIR}/)
 
-# file(GLOB_RECURSE SRC_FILES src/*)
-# file(GLOB_RECURSE HEADER_FILES include/*)
+file(GLOB_RECURSE SRC_FILES src/*)
+file(GLOB_RECURSE HEADER_FILES include/*)
 
 add_executable(${PROJECT_NAME}
     ${SRC_DIR}/main.cpp
@@ -58,3 +59,5 @@ target_link_libraries(${PROJECT_NAME}
     SDL2::SDL2main
     PTSD
 )
+source_group("Headers" FILES ${HEADER_FILES})
+target_sources(${PROJECT_NAME} PRIVATE ${HEADER_FILES})

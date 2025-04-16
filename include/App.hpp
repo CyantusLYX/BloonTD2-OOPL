@@ -2,7 +2,7 @@
 #define APP_HPP
 
 #include "Util/Renderer.hpp"
-#include "manager.hpp"
+#include "core/manager.hpp"
 #include "pch.hpp" // IWYU pragma: export
 #include <memory>
 

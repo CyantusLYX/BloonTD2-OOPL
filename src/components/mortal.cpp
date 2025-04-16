@@ -1,5 +1,5 @@
-#include "mortal.hpp"
-#include "uuid.hpp"
+#include "components/mortal.hpp"
+#include "core/uuid.hpp"
 
 Mortal::Mortal() : m_uuid(Util::generate_uuid()) {}
 void Mortal::kill() {

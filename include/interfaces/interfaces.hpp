@@ -2,7 +2,7 @@
 #define INTERFACES_HPP
 #include <Util/Input.hpp>
 #include "move.hpp"
-#include "mortal.hpp"
+#include "components/mortal.hpp"
 
 namespace Interface {
 class IUpdatable {

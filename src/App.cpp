@@ -3,8 +3,9 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
-#include "shape.hpp"
-#include "test.hpp"
+#include "entities/poppers/spike.hpp"
+#include "core/shape.hpp"
+#include "test/test.hpp"
 #include <Util/Time.hpp>
 #include <cmath>
 #include <glm/fwd.hpp>
@@ -21,6 +22,7 @@ void App::Start() {
   manager->add_object(test);
   manager->add_bloon(Bloon::Type::red, 0);
   manager->set_playing();
+  //manager->add_popper(std::make_shared<spike>(Util::PTSDPosition(0, 0)));
 }
 
 void App::Update() {

@@ -1,4 +1,4 @@
-#include "shape.hpp"
+#include "core/shape.hpp"
 #include "Core/IndexBuffer.hpp"
 #include "Core/VertexBuffer.hpp"
 #include "Util/Logger.hpp"

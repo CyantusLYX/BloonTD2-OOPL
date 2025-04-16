@@ -2,15 +2,16 @@
 #define MANAGER_HPP
 
 #include "Util/Renderer.hpp"
-#include "bloon.hpp"
+#include "entities/bloon.hpp"
 #include "collapsible.hpp"
-#include "loader.hpp"
 #include "map.hpp"
-#include "mortal.hpp"
-#include "move.hpp"
+#include "components/mortal.hpp"
+#include "interfaces/move.hpp"
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include "entities/poppers/popper.hpp"
+#include "entities/poppers/spike.hpp"
 
 class Manager {
 public:
@@ -52,6 +53,7 @@ public:
   void add_bloon(Bloon::Type type, float distance);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
+  void add_popper(const std::shared_ptr<popper> &popper);
   void pop_bloon(std::shared_ptr<bloon_holder> bloon);
 
   // 遊戲狀態和流程控制
@@ -115,6 +117,7 @@ private:
   std::vector<std::shared_ptr<Collapsible>> clicks;
   std::shared_ptr<Collapsible> dragging = nullptr;
   std::vector<std::shared_ptr<bloon_holder>> bloons;
+  std::vector<std::shared_ptr<popper>> poppers;
 };
 
 #endif // MANAGER_HPP

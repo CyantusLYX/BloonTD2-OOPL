@@ -1,7 +1,7 @@
 #ifndef BLOON_HPP
 #define BLOON_HPP
 #include "collapsible.hpp"
-#include "mortal.hpp"
+#include "components/mortal.hpp"
 #include <memory>
 #include <vector>
 class Bloon final : public Collapsible, public Mortal {
