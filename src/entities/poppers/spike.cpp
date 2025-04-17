@@ -1,5 +1,6 @@
 #include "entities/poppers/spike.hpp"
 #include "Util/Image.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 spike::spike(const Util::PTSDPosition &pos)
     : popper(pos, 10.0f),
@@ -33,3 +34,26 @@ std::vector<bool> spike::hit(std::vector<std::shared_ptr<Bloon>> bloons) {
   return hit_results;
 }
 std::shared_ptr<Util::GameObject> spike::get_object() { return m_object; }
+
+void spike::onDragStart() {
+  // 開始拖曳時的處理
+  LOG_INFO("開始拖曳釘子");
+}
+
+void spike::onDrag(const Util::PTSDPosition& newPosition) {
+  // 更新釘子的位置
+  m_object->m_Transform.translation = newPosition.ToVec2();
+  m_position = newPosition;
+  // 更新碰撞檢測位置
+  CollisionComponent::setPosition(newPosition);
+  
+  LOG_INFO("釘子被拖曳到位置 ({}, {})", newPosition.x, newPosition.y);
+}
+
+void spike::onDragEnd() {
+  // 結束拖曳時的處理
+  LOG_INFO("釘子放置完成，位置: ({}, {})", m_position.x, m_position.y);
+  // 放置後不再可拖曳
+  m_draggable = false;
+}
+

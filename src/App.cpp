@@ -16,11 +16,6 @@ void App::Start() {
   LOG_TRACE("Start");
   m_CurrentState = State::UPDATE;
   manager->set_map(0);
-  auto test_drawable = std::make_shared<Util::Shape>(Util::ShapeType::Circle,
-                                                     glm::vec2(100.0f, 100.0f));
-  test_drawable->SetColorHSV(0.0f, 1.0f, 1.0f, 0.3f);
-  auto test = std::make_shared<coshader>(test_drawable, 5);
-  manager->add_object(test);
   
   manager->add_bloon(Bloon::Type::red, 0);
   manager->set_playing();
