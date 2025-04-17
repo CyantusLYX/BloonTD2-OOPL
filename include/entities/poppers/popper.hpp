@@ -13,7 +13,7 @@ class popper : public Mortal, public Components::CollisionComponent {
 protected:
   bool explosive = false;
 public:
-  popper(const Util::PTSDPosition &pos = {0, 0}, const std::variant<glm::vec2, int> &circle_r_or_rectangle_xy = 0)
+  popper(const Util::PTSDPosition &pos = {0, 0}, const std::variant<glm::vec2, float> &circle_r_or_rectangle_xy = 0.0f)
       : Components::CollisionComponent(pos, circle_r_or_rectangle_xy) {
     m_colType = circle_r_or_rectangle_xy.index() == 1 ? Interface::ColType::OVAL : Interface::ColType::RECTANGLE;}  
   bool is_explosive() const { return explosive; }

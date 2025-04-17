@@ -2,7 +2,7 @@
 #include "Util/Image.hpp"
 #include "Util/Position.hpp"
 spike::spike(const Util::PTSDPosition &pos)
-    : popper(pos, 10),
+    : popper(pos, 10.0f),
       m_object(std::make_shared<Util::GameObject>(
           std::make_shared<Util::Image>(RESOURCE_DIR "/poppers/spike.png"), 5.0f)) {
             m_object->SetVisible(true);

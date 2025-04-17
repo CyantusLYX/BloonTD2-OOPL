@@ -21,6 +21,7 @@ void App::Start() {
   test_drawable->SetColorHSV(0.0f, 1.0f, 1.0f, 0.3f);
   auto test = std::make_shared<coshader>(test_drawable, 5);
   manager->add_object(test);
+  
   manager->add_bloon(Bloon::Type::red, 0);
   manager->set_playing();
   auto first_bloon = manager->get_bloons()[0];
@@ -28,6 +29,21 @@ void App::Start() {
   auto first_spike = std::make_shared<spike>(Util::PTSDPosition(-135,4));
   //auto first_spike = std::make_shared<spike>(Util::PTSDPosition(0,0));
   manager->add_popper(first_spike);
+  auto dartMonkey = std::make_shared<DartMonkey>(Util::PTSDPosition(150, 100));
+  manager->add_tower(dartMonkey);
+  auto dartMonkey2 =
+      std::make_shared<DartMonkey>(Util::PTSDPosition(-200, 100));
+  manager->add_tower(dartMonkey2);
+  auto dartMonkey3 =
+      std::make_shared<DartMonkey>(Util::PTSDPosition(150, 0));
+  manager->add_tower(dartMonkey3);
+  auto dartMonkey4 =
+      std::make_shared<DartMonkey>(Util::PTSDPosition(150, 200));
+  manager->add_tower(dartMonkey4);
+  auto spike_at_end =
+      std::make_shared<spike>(manager->get_curr_map()->get_path()->getPositionAtPercentage(1));
+  spike_at_end->setLife(1000000);
+  manager->add_popper(spike_at_end);
 }
 
 void App::Update() {
@@ -38,6 +54,7 @@ void App::Update() {
     manager->processBloonsState();
     manager->updateAllMovingObjects();
     manager->handlePoppers();
+    manager->handleTowers();
   }
 
   // 處理輸入

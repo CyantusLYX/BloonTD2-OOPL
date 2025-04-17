@@ -5,12 +5,12 @@ namespace Components {
 
 CollisionComponent::CollisionComponent(
     const Util::PTSDPosition& position,
-    const std::variant<glm::vec2, int>& colParam
+    const std::variant<glm::vec2, float>& colParam
 ) : m_colParam(colParam), m_position(position) {
     m_colType = colParam.index() == 0 ? Interface::ColType::RECTANGLE : Interface::ColType::OVAL;
 }
     
-void CollisionComponent::setColParam(const std::variant<glm::vec2, int>& colParam) {
+void CollisionComponent::setColParam(const std::variant<glm::vec2, float>& colParam) {
     if (m_colParam.index() == colParam.index())
         this->m_colParam = colParam;
 }
@@ -30,7 +30,7 @@ bool CollisionComponent::recToOval(const CollisionComponent& rec, const Collisio
             rec.getPosition().y - recSize.y / 2
         };
         glm::vec2 c = oval.getPosition().ToVec2();
-        int cr = std::get<int>(oval.getColParam());
+        int cr = std::get<float>(oval.getColParam());
         float min_x = std::min(std::fabs(dl.x - c.x), std::fabs(ur.x - c.x));
         float min_y = std::min(std::fabs(dl.y - c.y), std::fabs(ur.y - c.y));
         return min_x * min_x + min_y * min_y < cr * cr ||
@@ -59,8 +59,8 @@ bool CollisionComponent::ovalToOval(const CollisionComponent& oval1, const Colli
     if (oval1.getColType() !=Interface::ColType::OVAL || oval2.getColType() !=Interface::ColType::OVAL) {
         throw std::invalid_argument("err on CollisionComponent::ovalToOval");
     } else {
-        int r1 = std::get<int>(oval1.getColParam());
-        int r2 = std::get<int>(oval2.getColParam());
+        int r1 = std::get<float>(oval1.getColParam());
+        int r2 = std::get<float>(oval2.getColParam());
         
         return (pow(oval1.getPosition().x - oval2.getPosition().x, 2) +
                 pow(oval1.getPosition().y - oval2.getPosition().y, 2)) <
@@ -108,7 +108,7 @@ bool CollisionComponent::isCollide(const I_collider& other) const {
 bool CollisionComponent::isCollide(const Util::PTSDPosition& point) const {
     switch (m_colType) {
         case Interface::ColType::OVAL: {
-            int radius = std::get<int>(m_colParam);
+            int radius = std::get<float>(m_colParam);
             return (pow(point.x - m_position.x, 2) + pow(point.y - m_position.y, 2)) < pow(radius, 2);
         }
         

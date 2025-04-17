@@ -7,7 +7,7 @@
 
 Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
     : Util::GameObject(nullptr, 10, {0,0}, true),
-      Components::CollisionComponent(pos, static_cast<int>(10)), // Initialize base class
+      Components::CollisionComponent(pos, static_cast<float>(10)), // Initialize base class
       m_Type(type), m_State(State::alive) {
   m_Transform.translation = pos.ToVec2();
   switch (type) {
@@ -64,7 +64,7 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
       ".png");
   
   // 建立圓形碰撞組件
-  int radius = static_cast<int>(m_Drawable->GetSize().x / 2);
+  float radius = static_cast<float>(m_Drawable->GetSize().x / 2);
   m_collisionComponent = std::make_shared<Components::CollisionComponent>(pos, radius);
 }
 

@@ -11,14 +11,14 @@ namespace Components {
 
 class CollisionComponent : public Interface::I_collider {
 protected:
-    std::variant<glm::vec2, int> m_colParam;
+    std::variant<glm::vec2, float> m_colParam;  // 從 int 改為 float
     Interface::ColType m_colType;
     Util::PTSDPosition m_position;
 
 public:
     CollisionComponent(
         const Util::PTSDPosition& position,
-        const std::variant<glm::vec2, int>& colParam
+        const std::variant<glm::vec2, float>& colParam  // 從 int 改為 float
     );
     ~CollisionComponent() override = default;
 
@@ -30,8 +30,8 @@ public:
     virtual Util::PTSDPosition getPosition() const override { return m_position; }
     virtual void setPosition(const Util::PTSDPosition& position) override { m_position = position; }
     
-    const std::variant<glm::vec2, int>& getColParam() const override { return m_colParam; }
-    void setColParam(const std::variant<glm::vec2, int>& colParam) override;
+    const std::variant<glm::vec2, float>& getColParam() const override { return m_colParam; }  // 從 int 改為 float
+    void setColParam(const std::variant<glm::vec2, float>& colParam) override;  // 從 int 改為 float
     
     // 碰撞檢測輔助方法
     static bool recToOval(const CollisionComponent& rec, const CollisionComponent& oval);

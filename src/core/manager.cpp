@@ -279,9 +279,9 @@ void Manager::handlePoppers() {
       for (auto &holder : bloons) {
         auto bloon = holder->get_bloon();
 
-        LOG_INFO("Checking collision with bloon at {}, {} ,{},{}",
+        /* LOG_INFO("Checking collision with bloon at {}, {} ,{},{}",
                  bloon->getPosition().x, bloon->getPosition().y,
-                 popper->getPosition().x, popper->getPosition().y);
+                 popper->getPosition().x, popper->getPosition().y); */
         // 使用氣球的碰撞檢測與 popper 的位置進行碰撞檢測
         if (bloon->isCollide(popper->get_position())) {
           collided_bloons.push_back(bloon);
@@ -356,6 +356,60 @@ void Manager::cleanup_dead_objects() {
   cleanup_container(clickables, [](const auto &clickable) {
     return std::dynamic_pointer_cast<Mortal>(clickable);
   });
+}
+
+void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
+  // 設置回調函數，讓塔可以創建飛鏢
+  tower->setPopperCallback([this](std::shared_ptr<popper> p) {
+      this->add_popper(p);
+      auto move_popper = std::dynamic_pointer_cast<Interface::I_move>(p);
+      if (move_popper) {
+          this->add_moving(move_popper);
+      }
+  });
+  
+  // 將塔加入容器
+  tower->setPath(current_path);
+  towers.push_back(tower);
+  
+  // 將塔的視覺元素加入渲染器
+  if (auto body = tower->getBody()) {
+      m_Renderer->AddChild(body);
+  }
+  if (auto range = tower->getRange()) {
+      m_Renderer->AddChild(range);
+  }
+}
+
+void Manager::handleTowers() {
+  for (auto &tower : towers) {
+      // 塔的碰撞組件
+      auto towerCollider = tower->getCollisionComponent();
+      if (!towerCollider) continue;
+      
+      // 收集在射程內的氣球和距離
+      std::vector<std::shared_ptr<Bloon>> bloonsInRange;
+      std::vector<float> distancesInRange;
+      
+      for (auto &holder : bloons) {
+          auto bloon = holder->get_bloon();
+          
+          // 檢查氣球是否在塔的射程內
+          bool collision = false;
+          auto bloonCollider = std::dynamic_pointer_cast<Interface::I_collider>(bloon);
+          if (bloonCollider) {
+              collision = towerCollider->isCollide(*bloonCollider);
+          }
+          
+          if (collision) {
+              bloonsInRange.push_back(bloon);
+              distancesInRange.push_back(holder->get_distance());
+          }
+      }
+      
+      // 讓塔處理射程內的氣球
+      tower->handleBloonsInRange(bloonsInRange, distancesInRange);
+  }
 }
 
 // 流程相關

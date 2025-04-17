@@ -25,8 +25,8 @@ public:
     virtual void setPosition(const Util::PTSDPosition& position) = 0;
     
     // 獲取碰撞參數
-    virtual const std::variant<glm::vec2, int>& getColParam() const = 0;
-    virtual void setColParam(const std::variant<glm::vec2, int>& colParam) = 0;
+virtual const std::variant<glm::vec2, float>& getColParam() const = 0;
+virtual void setColParam(const std::variant<glm::vec2, float>& colParam) = 0;
 };
 
 } // namespace Components
