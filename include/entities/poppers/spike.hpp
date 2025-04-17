@@ -9,7 +9,7 @@
 class spike : public popper {
 private:
   std::shared_ptr<Util::GameObject> m_object;
-  int life = 10;
+  int life = 100;
 
 public:
   spike(const Util::PTSDPosition &pos);
