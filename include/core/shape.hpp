@@ -17,7 +17,7 @@ class Shape : public Core::Drawable {
 public:
   // 建構函數
   Shape(ShapeType type, const glm::vec2 &size,
-        const Color &color = Color::FromName(Colors::WHITE));
+        const Util::Color &color = Color::FromName(Colors::WHITE));
   virtual ~Shape() = default;
 
   // 顏色設置方法 - 提供多種便捷方式設置顏色

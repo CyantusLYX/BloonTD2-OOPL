@@ -19,6 +19,7 @@ std::unique_ptr<Core::VertexArray> Shape::s_LineVA = nullptr;
 Shape::Shape(ShapeType type, const glm::vec2 &size, const Color &color)
     : m_Type(type), m_Size(size), m_Color(color), m_HasOutline(false),
       m_OutlineWidth(1.0f) {
+        LOG_INFO("shapeconstr");
   // 初始化著色器程序（如果尚未初始化）
   if (s_Program == nullptr) {
     InitializeShaders();
@@ -143,6 +144,31 @@ void Shape::InitializeShaders() {
     LOG_ERROR("Failed to create shape shader program");
   }
 }
+
+// void Shape::InitializeShaders() {
+//   try {
+//     s_Program = std::make_unique<Core::Program>(
+//         RESOURCE_DIR "/shaders/shape.vert",
+//         RESOURCE_DIR "/shaders/shape.frag");
+
+//     if (!s_Program) {
+//       LOG_ERROR("Failed to create Core::Program (nullptr).");
+//       return;
+//     }
+
+//     if (!s_Program->Validate()) {
+//       LOG_ERROR("Shader program validation failed!");
+//       s_Program.reset();  // 避免後續解引用
+//       return;
+//     }
+
+//     LOG_INFO("Shader program initialized and validated successfully.");
+
+//   } catch (const std::exception& e) {
+//     LOG_ERROR("Exception during shader init: {}", e.what());
+//     s_Program = nullptr;
+//   }
+// }
 
 void Shape::InitializeVertexArrays() {
   InitializeRectangle();

@@ -16,6 +16,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+bool toggle = 0;
 
 // 座標轉換輔助函數
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
@@ -61,6 +62,13 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
                               std::make_shared<Path>(paths[i], 40), false);
     this->add_map(map);
   }
+
+  // Add spike button to the top-right corner with adjusted position
+  auto spike_button = std::make_shared<Button>(
+      "spike", Util::PTSDPosition(280, 200), 50.0f, true); // Adjusted position to be visible
+  LOG_INFO("Adding spike button at visible top-right corner");
+  this->add_button(spike_button);
+  this->add_clickable(spike_button);  
 }
 
 // 地圖管理相關函數
@@ -116,6 +124,12 @@ void Manager::add_bloon(Bloon::Type type, float distance) {
   bloons.push_back(bloon_holder);
 }
 
+void Manager::add_button(const std::shared_ptr<Button> &button) {
+  buttons.push_back(button);
+  
+  m_Renderer->AddChild(button);  // 將按鈕加入渲染器
+}
+
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   bloon->get_bloon()->SetVisible(false);
 
@@ -148,81 +162,55 @@ void Manager::add_popper(const std::shared_ptr<popper> &popper) {
   }
 }
 
-// 拖曳相關函數
-void Manager::set_dragging(
-    const std::shared_ptr<Interface::I_draggable> &draggable) {
-  if (m_mouse_status == mouse_status::free) {
-    LOG_INFO("start dragging");
-    this->dragging = draggable;
-    m_mouse_status = mouse_status::drag;
-    // 通知物件開始拖曳
-    if (dragging) {
-      dragging->onDragStart();
+// 新增: 創建可拖曳的釘子
+void Manager::createDraggableSpike(const Util::PTSDPosition &position) {
+  // 創建一個釘子
+  auto new_spike = std::make_shared<spike>(position);
+  new_spike->setDraggable(true); // 設置為可拖曳
+  
+  // 加入管理器
+  add_popper(new_spike);
+  
+  // 設置為當前拖曳物件
+  set_dragging(std::static_pointer_cast<Interface::I_draggable>(new_spike));
+  
+  LOG_INFO("創建一個可拖曳的釘子在位置 ({}, {})", position.x, position.y);
+}
+
+// 修改按鈕點擊處理
+void Manager::handleButtonClicks(const Util::PTSDPosition &cursor_position) {
+  for (auto &button : buttons) {
+    if (button->isClickable() && button->isCollide(cursor_position)) {
+      button->onClick();
+      
+      // 根據按鈕名稱執行特定操作
+      if (button->getName() == "spike") {
+        createDraggableSpike(cursor_position);
+      }
+      
+      LOG_INFO("按鈕 %s 被點擊了", button->getName().c_str());
+      break;
     }
   }
 }
 
-/**
- * @brief 結束拖曳狀態
- */
-void Manager::end_dragging() {
-  if (m_mouse_status == mouse_status::drag) {
-    LOG_INFO("ender dragoned");
-    // 通知物件結束拖曳
-    if (dragging) {
-      dragging->onDragEnd();
-    }
-    dragging = nullptr;
-    m_mouse_status = mouse_status::free;
-  }
-}
-
-// 更新被拖曳的物件
-void Manager::updateDraggingObject(const Util::PTSDPosition &cursor_position) {
-  if (m_mouse_status == mouse_status::drag && dragging != nullptr) {
-    dragging->onDrag(cursor_position);
-  }
-}
-
-// 處理氣球狀態
-void Manager::processBloonsState() {
-  std::vector<std::shared_ptr<bloon_holder>> popped_bloons;
-
-  for (auto &bloon : bloons) {
-    if (bloon->get_bloon()->GetState() == Bloon::State::pop) {
-      popped_bloons.push_back(bloon);
-    }
-  }
-
-  // 在迴圈外處理爆炸，避免迭代器失效
-  for (auto &bloon : popped_bloons) {
-    pop_bloon(bloon);
-  }
-
-  // 清理已死亡的物件
-}
-
-// 更新所有移動物件
-void Manager::updateAllMovingObjects() {
-  for (auto &move : movings) {
-    move->move();
-  }
-}
-
-// 處理點擊事件
+// 修改點擊處理，確保第二次點擊時固定位置
 void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
-  static bool drag_cooldown = false; // 將 drag_cd 移入 Manager
-
+  static bool drag_cooldown = false;
+  
   // 重置冷卻
   drag_cooldown = false;
-
-  // 如果正在拖曳，則結束拖曳
-  if (m_mouse_status == mouse_status::drag && !drag_cooldown) {
+  
+  // 如果正在拖曳，則結束拖曳 (第二次點擊時)
+  if (m_mouse_status == mouse_status::drag) {
+    if (dragging) {
+      // 更新最後位置為點擊位置
+      dragging->onDrag(cursor_position);
+    }
     end_dragging();
-    drag_cooldown = true;
     return;
   }
-
+  
   // 檢查是否點擊了可互動物件
   for (auto &clickable : clickables) {
     // 跳過不可點擊或已在冷卻的物件
@@ -278,10 +266,10 @@ void Manager::handlePoppers() {
       // 檢查所有氣球是否與 popper 碰撞
       for (auto &holder : bloons) {
         auto bloon = holder->get_bloon();
-
-        /* LOG_INFO("Checking collision with bloon at {}, {} ,{},{}",
+        if(toggle)
+        LOG_INFO("Checking collision with bloon at ({},{}) , ({},{})",
                  bloon->getPosition().x, bloon->getPosition().y,
-                 popper->getPosition().x, popper->getPosition().y); */
+                 popper->getPosition().x, popper->getPosition().y); 
         // 使用氣球的碰撞檢測與 popper 的位置進行碰撞檢測
         if (bloon->isCollide(popper->get_position())) {
           collided_bloons.push_back(bloon);
@@ -498,4 +486,60 @@ void Manager::bloon_holder::move() {
     return;
   distance += m_bloon->GetSpeed();
   m_bloon->setPosition(next_position(0));
+}
+
+// 設定拖曳物件
+void Manager::set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable) {
+  if (m_mouse_status == mouse_status::free) {
+    LOG_INFO("開始拖曳物件");
+    this->dragging = draggable;
+    m_mouse_status = mouse_status::drag;
+    // 通知物件開始拖曳
+    if (dragging) {
+      dragging->onDragStart();
+    }
+  }
+}
+
+// 結束拖曳狀態
+void Manager::end_dragging() {
+  if (m_mouse_status == mouse_status::drag) {
+    LOG_INFO("結束拖曳物件");
+    // 通知物件結束拖曳
+    if (dragging) {
+      dragging->onDragEnd();
+    }
+    dragging = nullptr;
+    m_mouse_status = mouse_status::free;
+  }
+}
+
+// 更新被拖曳的物件
+void Manager::updateDraggingObject(const Util::PTSDPosition &cursor_position) {
+  if (m_mouse_status == mouse_status::drag && dragging != nullptr) {
+    dragging->onDrag(cursor_position);
+  }
+}
+
+// 處理氣球狀態
+void Manager::processBloonsState() {
+  std::vector<std::shared_ptr<bloon_holder>> popped_bloons;
+
+  for (auto &bloon : bloons) {
+    if (bloon->get_bloon()->GetState() == Bloon::State::pop) {
+      popped_bloons.push_back(bloon);
+    }
+  }
+
+  // 在迴圈外處理爆炸，避免迭代器失效
+  for (auto &bloon : popped_bloons) {
+    pop_bloon(bloon);
+  }
+}
+
+// 更新所有移動物件
+void Manager::updateAllMovingObjects() {
+  for (auto &move : movings) {
+    move->move();
+  }
 }

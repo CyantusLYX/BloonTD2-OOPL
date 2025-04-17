@@ -15,6 +15,7 @@
 #include <vector>
 #include "entities/poppers/popper.hpp"
 #include "entities/poppers/spike.hpp"
+#include "UI/button.hpp"
 #include "entities/tower/all_tower.hpp"
 
 class Manager {
@@ -60,7 +61,12 @@ public:
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
+  void add_button(const std::shared_ptr<Button> &button);
   void pop_bloon(std::shared_ptr<bloon_holder> bloon);
+  void handleButtonClicks(const Util::PTSDPosition &cursor_position);
+
+  // 新增: 創建可拖曳的釘子
+  void createDraggableSpike(const Util::PTSDPosition &position);
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
 
   // 遊戲狀態和流程控制
@@ -126,6 +132,7 @@ private:
   std::shared_ptr<Interface::I_draggable> dragging = nullptr;
   std::vector<std::shared_ptr<bloon_holder>> bloons;
   std::vector<std::shared_ptr<popper>> poppers;
+  std::vector<std::shared_ptr<Button>> buttons;
   std::vector<std::shared_ptr<Tower::Tower>> towers;
 };
 

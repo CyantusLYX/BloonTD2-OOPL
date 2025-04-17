@@ -1,7 +1,6 @@
 #ifndef COLLISIONCOMP_HPP
 #define COLLISIONCOMP_HPP
 
-#include "Util/GameObject.hpp"
 #include "interfaces/collision.hpp"
 #include "Util/Position.hpp"
 #include <variant>
