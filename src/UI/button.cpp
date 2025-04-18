@@ -35,15 +35,15 @@ Button::Button(const std::string &name, const Util::PTSDPosition &pos,
 
 void Button::onClick() {
   // 只做簡單的日誌記錄，具體功能由 Manager 處理
-  LOG_INFO("按鈕 %s 被點擊", name.c_str());
+  LOG_INFO("BUTTON: button " + name + " onClick");
 }
 
-void Button::onFocus() { LOG_INFO("button %s onFokus", name); }
+void Button::onFocus() { LOG_INFO("BUTTON:" + name + " onFokus"); }
 
 bool Button::isClickable() const { return m_State != State::non_clickable; }
 
 void Button::setClickable(bool clickable) {
   m_State = clickable ? State::clickable : State::non_clickable;  // 修正連字符為下劃線
-  LOG_INFO("button %s set to %s", name.c_str(),  // 加入 c_str() 確保格式正確
+  LOG_INFO("BUTTON: {} set to {}", name.c_str(),  // 加入 c_str() 確保格式正確
            clickable ? "clickable" : "non-clickable");
 }

@@ -1,3 +1,4 @@
+#include "Util/Logger.hpp"
 #include "entities/bloon.hpp"
 #include "core/loader.hpp"
 #include <fstream>
@@ -26,6 +27,7 @@ std::vector<Bloon::Type> load_bloons(int wave) {
     for (const auto &level : root) {
       if (level["level"] == wave) {
         found = true;
+        LOG_INFO("LODR  : level {}", wave);
 
         // 取得該關卡的所有氣球類型
         const auto &bloons = level["bloons"];
@@ -59,7 +61,7 @@ std::vector<Bloon::Type> load_bloons(int wave) {
             result.push_back(Bloon::Type::rainbow);
             break;
           default:
-            std::cerr << "未知的氣球類型: " << type_num << std::endl;
+            std::cerr << "LODR  : 未知的氣球類型: " << type_num << std::endl;
             break;
           }
         }
@@ -69,10 +71,10 @@ std::vector<Bloon::Type> load_bloons(int wave) {
     }
 
     if (!found) {
-      std::cerr << "未找到關卡 " << wave << " 的資料！" << std::endl;
+      std::cerr << "LODR  : 未找到關卡 " << wave << " 的資料！" << std::endl;
     }
   } catch (const nlohmann::json::exception &e) {
-    std::cerr << "解析 JSON 檔案失敗: " << e.what() << std::endl;
+    std::cerr << "LODR  : 解析 JSON 檔案失敗: " << e.what() << std::endl;
   }
 
   return result;

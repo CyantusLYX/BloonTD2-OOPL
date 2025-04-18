@@ -22,6 +22,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(ptsd)
 
+FetchContent_Declare(
+    magic_enum
+
+    #URL         https://github.com/ntut-open-source-club/practical-tools-for-simple-design/archive/refs/tags/v0.2.zip
+
+    # Or alternatively if you want to use a specific git commit instead of a release:
+    GIT_REPOSITORY  https://github.com/Neargye/magic_enum.git
+    GIT_TAG         master
+)
+FetchContent_MakeAvailable(magic_enum)
+
 
 include(files.cmake)
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
@@ -58,6 +69,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i
 target_link_libraries(${PROJECT_NAME}
     SDL2::SDL2main
     PTSD
+    magic_enum
 )
 source_group("Headers" FILES ${HEADER_FILES})
 target_sources(${PROJECT_NAME} PRIVATE ${HEADER_FILES})

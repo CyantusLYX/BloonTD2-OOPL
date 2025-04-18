@@ -54,7 +54,7 @@ void App::Update() {
 
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
-    LOG_INFO("Mouse Left Button Pressed");
+    LOG_INFO("MOUSE : Left Button Pressed");
     manager->handleClickAt(Util::Input::GetCursorPosition());
   }
 

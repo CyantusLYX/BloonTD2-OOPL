@@ -3,9 +3,11 @@
 #include "Util/Time.hpp"
 #include "entities/tower/tower.hpp"
 
-DartMonkey::DartMonkey(const Util::PTSDPosition &position,float range) {
+DartMonkey::DartMonkey(const Util::PTSDPosition &position,float range): m_collision(Components::CollisionComponent(
+  position, range)) {
   m_type = ::Tower::TowerType::dart;
   m_state = ::Tower::TowerState::ready;
+  
 
   // 創建塔身
   m_body = std::make_shared<::Tower::Body>(
@@ -82,4 +84,7 @@ float timeToTarget = distance / dartSpeed;
     m_popperCallback(dart);
     m_state = ::Tower::TowerState::ready;
   }
+
+  //dragging
+    
 }

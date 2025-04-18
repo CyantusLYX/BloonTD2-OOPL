@@ -19,7 +19,7 @@ std::unique_ptr<Core::VertexArray> Shape::s_LineVA = nullptr;
 Shape::Shape(ShapeType type, const glm::vec2 &size, const Color &color)
     : m_Type(type), m_Size(size), m_Color(color), m_HasOutline(false),
       m_OutlineWidth(1.0f) {
-        LOG_INFO("shapeconstr");
+        LOG_INFO("SHAPE : shapeconstr");
   // 初始化著色器程序（如果尚未初始化）
   if (s_Program == nullptr) {
     InitializeShaders();
@@ -91,18 +91,18 @@ void Shape::Draw(const Core::Matrices &data) {
   s_Program->Bind();
 
   // 設置顏色和透明度 uniform - 使用 Color 的原始值
-  GLint colorLoc = glGetUniformLocation(s_Program->GetId(), "shapeColor");
+  GLint colorLoc = glGetUniformLocation(s_Program->GetId(), "SHAPE : shapeColor");
   glUniform4f(colorLoc,
               m_Color.r / 255.0f, // 將 Color 的 0-255 範圍轉換為 GL 的 0-1 範圍
               m_Color.g / 255.0f, m_Color.b / 255.0f, m_Color.a / 255.0f);
 
   // 設置是否有邊框的 uniform
-  GLint outlineLoc = glGetUniformLocation(s_Program->GetId(), "hasOutline");
+  GLint outlineLoc = glGetUniformLocation(s_Program->GetId(), "SHAPE : hasOutline");
   glUniform1i(outlineLoc, m_HasOutline ? 1 : 0);
 
   // 設置邊框寬度的 uniform
   GLint outlineWidthLoc =
-      glGetUniformLocation(s_Program->GetId(), "outlineWidth");
+      glGetUniformLocation(s_Program->GetId(), "SHAPE : outlineWidth");
   glUniform1f(outlineWidthLoc, m_OutlineWidth);
 
   // 根據形狀類型選擇合適的頂點陣列
@@ -124,7 +124,7 @@ void Shape::Draw(const Core::Matrices &data) {
     va = s_LineVA.get();
     break;
   default:
-    LOG_ERROR("Unknown shape type");
+    LOG_ERROR("SHAPE : Unknown shape type");
     return;
   }
 
@@ -141,7 +141,7 @@ void Shape::InitializeShaders() {
       RESOURCE_DIR "/shaders/shape.vert", RESOURCE_DIR "/shaders/shape.frag");
 
   if (!s_Program) {
-    LOG_ERROR("Failed to create shape shader program");
+    LOG_ERROR("SHAPE : Failed to create shape shader program");
   }
 }
 

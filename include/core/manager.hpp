@@ -1,7 +1,9 @@
 #ifndef MANAGER_HPP
 #define MANAGER_HPP
 
+#include "Util/Color.hpp"
 #include "Util/Renderer.hpp"
+#include "Util/Text.hpp"
 #include "entities/bloon.hpp"
 // 替換 Collapsible 引用
 #include "components/collisionComp.hpp"
@@ -79,6 +81,7 @@ public:
   void wave_check();
   void add_map(const std::shared_ptr<Map> &map);
   void update();
+  std::shared_ptr<Util::GameObject> m_waveText;
 
   // 點擊和拖曳相關
   void add_clickable(const std::shared_ptr<Interface::I_clickable> &clickable) {

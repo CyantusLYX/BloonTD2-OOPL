@@ -1,8 +1,10 @@
 #include "core/manager.hpp"
+#include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
+#include "Util/Text.hpp"
 #include "components/collisionComp.hpp"
 #include "core/loader.hpp"
 #include "entities/bloon.hpp"
@@ -16,7 +18,11 @@
 #include <memory>
 #include <random>
 #include <vector>
-bool toggle = 0;
+
+#include <magic_enum/magic_enum.hpp>
+
+bool toggle_show_collision_at = 1;
+bool toggle_show_bloons = 1;
 
 // 座標轉換輔助函數
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
@@ -64,11 +70,16 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   }
 
   // Add spike button to the top-right corner with adjusted position
-  auto spike_button = std::make_shared<Button>(
-      "spike", Util::PTSDPosition(280, 200), 50.0f, true); // Adjusted position to be visible
-  LOG_INFO("Adding spike button at visible top-right corner");
+  auto spike_button =
+      std::make_shared<Button>("spike", Util::PTSDPosition(280, 200), 50.0f,
+                               true); // Adjusted position to be visible
+  LOG_INFO("MNGR  : Adding spike button at visible top-right corner");
   this->add_button(spike_button);
-  this->add_clickable(spike_button);  
+  this->add_clickable(spike_button);
+
+  //m_waveText->SetDrawable(nullptr);//std::make_shared<Util::Text>(
+  //    Util::Text("/usr/share/fonts/gsfonts/C059-Roman.otf", 20, "0", Util::Color(255, 255, 255), false)));
+  //m_Renderer->AddChild(m_waveText);
 }
 
 // 地圖管理相關函數
@@ -79,7 +90,7 @@ void Manager::add_map(const std::shared_ptr<Map> &map) {
 
 void Manager::set_map(int diff) {
   if (diff != 0 && diff != 1 && diff != 2) {
-    LOG_ERROR("Invalid map diff");
+    LOG_ERROR("MNGR  : Invalid map diff");
     return;
   }
   for (auto &map : maps) {
@@ -126,12 +137,15 @@ void Manager::add_bloon(Bloon::Type type, float distance) {
 
 void Manager::add_button(const std::shared_ptr<Button> &button) {
   buttons.push_back(button);
-  
-  m_Renderer->AddChild(button);  // 將按鈕加入渲染器
+
+  m_Renderer->AddChild(button); // 將按鈕加入渲染器
 }
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   bloon->get_bloon()->SetVisible(false);
+  if (toggle_show_bloons)
+    LOG_INFO("MNGR  : Pop bloon {}",
+             std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())));
 
   // 產生一個不重複的 1~4 順序
   std::vector<int> values = {1, 2, 3, 4};
@@ -142,6 +156,11 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   auto sub_bloons = bloon->get_bloon()->GetChildBloons();
   for (size_t i = 0; i < sub_bloons.size() && i < values.size(); ++i) {
     float distance = bloon->get_distance() - values[i] * 5;
+    if (toggle_show_bloons)
+      LOG_INFO(
+          "MNGR  : Gen bloon {} at distance {}",
+          std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())),
+          distance);
     this->add_bloon(*sub_bloons[i], distance);
   }
 
@@ -167,28 +186,30 @@ void Manager::createDraggableSpike(const Util::PTSDPosition &position) {
   // 創建一個釘子
   auto new_spike = std::make_shared<spike>(position);
   new_spike->setDraggable(true); // 設置為可拖曳
-  
+
   // 加入管理器
   add_popper(new_spike);
-  
+
   // 設置為當前拖曳物件
   set_dragging(std::static_pointer_cast<Interface::I_draggable>(new_spike));
-  
-  LOG_INFO("創建一個可拖曳的釘子在位置 ({}, {})", position.x, position.y);
+
+  LOG_DEBUG("MNGR  : 創建一個可拖曳的釘子在位置 ({}, {})", position.x,
+            position.y);
 }
 
 // 修改按鈕點擊處理
+// wtbi
 void Manager::handleButtonClicks(const Util::PTSDPosition &cursor_position) {
   for (auto &button : buttons) {
     if (button->isClickable() && button->isCollide(cursor_position)) {
       button->onClick();
-      
+
       // 根據按鈕名稱執行特定操作
       if (button->getName() == "spike") {
         createDraggableSpike(cursor_position);
       }
-      
-      LOG_INFO("按鈕 %s 被點擊了", button->getName().c_str());
+
+      LOG_INFO("MNGR  : 按鈕 {} 被點擊了", button->getName().c_str());
       break;
     }
   }
@@ -197,10 +218,10 @@ void Manager::handleButtonClicks(const Util::PTSDPosition &cursor_position) {
 // 修改點擊處理，確保第二次點擊時固定位置
 void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
   static bool drag_cooldown = false;
-  
+
   // 重置冷卻
   drag_cooldown = false;
-  
+
   // 如果正在拖曳，則結束拖曳 (第二次點擊時)
   if (m_mouse_status == mouse_status::drag) {
     if (dragging) {
@@ -210,14 +231,15 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
     end_dragging();
     return;
   }
-  
+
   // 檢查是否點擊了可互動物件
   for (auto &clickable : clickables) {
     // 跳過不可點擊或已在冷卻的物件
     if (!(clickable->isClickable() && !drag_cooldown)) {
       continue;
     }
-    LOG_INFO("clickable");
+    if (toggle_show_collision_at)
+      LOG_DEBUG("MNGR  : clickable");
     // 獲取具有碰撞功能的 GameObject
     /* auto gameObject = std::dynamic_pointer_cast<Util::GameObject>(clickable);
     if (!gameObject)
@@ -235,7 +257,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
     if (isCollided) {
       // 處理可拖曳物件
-      LOG_INFO("clicked");
+      LOG_DEBUG("MNGR  : clicked");
       auto draggable =
           std::dynamic_pointer_cast<Interface::I_draggable>(clickable);
       if (draggable && draggable->isDraggable() &&
@@ -247,7 +269,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
       // 處理點擊事件
       if (clickable->isClickable()) {
         clickable->onClick();
-        LOG_INFO("Clicked");
+        LOG_DEBUG("MNGR  : Clicked");
       }
       break;
     }
@@ -266,10 +288,11 @@ void Manager::handlePoppers() {
       // 檢查所有氣球是否與 popper 碰撞
       for (auto &holder : bloons) {
         auto bloon = holder->get_bloon();
-        if(toggle)
-        LOG_INFO("Checking collision with bloon at ({},{}) , ({},{})",
-                 bloon->getPosition().x, bloon->getPosition().y,
-                 popper->getPosition().x, popper->getPosition().y); 
+        if (toggle_show_collision_at)
+          LOG_DEBUG(
+              "MNGR  : Checking collision with bloon at ({},{}) , ({},{})",
+              bloon->getPosition().x, bloon->getPosition().y,
+              popper->getPosition().x, popper->getPosition().y);
         // 使用氣球的碰撞檢測與 popper 的位置進行碰撞檢測
         if (bloon->isCollide(popper->get_position())) {
           collided_bloons.push_back(bloon);
@@ -289,8 +312,8 @@ void Manager::handlePoppers() {
           }
         }
       }
-      if(popper->is_dead()) {
-        //popper->get_object()->SetVisible(false);
+      if (popper->is_dead()) {
+        // popper->get_object()->SetVisible(false);
         m_Renderer->RemoveChild(popper->get_object());
       }
     }
@@ -349,54 +372,56 @@ void Manager::cleanup_dead_objects() {
 void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
   // 設置回調函數，讓塔可以創建飛鏢
   tower->setPopperCallback([this](std::shared_ptr<popper> p) {
-      this->add_popper(p);
-      auto move_popper = std::dynamic_pointer_cast<Interface::I_move>(p);
-      if (move_popper) {
-          this->add_moving(move_popper);
-      }
+    this->add_popper(p);
+    auto move_popper = std::dynamic_pointer_cast<Interface::I_move>(p);
+    if (move_popper) {
+      this->add_moving(move_popper);
+    }
   });
-  
+
   // 將塔加入容器
   tower->setPath(current_path);
   towers.push_back(tower);
-  
+
   // 將塔的視覺元素加入渲染器
   if (auto body = tower->getBody()) {
-      m_Renderer->AddChild(body);
+    m_Renderer->AddChild(body);
   }
   if (auto range = tower->getRange()) {
-      m_Renderer->AddChild(range);
+    m_Renderer->AddChild(range);
   }
 }
 
 void Manager::handleTowers() {
   for (auto &tower : towers) {
-      // 塔的碰撞組件
-      auto towerCollider = tower->getCollisionComponent();
-      if (!towerCollider) continue;
-      
-      // 收集在射程內的氣球和距離
-      std::vector<std::shared_ptr<Bloon>> bloonsInRange;
-      std::vector<float> distancesInRange;
-      
-      for (auto &holder : bloons) {
-          auto bloon = holder->get_bloon();
-          
-          // 檢查氣球是否在塔的射程內
-          bool collision = false;
-          auto bloonCollider = std::dynamic_pointer_cast<Interface::I_collider>(bloon);
-          if (bloonCollider) {
-              collision = towerCollider->isCollide(*bloonCollider);
-          }
-          
-          if (collision) {
-              bloonsInRange.push_back(bloon);
-              distancesInRange.push_back(holder->get_distance());
-          }
+    // 塔的碰撞組件
+    auto towerCollider = tower->getCollisionComponent();
+    if (!towerCollider)
+      continue;
+
+    // 收集在射程內的氣球和距離
+    std::vector<std::shared_ptr<Bloon>> bloonsInRange;
+    std::vector<float> distancesInRange;
+
+    for (auto &holder : bloons) {
+      auto bloon = holder->get_bloon();
+
+      // 檢查氣球是否在塔的射程內
+      bool collision = false;
+      auto bloonCollider =
+          std::dynamic_pointer_cast<Interface::I_collider>(bloon);
+      if (bloonCollider) {
+        collision = towerCollider->isCollide(*bloonCollider);
       }
-      
-      // 讓塔處理射程內的氣球
-      tower->handleBloonsInRange(bloonsInRange, distancesInRange);
+
+      if (collision) {
+        bloonsInRange.push_back(bloon);
+        distancesInRange.push_back(holder->get_distance());
+      }
+    }
+
+    // 讓塔處理射程內的氣球
+    tower->handleBloonsInRange(bloonsInRange, distancesInRange);
   }
 }
 
@@ -414,9 +439,16 @@ void Manager::next_wave() {
     set_menu();
     current_waves = -1;
   } else {
-    LOG_ERROR("Invalid game state");
+    LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
+
+  if (current_waves >= 0) {
+    auto textComponent = std::dynamic_pointer_cast<Util::Text>(m_waveText);
+    if (textComponent) {
+        textComponent->SetText(std::to_string(current_waves));
+    }
+}
   start_wave();
 }
 
@@ -425,7 +457,7 @@ void Manager::start_wave() {
       (current_waves != -1 || current_waves <= 50)) {
     set_playing();
   } else {
-    LOG_ERROR("Invalid game state");
+    LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
   // start generate bloons
@@ -489,9 +521,10 @@ void Manager::bloon_holder::move() {
 }
 
 // 設定拖曳物件
-void Manager::set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable) {
+void Manager::set_dragging(
+    const std::shared_ptr<Interface::I_draggable> &draggable) {
   if (m_mouse_status == mouse_status::free) {
-    LOG_INFO("開始拖曳物件");
+    LOG_DEBUG("MNGR  : dragging start");
     this->dragging = draggable;
     m_mouse_status = mouse_status::drag;
     // 通知物件開始拖曳
@@ -504,7 +537,7 @@ void Manager::set_dragging(const std::shared_ptr<Interface::I_draggable> &dragga
 // 結束拖曳狀態
 void Manager::end_dragging() {
   if (m_mouse_status == mouse_status::drag) {
-    LOG_INFO("結束拖曳物件");
+    LOG_DEBUG("MNGR  : dragging end");
     // 通知物件結束拖曳
     if (dragging) {
       dragging->onDragEnd();
