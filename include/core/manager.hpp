@@ -6,19 +6,20 @@
 #include "Util/Text.hpp"
 #include "entities/bloon.hpp"
 // 替換 Collapsible 引用
+#include "UI/button.hpp"
 #include "components/collisionComp.hpp"
+#include "components/mortal.hpp"
+#include "entities/poppers/popper.hpp"
+#include "entities/poppers/spike.hpp"
+#include "entities/tower/all_tower.hpp"
 #include "interfaces/clickable.hpp"
 #include "interfaces/draggable.hpp"
-#include "map.hpp"
-#include "components/mortal.hpp"
 #include "interfaces/move.hpp"
+#include "map.hpp"
+#include <X11/X.h>
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "entities/poppers/popper.hpp"
-#include "entities/poppers/spike.hpp"
-#include "UI/button.hpp"
-#include "entities/tower/all_tower.hpp"
 
 class Manager {
 public:
@@ -49,9 +50,7 @@ public:
     Util::PTSDPosition next_position(int frames) override;
     void move() override;
     auto get_bloon() const { return m_bloon; }
-    void pre_kill() override {
-      m_bloon->kill();
-    }
+    void pre_kill() override { m_bloon->kill(); }
   };
 
   // 建構函式和解構函式
@@ -81,15 +80,17 @@ public:
   void wave_check();
   void add_map(const std::shared_ptr<Map> &map);
   void update();
-  std::shared_ptr<Util::GameObject> m_waveText;
-
+  std::shared_ptr<Util::Text> m_waveText_text =
+      std::make_shared<Util::Text>(RESOURCE_DIR "/NotoSansTC-ExtraLight.ttf",
+                                   32, "Default", Util::Color(0, 0, 0), false);
+  std::shared_ptr<Util::GameObject> m_waveText =
+      std::make_shared<Util::GameObject>(m_waveText_text, 5);
   // 點擊和拖曳相關
   void add_clickable(const std::shared_ptr<Interface::I_clickable> &clickable) {
     clickables.push_back(clickable);
   }
   void set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable);
   void end_dragging(); // ender_dragon()
-
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }

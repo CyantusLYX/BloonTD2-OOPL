@@ -12,16 +12,20 @@
 #include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
 #include "interfaces/move.hpp"
+#include <X11/X.h>
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <filesystem>
 #include <glm/fwd.hpp>
 #include <memory>
 #include <random>
+#include <string>
 #include <vector>
 
 #include <magic_enum/magic_enum.hpp>
 
-bool toggle_show_collision_at = 1;
+bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 1;
 
 // 座標轉換輔助函數
@@ -77,9 +81,15 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   this->add_button(spike_button);
   this->add_clickable(spike_button);
 
-  //m_waveText->SetDrawable(nullptr);//std::make_shared<Util::Text>(
-  //    Util::Text("/usr/share/fonts/gsfonts/C059-Roman.otf", 20, "0", Util::Color(255, 255, 255), false)));
-  //m_Renderer->AddChild(m_waveText);
+  m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
+
+  // m_waveText->
+  // m_waveText->SetDrawable(std::make_shared<Util::Text>(RESOURCE_DIR
+  // "/NotoSansTC-ExtraLight.ttf", 12, "Default", Util::Color(255, 255, 255),
+  // false)); m_waveText->SetDrawable(nullptr);//std::make_shared<Util::Text>(
+  //     Util::Text("/usr/share/fonts/gsfonts/C059-Roman.otf", 20, "0",
+  //     Util::Color(255, 255, 255), false)));
+  m_Renderer->AddChild(m_waveText);
 }
 
 // 地圖管理相關函數
@@ -144,8 +154,8 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   bloon->get_bloon()->SetVisible(false);
   if (toggle_show_bloons)
-    LOG_INFO("MNGR  : Pop bloon {}",
-             std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())));
+    LOG_DEBUG("MNGR  : Pop bloon {}", std::string(magic_enum::enum_name(
+                                          bloon->get_bloon()->GetType())));
 
   // 產生一個不重複的 1~4 順序
   std::vector<int> values = {1, 2, 3, 4};
@@ -157,7 +167,7 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   for (size_t i = 0; i < sub_bloons.size() && i < values.size(); ++i) {
     float distance = bloon->get_distance() - values[i] * 5;
     if (toggle_show_bloons)
-      LOG_INFO(
+      LOG_DEBUG(
           "MNGR  : Gen bloon {} at distance {}",
           std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())),
           distance);
@@ -444,11 +454,18 @@ void Manager::next_wave() {
   }
 
   if (current_waves >= 0) {
-    auto textComponent = std::dynamic_pointer_cast<Util::Text>(m_waveText);
-    if (textComponent) {
-        textComponent->SetText(std::to_string(current_waves));
-    }
-}
+    LOG_INFO("MNGR  : new wave loaded");
+    if (1) {
+      try {
+        m_waveText_text->SetText(std::to_string(current_waves));
+        m_waveText->SetDrawable(m_waveText_text);
+      } catch (std::exception &e) { // exception should be caught by reference
+        LOG_CRITICAL("exception: {}", e.what());
+      }
+      //LOG_DEBUG("NONSTD: into textComponent-inner (manager.next_wave())");
+    } else
+      LOG_DEBUG("NONSTD: into textComponent-inner-else (manager.next_wave())");
+  }
   start_wave();
 }
 

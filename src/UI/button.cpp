@@ -35,7 +35,7 @@ Button::Button(const std::string &name, const Util::PTSDPosition &pos,
 
 void Button::onClick() {
   // 只做簡單的日誌記錄，具體功能由 Manager 處理
-  LOG_INFO("BUTTON: button " + name + " onClick");
+  LOG_DEBUG("BUTTON: button " + name + " onClick");
 }
 
 void Button::onFocus() { LOG_INFO("BUTTON:" + name + " onFokus"); }
