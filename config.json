@@ -2,6 +2,6 @@
     "title": "BloonsTD2 - A Bloons Tower Defense 2 Clone",
     "window_width": 640,
     "window_height": 480,
-    "default_log_level": 2,
+    "default_log_level": 0,
     "fps_cap": 60
 }

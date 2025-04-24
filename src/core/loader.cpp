@@ -27,7 +27,7 @@ std::vector<Bloon::Type> load_bloons(int wave) {
     for (const auto &level : root) {
       if (level["level"] == wave) {
         found = true;
-        LOG_INFO("LODR  : level {}", wave);
+        LOG_TRACE("LODR  : level {}", wave);
 
         // 取得該關卡的所有氣球類型
         const auto &bloons = level["bloons"];
