@@ -132,28 +132,121 @@ void UIContainer::resizeToFitChildren() {
 }
 
 void UIContainer::updateLayout() {
-  if (m_Children.empty()) {
-    return;
-  }
+    if (m_Children.empty()) {
+        return;
+    }
 
-  // 獲取容器的大小
-  auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
-  glm::vec2 size = shape ? shape->GetSize() : glm::vec2(100, 100);
-
-  // 從上到下垂直佈局
-  float currentY = size.y / 2 - m_padding;
-
-  for (const auto &child : m_Children) {
-    glm::vec2 childSize = child->GetScaledSize();
-
-    // 水平居中，垂直從上往下排列
-    child->m_Transform.translation = glm::vec2(0, currentY - childSize.y / 2);
-
-    // 更新下一個元素的 Y 位置
-    currentY -= (childSize.y + m_spacing);
-  }
-
-  LOG_DEBUG("UICon : Layout updated with {} children", m_Children.size());
+    // 獲取容器的大小
+    auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
+    glm::vec2 size = shape ? shape->GetSize() : glm::vec2(100, 100);
+    
+    // 計算子元素總的所需空間和最大尺寸
+    float totalWidth = 0.0f;
+    float totalHeight = 0.0f;
+    float maxWidth = 0.0f;
+    float maxHeight = 0.0f;
+    
+    for (const auto &child : m_Children) {
+        if (!isObjectVisible(child)) continue;
+        
+        glm::vec2 childSize = child->GetScaledSize();
+        totalWidth += childSize.x;
+        totalHeight += childSize.y;
+        maxWidth = std::max(maxWidth, childSize.x);
+        maxHeight = std::max(maxHeight, childSize.y);
+    }
+    
+    // 添加間距
+    size_t visibleCount = 0;
+    for (const auto &child : m_Children) {
+        if (isObjectVisible(child)) visibleCount++;
+    }
+    
+    if (visibleCount > 1) {
+        if (m_layoutDirection == LayoutDirection::Horizontal) {
+            totalWidth += m_spacing * (visibleCount - 1);
+        } else {
+            totalHeight += m_spacing * (visibleCount - 1);
+        }
+    }
+    
+    // 根據布局方向和對齊方式計算起始位置
+    float currentX = 0.0f;
+    float currentY = 0.0f;
+    
+    if (m_layoutDirection == LayoutDirection::Horizontal) {
+        // 水平布局
+        switch (m_alignment) {
+            case Alignment::Start:  // 左對齊
+                currentX = -size.x/2 + m_padding;
+                currentY = 0;  // 垂直居中
+                break;
+                
+            case Alignment::Center:  // 居中對齊
+                currentX = -totalWidth/2;
+                currentY = 0;
+                break;
+                
+            case Alignment::End:  // 右對齊
+                currentX = size.x/2 - m_padding - totalWidth;
+                currentY = 0;
+                break;
+        }
+        
+        // 放置每個元素
+        for (const auto &child : m_Children) {
+            if (!isObjectVisible(child)) continue;
+            
+            glm::vec2 childSize = child->GetScaledSize();
+            
+            // 設置元素位置
+            child->m_Transform.translation = glm::vec2(currentX + childSize.x/2, currentY);
+            
+            // 更新下一個元素的 X 位置
+            currentX += childSize.x + m_spacing;
+        }
+    } else {
+        // 垂直布局
+        switch (m_alignment) {
+            case Alignment::Start:  // 上對齊
+                currentX = 0;  // 水平居中
+                currentY = size.y/2 - m_padding;
+                break;
+                
+            case Alignment::Center:  // 居中對齊
+                currentX = 0;
+                currentY = totalHeight/2;
+                break;
+                
+            case Alignment::End:  // 下對齊
+                currentX = 0;
+                currentY = -size.y/2 + m_padding + totalHeight;
+                break;
+        }
+        
+        // 放置每個元素
+        for (const auto &child : m_Children) {
+            if (!isObjectVisible(child)) continue;
+            
+            glm::vec2 childSize = child->GetScaledSize();
+            
+            // 設置元素位置
+            child->m_Transform.translation = glm::vec2(currentX, currentY - childSize.y/2);
+            
+            // 更新下一個元素的 Y 位置
+            currentY -= (childSize.y + m_spacing);
+        }
+    }
+    
+    LOG_DEBUG("UICon : Layout updated with {} children", visibleCount);
+    
+    // 如果這個容器包含其他 UIContainer，也更新它們的布局
+    for (const auto &child : m_Children) {
+        auto childContainer = std::dynamic_pointer_cast<UIContainer>(child);
+        if (childContainer) {
+            childContainer->updateLayout();
+        }
+    }
 }
 
 void UIContainer::setPosition(const Util::PTSDPosition &position) {
@@ -186,6 +279,16 @@ void UIContainer::setSize(const glm::vec2 &size) {
   updateLayout();
 
   LOG_DEBUG("UICon : Size set to {}x{}", size.x, size.y);
+}
+
+glm::vec2 UIContainer::getSize() const {
+    auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
+    return shape ? shape->GetSize() : glm::vec2(0, 0);
+}
+
+glm::vec2 UIContainer::getContentSize() const {
+    glm::vec2 size = getSize();
+    return glm::vec2(size.x - 2 * m_padding, size.y - 2 * m_padding);
 }
 
 bool UIContainer::containsPoint(const Util::PTSDPosition &point) const {

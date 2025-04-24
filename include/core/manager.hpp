@@ -59,7 +59,7 @@ public:
   ~Manager() = default;
 
   // 遊戲物件管理
-  void add_bloon(Bloon::Type type, float distance);
+  void add_bloon(Bloon::Type type, float distance,float z_index=10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);

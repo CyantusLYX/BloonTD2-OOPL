@@ -11,6 +11,19 @@
 
 namespace UI {
 
+// 布局方向枚舉
+enum class LayoutDirection {
+    Vertical,   // 垂直排列（從上到下）
+    Horizontal  // 水平排列（從左到右）
+};
+
+// 對齊方式枚舉
+enum class Alignment {
+    Start,  // 左對齊(水平)/上對齊(垂直)
+    Center, // 居中對齊
+    End     // 右對齊(水平)/下對齊(垂直)
+};
+
 class UIContainer : 
     public Util::GameObject, 
     public Components::CollisionComponent, 
@@ -24,6 +37,9 @@ private:
     float m_padding = 5.0f;  // 內邊距
     float m_spacing = 2.0f;  // 子元素間距
     
+    // 布局控制
+    LayoutDirection m_layoutDirection = LayoutDirection::Vertical;  // 默認垂直布局
+    Alignment m_alignment = Alignment::Start;  // 默認左/上對齊
 public:
     // 建構函式
     UIContainer(
@@ -75,6 +91,31 @@ public:
 
     // 查找點擊的子元素
     std::shared_ptr<Util::GameObject> findChildAt(const Util::PTSDPosition &point) const;
+
+    // 佈局方向的 getter/setter
+    LayoutDirection getLayoutDirection() const { return m_layoutDirection; }
+    void setLayoutDirection(LayoutDirection direction) { 
+        m_layoutDirection = direction; 
+        updateLayout();  // 更新布局
+    }
+    
+    // 對齊方式 getter/setter
+    Alignment getAlignment() const { return m_alignment; }
+    void setAlignment(Alignment alignment) { 
+        m_alignment = alignment; 
+        updateLayout();  // 更新布局
+    }
+    
+    // 獲取容器大小 (以 vec2 形式)
+    glm::vec2 getSize() const;
+    
+    // 獲取容器內容區域大小 (排除內邊距)
+    glm::vec2 getContentSize() const;
+    
+    // 獲取所有子元素
+    const std::vector<std::shared_ptr<Util::GameObject>>& getChildren() const { 
+        return m_Children; 
+    }
 };
 
 }  // namespace UI

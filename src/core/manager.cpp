@@ -119,9 +119,9 @@ void Manager::add_moving(const std::shared_ptr<Interface::I_move> &moving) {
 }
 
 // 氣球管理函數
-void Manager::add_bloon(Bloon::Type type, float distance) {
+void Manager::add_bloon(Bloon::Type type, float distance,float z_index) {
   auto bloon = std::make_shared<Bloon>(
-      type, current_path->getPositionAtDistance(distance));
+      type, current_path->getPositionAtDistance(distance),z_index);
   bloon->setClickable(true);  // 更改為使用新介面方法
   this->add_clickable(bloon); // 使用新的方法
 
@@ -161,7 +161,7 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
           "MNGR  : Gen bloon {} at distance {}",
           std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())),
           distance);
-    this->add_bloon(*sub_bloons[i], distance);
+    this->add_bloon(*sub_bloons[i], distance,11+frame_count/10.0f);
   }
 
   bloon->kill();
@@ -491,7 +491,7 @@ void Manager::wave_check() {
       counter = 0;
       auto bloon_type = bloons_gen_list.back();
       bloons_gen_list.pop_back();
-      add_bloon(bloon_type, 0);
+      add_bloon(bloon_type, 0,10+counter/10.0);
     }
   }
 }

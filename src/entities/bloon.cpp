@@ -5,8 +5,8 @@
 #include "components/collisionComp.hpp"
 #include <memory>
 
-Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos)
-    : Util::GameObject(nullptr, 10, {0,0}, true),
+Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos,float z_index)
+    : Util::GameObject(nullptr, z_index, {0,0}, true),
       Components::CollisionComponent(pos, static_cast<float>(10.0)), // Initialize base class
       m_Type(type), m_State(State::alive) {
   m_Transform.translation = pos.ToVec2();
