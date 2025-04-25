@@ -25,7 +25,7 @@
 
 #include <magic_enum/magic_enum.hpp>
 
-bool toggle_show_collision_at = 0;
+bool toggle_show_collision_at = 1;
 bool toggle_show_bloons = 1;
 
 // 座標轉換輔助函數
