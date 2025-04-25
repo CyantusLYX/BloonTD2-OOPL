@@ -2,8 +2,9 @@
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
+#include "components/canBuy.hpp"
 spike::spike(const Util::PTSDPosition &pos)
-    : popper(pos, 10.0f),
+    : popper(pos, 10.0f), CanBuy(Tower::TowerType::spike,25),
       m_object(std::make_shared<Util::GameObject>(
           std::make_shared<Util::Image>(RESOURCE_DIR "/poppers/spike.png"), 5.0f)) {
             m_object->SetVisible(true);

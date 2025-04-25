@@ -7,6 +7,7 @@
 #include "entities/bloon.hpp"
 // 替換 Collapsible 引用
 #include "UI/button.hpp"
+#include "UI/container/sidebar.hpp"  // 添加 Sidebar 引用
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
 #include "entities/poppers/popper.hpp"
@@ -20,6 +21,9 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <unordered_map>
+#include <functional>
+#include "components/towerType.hpp"
 
 class Manager {
 public:
@@ -58,16 +62,13 @@ public:
   ~Manager() = default;
 
   // 遊戲物件管理
-  void add_bloon(Bloon::Type type, float distance);
+  void add_bloon(Bloon::Type type, float distance,float z_index=10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
   void pop_bloon(std::shared_ptr<bloon_holder> bloon);
-  void handleButtonClicks(const Util::PTSDPosition &cursor_position);
 
-  // 新增: 創建可拖曳的釘子
-  void createDraggableSpike(const Util::PTSDPosition &position);
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
 
   // 遊戲狀態和流程控制
@@ -80,17 +81,25 @@ public:
   void wave_check();
   void add_map(const std::shared_ptr<Map> &map);
   void update();
-  std::shared_ptr<Util::Text> m_waveText_text =
-      std::make_shared<Util::Text>(RESOURCE_DIR "/NotoSansTC-ExtraLight.ttf",
-                                   32, "Default", Util::Color(0, 0, 0), false);
-  std::shared_ptr<Util::GameObject> m_waveText =
-      std::make_shared<Util::GameObject>(m_waveText_text, 5);
   // 點擊和拖曳相關
   void add_clickable(const std::shared_ptr<Interface::I_clickable> &clickable) {
     clickables.push_back(clickable);
   }
   void set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable);
   void end_dragging(); // ender_dragon()
+  bool drag_cd=false;
+
+  // Sidebar 相關方法
+  void initUI();
+  void updateUI();
+  
+  // 塔建造相關
+  void startDraggingTower(Tower::TowerType towerType);
+  void placeCurrentTower(const Util::PTSDPosition &position);
+  void cancelTowerPlacement();
+
+  // 創建一個塔
+  std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type, const Util::PTSDPosition &position);
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }
@@ -101,8 +110,16 @@ public:
   auto get_bloons() { return bloons; }
   std::shared_ptr<Map> get_curr_map();
   auto get_current_waves() { return current_waves; }
+  int getMoney() const { return money; }
+  int getLife() const { return life; }
+  int getCurrentWave() const { return current_waves; }
 
-  // flow control
+  // some resources
+  std::shared_ptr<Util::Text> m_waveText_text =
+      std::make_shared<Util::Text>(RESOURCE_DIR "/NotoSansTC-ExtraLight.ttf",
+                                   32, "Default", Util::Color(0, 0, 0), false);
+  std::shared_ptr<Util::GameObject> m_waveText =
+      std::make_shared<Util::GameObject>(m_waveText_text, 5);
 
 private:
   // 渲染和狀態
@@ -138,6 +155,28 @@ private:
   std::vector<std::shared_ptr<popper>> poppers;
   std::vector<std::shared_ptr<Button>> buttons;
   std::vector<std::shared_ptr<Tower::Tower>> towers;
+
+  // UI 相關
+  std::shared_ptr<UI::UISidebar> m_sidebar;
+  bool m_isTowerDragging = false;
+  Tower::TowerType m_dragTowerType;
+  int m_dragTowerCost = 0;
+
+  std::shared_ptr<popper> createPopper(Tower::TowerType type, const Util::PTSDPosition &position);
+  // 塔工廠函數類型定義
+  using TowerFactory = std::function<std::shared_ptr<Tower::Tower>(const Util::PTSDPosition&)>;
+  
+  // Popper 工廠函數類型定義
+  using PopperFactory = std::function<std::shared_ptr<popper>(const Util::PTSDPosition&)>;
+  
+  // 塔工廠映射表
+  std::unordered_map<Tower::TowerType, TowerFactory> m_towerFactories;
+  
+  // Popper 工廠映射表
+  std::unordered_map<Tower::TowerType, PopperFactory> m_popperFactories;
+  
+  // 初始化塔工廠
+  void initTowerFactories();
 };
 
 #endif // MANAGER_HPP

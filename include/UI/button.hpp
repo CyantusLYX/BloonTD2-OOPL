@@ -2,6 +2,7 @@
 #define BUTTON_HPP
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Input.hpp"
 #include "components/collisionComp.hpp"
 #include "core/shape.hpp"
 #include "interfaces/clickable.hpp"
@@ -10,7 +11,7 @@
 #include <vector>
 
 enum class State { non_clickable, clickable, clicked };
-class Button final : public Components::CollisionComponent,
+class Button : public Components::CollisionComponent,
                      public Util::GameObject,
                      public Interface::I_clickable {
 public:
@@ -36,9 +37,12 @@ public:
   virtual bool isClickable() const override;
   virtual void setClickable(bool clickable) override;
 
+  void setSize(const glm::vec2 &size);
   // State get_state()const { return this->m_State; }
   // void set_state(State state) { this->m_State = state; }
 
   const std::string &getName() const { return name; }
-};
+
+  void setPosition(const Util::PTSDPosition &position) override;
+}; 
 #endif

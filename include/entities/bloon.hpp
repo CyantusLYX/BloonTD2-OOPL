@@ -32,7 +32,7 @@ private:
     bool m_clickable = true;
 
 public:
-    Bloon(Type type, Util::PTSDPosition pos);
+    Bloon(Type type, Util::PTSDPosition pos, float z_index);
     ~Bloon() override = default;
 
     // 碰撞相關方法
