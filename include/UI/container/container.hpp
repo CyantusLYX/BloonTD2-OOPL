@@ -40,6 +40,11 @@ private:
     // 布局控制
     LayoutDirection m_layoutDirection = LayoutDirection::Vertical;  // 默認垂直布局
     Alignment m_alignment = Alignment::Start;  // 默認左/上對齊
+
+    // 自適應大小控制
+    bool m_autoSize = false;
+    bool m_resizing = false;  // 防止遞歸調整大小的標誌
+
 public:
     // 建構函式
     UIContainer(
@@ -116,6 +121,10 @@ public:
     const std::vector<std::shared_ptr<Util::GameObject>>& getChildren() const { 
         return m_Children; 
     }
+
+    // 自適應大小控制
+    bool isAutoSizeEnabled() const { return m_autoSize; }
+    void setAutoSize(bool autoSize);
 };
 
 }  // namespace UI

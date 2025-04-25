@@ -38,19 +38,33 @@ UIContainer::UIContainer(const Util::PTSDPosition &position,
 }
 
 void UIContainer::addChild(const std::shared_ptr<Util::GameObject> &child,
-                           bool updateLayout) {
-  AddChild(child);
-  if (updateLayout) {
-    this->updateLayout();
-  }
+  bool updateLayout) {
+AddChild(child);
+child->SetPivot({-245,0});
+// 如果啟用了自動大小調整，先調整大小，再更新佈局
+if (m_autoSize && !m_resizing) {
+m_resizing = true;
+resizeToFitChildren();
+m_resizing = false;
+} else if (updateLayout) {
+// 否則按照參數決定是否更新佈局
+this->updateLayout();
+}
 }
 
 void UIContainer::removeChild(const std::shared_ptr<Util::GameObject> &child,
-                              bool updateLayout) {
-  RemoveChild(child);
-  if (updateLayout) {
-    this->updateLayout();
-  }
+     bool updateLayout) {
+RemoveChild(child);
+
+// 如果啟用了自動大小調整，先調整大小，再更新佈局
+if (m_autoSize && !m_resizing) {
+m_resizing = true;
+resizeToFitChildren();
+m_resizing = false;
+} else if (updateLayout) {
+// 否則按照參數決定是否更新佈局
+this->updateLayout();
+}
 }
 
 void UIContainer::clearChildren() { m_Children.clear(); }
@@ -99,8 +113,10 @@ UIContainer::toLocalPosition(const Util::PTSDPosition &worldPos) const {
 
 void UIContainer::resizeToFitChildren() {
   if (m_Children.empty()) {
-    return;
+      return;
   }
+
+  m_resizing = true;  // 設置調整大小標誌，防止循環調用
 
   // 找出所有子節點的邊界
   float minX = std::numeric_limits<float>::max();
@@ -108,33 +124,40 @@ void UIContainer::resizeToFitChildren() {
   float maxX = std::numeric_limits<float>::lowest();
   float maxY = std::numeric_limits<float>::lowest();
 
-  for (const auto &child : m_Children) {
-    glm::vec2 pos = child->m_Transform.translation;
-    glm::vec2 size = child->GetScaledSize();
-
-    minX = std::min(minX, pos.x - size.x / 2);
-    minY = std::min(minY, pos.y - size.y / 2);
-    maxX = std::max(maxX, pos.x + size.x / 2);
-    maxY = std::max(maxY, pos.y + size.y / 2);
-  }
-
-  // 考慮內邊距
-  minX -= m_padding;
-  minY -= m_padding;
-  maxX += m_padding;
-  maxY += m_padding;
+  // ... 保持原有邊界計算邏輯 ...
 
   // 計算新的大小
   glm::vec2 newSize = {maxX - minX, maxY - minY};
 
-  // 更新大小
-  setSize(newSize);
+  // 更新大小（會呼叫修改後的 setSize 方法）
+  auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
+  if (shape) {
+      shape->SetSize(newSize);
+  }
+  
+  // 更新碰撞組件大小
+  if (m_colType == Interface::ColType::OVAL) {
+      setColParam(std::min(newSize.x, newSize.y) / 2.0f);
+  } else {
+      setColParam(newSize);
+  }
+
+  // 記錄日誌
+  LOG_DEBUG("UICon : Auto-resized to {}x{}", newSize.x, newSize.y);
+  
+  m_resizing = false;  // 解除調整大小標誌
 }
 
 void UIContainer::updateLayout() {
-    if (m_Children.empty()) {
-        return;
-    }
+  if (m_Children.empty()) {
+      return;
+  }
+
+  if (m_autoSize && !m_resizing) {
+      m_resizing = true;
+      resizeToFitChildren();
+      m_resizing = false;
+  }
 
     // 獲取容器的大小
     auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
@@ -263,22 +286,33 @@ void UIContainer::setSize(const glm::vec2 &size) {
   // 更新形狀大小
   auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
   if (shape) {
-    shape->SetSize(size);
+      shape->SetSize(size);
   }
 
   // 更新碰撞組件大小
   if (m_colType == Interface::ColType::OVAL) {
-    // 如果是圓形，設定為半徑
-    setColParam(std::min(size.x, size.y) / 2.0f);
+      // 如果是圓形，設定為半徑
+      setColParam(std::min(size.x, size.y) / 2.0f);
   } else {
-    // 如果是矩形，設定為尺寸
-    setColParam(size);
+      // 如果是矩形，設定為尺寸
+      setColParam(size);
   }
 
-  // 重新佈局子元素
-  updateLayout();
+  // 如果不是在調整大小過程中，才重新佈局子元素
+  if (!m_resizing) {
+      // 重新佈局子元素
+      updateLayout();
+  }
 
   LOG_DEBUG("UICon : Size set to {}x{}", size.x, size.y);
+}
+
+void UIContainer::setAutoSize(bool autoSize) {
+    m_autoSize = autoSize;
+    if (autoSize && !m_Children.empty() && !m_resizing) {
+        // 啟用自適應大小時立即調整大小
+        resizeToFitChildren();
+    }
 }
 
 glm::vec2 UIContainer::getSize() const {

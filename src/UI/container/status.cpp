@@ -13,6 +13,9 @@ StatusItem::StatusItem(const std::string &title,
   if (shape) {
     shape->SetColorRGB(50, 50, 50, 0); // 完全透明
   }
+  
+  // 禁用自動大小調整
+  setAutoSize(false);
 
   // 設置為水平排列
   setLayoutDirection(LayoutDirection::Horizontal);
@@ -29,6 +32,7 @@ StatusItem::StatusItem(const std::string &title,
       zIndex + 0.1f);
   m_titleContainer->setLayoutDirection(LayoutDirection::Horizontal);
   m_titleContainer->setAlignment(Alignment::Start); // 左對齊
+  m_titleContainer->setAutoSize(false); // 禁用自動大小調整
 
   // 創建值容器（右對齊）
   m_valueContainer = std::make_shared<UIContainer>(
@@ -36,6 +40,7 @@ StatusItem::StatusItem(const std::string &title,
       zIndex + 0.1f);
   m_valueContainer->setLayoutDirection(LayoutDirection::Horizontal);
   m_valueContainer->setAlignment(Alignment::End); // 右對齊
+  m_valueContainer->setAutoSize(false); // 禁用自動大小調整
 
   // 創建標題文字
   auto titleTextDrawable =
@@ -74,7 +79,7 @@ void StatusItem::updateValue(const std::string &value) {
 }
 
 StatusBar::StatusBar(const Util::PTSDPosition &position, float width,
-                     float height, float zIndex)
+                     float height, float zIndex, bool fixedSize)
     : UIContainer(position, glm::vec2(width, height), zIndex) {
   // 設置容器背景
   auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
@@ -82,7 +87,10 @@ StatusBar::StatusBar(const Util::PTSDPosition &position, float width,
     shape->SetColorRGB(30, 30, 30, 200); // 半透明深灰色背景
   }
 
-  // 設置為垂直排列，這樣 Money 在上方，Lives 在下方
+  // 自動大小調整
+  setAutoSize(!fixedSize);
+
+  // 設置為垂直排列
   setLayoutDirection(LayoutDirection::Vertical);
   setPadding(10.0f);
   setSpacing(5.0f);

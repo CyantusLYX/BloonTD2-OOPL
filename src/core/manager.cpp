@@ -6,8 +6,11 @@
 #include "Util/Renderer.hpp"
 #include "Util/Text.hpp"
 #include "components/collisionComp.hpp"
+#include "components/towerType.hpp"
 #include "core/loader.hpp"
 #include "entities/bloon.hpp"
+#include "entities/poppers/spike.hpp"
+#include "entities/tower/tower_config.hpp"
 #include "interfaces/clickable.hpp"
 #include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
@@ -26,7 +29,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 bool toggle_show_collision_at = 0;
-bool toggle_show_bloons = 1;
+bool toggle_show_bloons = 0;
 
 // 座標轉換輔助函數
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
@@ -36,7 +39,11 @@ glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
 
 // Manager 建構函數
 Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
-    : m_Renderer(renderer) {
+    : m_Renderer(renderer), life(100), money(2000) {
+
+  // 初始化塔工廠
+  initTowerFactories();
+
   // 初始化地圖路徑
   std::vector<std::string> map_paths = {RESOURCE_DIR "/maps/easyFull.png",
                                         RESOURCE_DIR "/maps/medFull.png",
@@ -74,14 +81,16 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   }
 
   // Add spike button to the top-right corner with adjusted position
-  auto spike_button =
-      std::make_shared<Button>("spike", Util::PTSDPosition(280, 200), 50.0f,
-                               true); // Adjusted position to be visible
-  LOG_INFO("MNGR  : Adding spike button at visible top-right corner");
-  this->add_button(spike_button);
-  this->add_clickable(spike_button);
+  /*  auto spike_button =
+       std::make_shared<Button>("spike", Util::PTSDPosition(280, 200), 50.0f,
+                                true); // Adjusted position to be visible
+   LOG_INFO("MNGR  : Adding spike button at visible top-right corner");
+   this->add_button(spike_button);
+   this->add_clickable(spike_button); */
 
   m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
+
+  initUI();
 
   // m_waveText->
   // m_waveText->SetDrawable(std::make_shared<Util::Text>(RESOURCE_DIR
@@ -90,6 +99,160 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   //     Util::Text("/usr/share/fonts/gsfonts/C059-Roman.otf", 20, "0",
   //     Util::Color(255, 255, 255), false)));
   m_Renderer->AddChild(m_waveText);
+}
+
+// 初始化塔工廠映射表
+void Manager::initTowerFactories() {
+  // 註冊 DartMonkey 工廠函數
+  m_towerFactories[Tower::TowerType::dart] = [](const Util::PTSDPosition &pos) {
+    return std::make_shared<DartMonkey>(pos);
+  };
+
+  // 註冊 BoomerangMonkey 工廠函數（如果已實現）
+  /* m_towerFactories[Tower::TowerType::boomerang] = [](const Util::PTSDPosition
+  &pos) {
+      // 如果未實現，返回 nullptr 或拋出異常
+      LOG_ERROR("MNGR  : BoomerangMonkey 尚未實現");
+      return nullptr;
+      // 或者 return std::make_shared<BoomerangMonkey>(pos);
+  }; */
+
+  // 可以繼續添加其他塔類型...
+
+  // 初始化 popper 工廠映射表
+  m_popperFactories[Tower::TowerType::spike] =
+      [](const Util::PTSDPosition &pos) {
+        return std::make_shared<spike>(pos);
+      };
+
+  // 可以繼續添加其他 popper 類型...
+}
+
+// 根據類型創建塔
+std::shared_ptr<Tower::Tower>
+Manager::createTower(Tower::TowerType type,
+                     const Util::PTSDPosition &position) {
+  // 檢查是否為塔類型
+  if (!BuyableConfigManager::IsTower(type)) {
+    LOG_ERROR("MNGR  : 試圖創建非塔類型 {}", static_cast<int>(type));
+    return nullptr;
+  }
+
+  auto factoryIt = m_towerFactories.find(type);
+  if (factoryIt != m_towerFactories.end() && factoryIt->second) {
+    auto tower = factoryIt->second(position);
+    if (tower) {
+      // 從配置中載入塔屬性
+      const auto &config = BuyableConfigManager::GetTowerConfig(type);
+      tower->setRange(config.range);
+      //  如果塔有其他屬性可從這裡設置，如攻擊速度等
+
+      return tower;
+    }
+  }
+
+  LOG_ERROR("MNGR  : 未找到塔類型 {} 的工廠函數", static_cast<int>(type));
+  return nullptr;
+}
+
+std::shared_ptr<popper>
+Manager::createPopper(Tower::TowerType type,
+                      const Util::PTSDPosition &position) {
+  // 檢查是否為 Popper 類型
+  if (!BuyableConfigManager::IsPopper(type)) {
+    LOG_ERROR("MNGR  : 試圖創建非 Popper 類型 {}", static_cast<int>(type));
+    return nullptr;
+  }
+
+  auto factoryIt = m_popperFactories.find(type);
+  if (factoryIt != m_popperFactories.end() && factoryIt->second) {
+    auto popper = factoryIt->second(position);
+    if (popper) {
+      // 從配置中載入 popper 屬性
+      const auto &config = BuyableConfigManager::GetPopperConfig(type);
+      auto spikePtr = std::dynamic_pointer_cast<spike>(popper);
+      spikePtr->setLife(config.durability);
+      return popper;
+    }
+  }
+
+  LOG_ERROR("MNGR  : 未找到 Popper 類型 {} 的工廠函數", static_cast<int>(type));
+  return nullptr;
+}
+
+// 開始拖曳一個新塔
+void Manager::startDraggingTower(Tower::TowerType towerType) {
+  // 檢查是否已經在拖曳狀態
+  if (m_mouse_status != mouse_status::free) {
+    LOG_DEBUG("MNGR  : 無法開始拖曳，當前不處於自由狀態");
+    return;
+  }
+
+  // 獲取物品成本
+  int cost = BuyableConfigManager::GetCost(towerType);
+
+  // 檢查金錢是否足夠
+  if (cost > money) {
+    LOG_DEBUG("MNGR  : 金錢不足，無法購買物品");
+    return;
+  }
+
+  // 獲取當前游標位置
+  Util::PTSDPosition cursorPos = Util::Input::GetCursorPosition();
+
+  // 創建可拖曳物件
+  std::shared_ptr<Interface::I_draggable> draggable;
+
+  if (BuyableConfigManager::IsTower(towerType)) {
+    // 創建塔實例
+    auto tower = createTower(towerType, cursorPos);
+    if (tower) {
+      // 設置為預覽模式
+      tower->setPreviewMode(true);
+
+      // 確保塔身和範圍是可見的
+      if (tower->getBody()) {
+        tower->getBody()->SetVisible(true);
+        m_Renderer->AddChild(tower->getBody());
+      }
+
+      if (tower->getRange()) {
+        tower->getRange()->setVisible(true);
+        m_Renderer->AddChild(tower->getRange());
+      }
+
+      // 設置拖曳物件
+      draggable = std::dynamic_pointer_cast<Interface::I_draggable>(tower);
+    }
+  } else if (BuyableConfigManager::IsPopper(towerType)) {
+    // 創建 Popper 實例
+    auto popper = createPopper(towerType, cursorPos);
+    if (popper) {
+      // 設置拖曳物件
+      draggable = std::dynamic_pointer_cast<Interface::I_draggable>(popper);
+
+      // 添加到渲染器
+      m_Renderer->AddChild(popper->get_object());
+    }
+  }
+
+  if (draggable) {
+    // 設置拖曳狀態
+    draggable->setDraggable(true);
+
+    // 記錄拖曳信息（但不存儲塔物件引用）
+    m_isTowerDragging = true;
+    m_dragTowerType = towerType;
+    m_dragTowerCost = cost;
+
+    // 開始拖曳
+    set_dragging(draggable);
+
+    LOG_DEBUG("MNGR  : 開始拖曳一個新的 {} 物品",
+              BuyableConfigManager::GetBaseConfig(towerType).name);
+  } else {
+    LOG_ERROR("MNGR  : 無法創建可拖曳物品");
+  }
 }
 
 // 地圖管理相關函數
@@ -129,9 +292,9 @@ void Manager::add_moving(const std::shared_ptr<Interface::I_move> &moving) {
 }
 
 // 氣球管理函數
-void Manager::add_bloon(Bloon::Type type, float distance,float z_index) {
+void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
   auto bloon = std::make_shared<Bloon>(
-      type, current_path->getPositionAtDistance(distance),z_index);
+      type, current_path->getPositionAtDistance(distance), z_index);
   bloon->setClickable(true);  // 更改為使用新介面方法
   this->add_clickable(bloon); // 使用新的方法
 
@@ -153,9 +316,6 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   bloon->get_bloon()->SetVisible(false);
-  if (toggle_show_bloons)
-    LOG_DEBUG("MNGR  : Pop bloon {}", std::string(magic_enum::enum_name(
-                                          bloon->get_bloon()->GetType())));
 
   // 產生一個不重複的 1~4 順序
   std::vector<int> values = {1, 2, 3, 4};
@@ -171,7 +331,7 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
           "MNGR  : Gen bloon {} at distance {}",
           std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())),
           distance);
-    this->add_bloon(*sub_bloons[i], distance,11+frame_count/10.0f);
+    this->add_bloon(*sub_bloons[i], distance, 11 + frame_count / 10.0f);
   }
 
   bloon->kill();
@@ -191,69 +351,43 @@ void Manager::add_popper(const std::shared_ptr<popper> &popper) {
   }
 }
 
-// 新增: 創建可拖曳的釘子
-void Manager::createDraggableSpike(const Util::PTSDPosition &position) {
-  // 創建一個釘子
-  auto new_spike = std::make_shared<spike>(position);
-  new_spike->setDraggable(true); // 設置為可拖曳
-
-  // 加入管理器
-  add_popper(new_spike);
-
-  // 設置為當前拖曳物件
-  set_dragging(std::static_pointer_cast<Interface::I_draggable>(new_spike));
-
-  LOG_DEBUG("MNGR  : 創建一個可拖曳的釘子在位置 ({}, {})", position.x,
-            position.y);
-}
-
-// 修改按鈕點擊處理
-// wtbi
-void Manager::handleButtonClicks(const Util::PTSDPosition &cursor_position) {
-  for (auto &button : buttons) {
-    if (button->isClickable() && button->isCollide(cursor_position)) {
-      button->onClick();
-
-      // 根據按鈕名稱執行特定操作
-      if (button->getName() == "spike") {
-        createDraggableSpike(cursor_position);
-      }
-
-      LOG_INFO("MNGR  : 按鈕 {} 被點擊了", button->getName().c_str());
-      break;
-    }
-  }
-}
-
 // 修改點擊處理，確保第二次點擊時固定位置
 void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
-  static bool drag_cooldown = false;
 
-  // 重置冷卻
-  drag_cooldown = false;
+  if (drag_cd) {
+    LOG_DEBUG("MNGR  : 點擊冷卻中，忽略此次點擊");
+    return;
+  }
 
   // 如果正在拖曳，則結束拖曳 (第二次點擊時)
   if (m_mouse_status == mouse_status::drag) {
     if (dragging) {
       // 更新最後位置為點擊位置
       dragging->onDrag(cursor_position);
+
+      // 如果是塔拖曳，則放置塔
+      if (m_isTowerDragging) {
+        placeCurrentTower(cursor_position);
+      } else {
+        // 其他拖曳物體（如果不需要特殊處理）
+        end_dragging();
+      }
     }
-    end_dragging();
     return;
   }
 
   // 檢查是否點擊了可互動物件
   for (auto &clickable : clickables) {
     // 跳過不可點擊或已在冷卻的物件
-    if (!(clickable->isClickable() && !drag_cooldown)) {
+    if (!(clickable->isClickable() && !drag_cd)) {
       continue;
     }
     if (toggle_show_collision_at)
       LOG_DEBUG("MNGR  : clickable");
     // 獲取具有碰撞功能的 GameObject
     /* auto gameObject = std::dynamic_pointer_cast<Util::GameObject>(clickable);
-    if (!gameObject)
-      continue; */
+        if (!gameObject)
+          continue; */
 
     // 檢查物件是否能夠進行碰撞檢測
     bool isCollided = false;
@@ -266,21 +400,57 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
     }
 
     if (isCollided) {
-      // 處理可拖曳物件
-      LOG_DEBUG("MNGR  : clicked");
-      auto draggable =
-          std::dynamic_pointer_cast<Interface::I_draggable>(clickable);
-      if (draggable && draggable->isDraggable() &&
-          m_mouse_status == mouse_status::free && !drag_cooldown) {
-        set_dragging(draggable);
-        drag_cooldown = true;
+      LOG_DEBUG("MNGR  : 檢測到點擊");
+
+      // 1. 首先嘗試處理特殊類型按鈕 - TowerButton
+      auto towerButton = std::dynamic_pointer_cast<TowerButton>(clickable);
+      if (towerButton) {
+        LOG_DEBUG("MNGR  : 檢測到塔按鈕點擊，類型: {}",
+                  static_cast<int>(towerButton->getTowerType()));
+
+        // 觸發點擊事件
+        clickable->onClick();
+
+        // 塔按鈕相關操作 (留空，稍後實現)
+        startDraggingTower(towerButton->getTowerType());
+
+        break;
       }
 
-      // 處理點擊事件
-      if (clickable->isClickable()) {
+      // 2. 然後處理普通按鈕
+      auto button = std::dynamic_pointer_cast<Button>(clickable);
+      if (button) {
+        // 觸發點擊事件
         clickable->onClick();
-        LOG_DEBUG("MNGR  : Clicked");
+
+        // 根據按鈕名稱執行對應操作
+        const std::string &buttonName = button->getName();
+        LOG_DEBUG("MNGR  : 檢測到普通按鈕點擊：{}", buttonName);
+
+        if (buttonName == "start") {
+          // 開始按鈕功能
+          next_wave();
+        } else if (buttonName == "menu") {
+          // 選單按鈕功能
+          m_game_state = game_state::menu;
+        }
+        // 處理可能的拖曳狀態
+        auto draggable =
+            std::dynamic_pointer_cast<Interface::I_draggable>(clickable);
+        if (draggable && draggable->isDraggable() &&
+            m_mouse_status == mouse_status::free && !drag_cd) {
+          set_dragging(draggable);
+          drag_cd = true;
+        }
+
+        break;
       }
+
+      // 3. 最後處理其他可點擊物件
+      clickable->onClick();
+
+      drag_cd = true;
+
       break;
     }
   }
@@ -462,7 +632,7 @@ void Manager::next_wave() {
       } catch (std::exception &e) { // exception should be caught by reference
         LOG_CRITICAL("exception: {}", e.what());
       }
-      //LOG_DEBUG("NONSTD: into textComponent-inner (manager.next_wave())");
+      // LOG_DEBUG("NONSTD: into textComponent-inner (manager.next_wave())");
     } else
       LOG_DEBUG("NONSTD: into textComponent-inner-else (manager.next_wave())");
   }
@@ -508,7 +678,7 @@ void Manager::wave_check() {
       counter = 0;
       auto bloon_type = bloons_gen_list.back();
       bloons_gen_list.pop_back();
-      add_bloon(bloon_type, 0,10+counter/10.0);
+      add_bloon(bloon_type, 0, 10 + counter / 10.0);
     }
   }
 }
@@ -516,6 +686,14 @@ void Manager::wave_check() {
 void Manager::update() {
   m_Renderer->Update();
   m_frame_count++;
+  updateUI();
+  static int cooldown_frames = 0;
+  if (cooldown_frames > 0) {
+    cooldown_frames--;
+  } else {
+    // 全局變數 drag_cooldown，在 handleClickAt 中使用
+    drag_cd = false;
+  }
 }
 
 // bloon_holder 內部類別實現
@@ -553,12 +731,9 @@ void Manager::set_dragging(
 
 // 結束拖曳狀態
 void Manager::end_dragging() {
-  if (m_mouse_status == mouse_status::drag) {
-    LOG_DEBUG("MNGR  : dragging end");
-    // 通知物件結束拖曳
-    if (dragging) {
-      dragging->onDragEnd();
-    }
+  if (m_mouse_status == mouse_status::drag && dragging) {
+    // 調用拖曳結束處理
+    dragging->onDragEnd();
     dragging = nullptr;
     m_mouse_status = mouse_status::free;
   }
@@ -592,4 +767,173 @@ void Manager::updateAllMovingObjects() {
   for (auto &move : movings) {
     move->move();
   }
+}
+
+void Manager::placeCurrentTower(const Util::PTSDPosition &position) {
+  if (!m_isTowerDragging || m_mouse_status != mouse_status::drag || !dragging) {
+    return;
+  }
+
+  // 保存當前拖曳信息
+  Tower::TowerType currentType = m_dragTowerType;
+  int currentCost = m_dragTowerCost;
+
+  // 檢查位置是否有效
+  bool isValidPosition = true;
+
+  // ... 路徑檢查代碼 ...
+
+  if (!isValidPosition) {
+    LOG_DEBUG("MNGR  : 無法在此處放置物品");
+    return;
+  }
+
+  // 清除拖曳狀態
+  auto oldDragging = dragging;
+  dragging = nullptr;
+  m_mouse_status = mouse_status::free;
+  m_isTowerDragging = false;
+
+  // 確保只扣一次錢
+  if (currentCost > 0 && money >= currentCost) {
+    money -= currentCost;
+
+    if (BuyableConfigManager::IsTower(currentType)) {
+      // 嘗試將 dragging 轉換為 Tower
+      auto tower = std::dynamic_pointer_cast<Tower::Tower>(oldDragging);
+      if (tower) {
+        // 將 dragging 中的塔設為非預覽模式
+        tower->setPreviewMode(false);
+
+        // 更新位置確保精確
+        tower->setPosition(position);
+
+        tower->setPopperCallback([this](std::shared_ptr<popper> p) {
+          this->add_popper(p);
+          auto move_popper = std::dynamic_pointer_cast<Interface::I_move>(p);
+          if (move_popper) {
+            this->add_moving(move_popper);
+          }
+        });
+
+        tower->setPath(current_path);
+
+        towers.push_back(tower);
+
+        LOG_DEBUG("MNGR  : 使用拖曳中的塔放置，位置: ({}, {})", position.x,
+                  position.y);
+      }
+    } else if (BuyableConfigManager::IsPopper(currentType)) {
+      // 嘗試將 dragging 轉換為 popper
+      auto npopper = std::dynamic_pointer_cast<popper>(oldDragging);
+      if (npopper) {
+        npopper->setPosition(position);
+        add_popper(npopper);
+      }
+    }
+
+    // 更新 UI
+    updateUI();
+
+    LOG_DEBUG("MNGR  : 成功放置一個 {}",
+              BuyableConfigManager::GetBaseConfig(currentType).name);
+  } else {
+    LOG_ERROR("MNGR  : 金錢不足或費用錯誤 (cost: {}, money: {})", currentCost,
+              money);
+  }
+
+  // 結束拖曳狀態（這個會調用 dragging->onDragEnd()）
+  end_dragging();
+  m_isTowerDragging = false;
+}
+
+void Manager::cancelTowerPlacement() {
+  if (m_isTowerDragging) {
+    LOG_DEBUG("MNGR  : 取消塔放置");
+
+    // 如果 dragging 是塔，從渲染器中移除其視覺元素
+    auto tower = std::dynamic_pointer_cast<Tower::Tower>(dragging);
+    if (tower) {
+      if (tower->getBody())
+        m_Renderer->RemoveChild(tower->getBody());
+      if (tower->getRange())
+        m_Renderer->RemoveChild(tower->getRange());
+    }
+
+    // 結束拖曳狀態
+    end_dragging();
+    m_isTowerDragging = false;
+  }
+}
+
+void Manager::updateUI() {
+  // 檢查側邊欄是否存在
+  if (m_sidebar) {
+    // 更新金錢和生命值顯示
+    m_sidebar->updateMoney(money);
+    m_sidebar->updateLives(life);
+
+    // 更新波數文字（如果需要）
+    m_waveText_text->SetText(std::to_string(current_waves));
+
+    // 檢查是否有正在拖曳的塔，更新按鈕狀態
+    if (m_sidebar->getTowerButtonsPanel()) {
+      // 獲取所有塔按鈕
+      auto buttons = m_sidebar->getAllTowerButtons();
+
+      // 更新按鈕可點擊狀態（根據金錢是否足夠）
+      for (const auto &button : buttons) {
+        // 檢查金錢是否足夠
+        int cost = button->getCost();
+        button->setClickable(money >= cost);
+      }
+    }
+  }
+}
+
+void Manager::initUI() {
+  // 獲取窗口大小
+  float screenWidth = 640;
+  float screenHeight = 480;
+
+  // 創建側邊欄 (位於右側)
+  float sidebarWidth = 150.0f;
+  
+  float sidebarX = screenWidth/2 - sidebarWidth/2;
+    
+  m_sidebar = std::make_shared<UI::UISidebar>(
+      Util::PTSDPosition(sidebarX, 0.0f), // 正確放在右側
+      screenHeight, sidebarWidth,
+      12.0f
+  );
+  LOG_INFO("MNGR  : 側邊欄創建於位置 ({}, {}), 寬度: {}",
+           screenWidth - sidebarWidth / 2.0f, 0, sidebarWidth);
+
+  // 初始化遊戲狀態
+  m_sidebar->updateMoney(money);
+  m_sidebar->updateLives(life);
+
+  // 添加塔按鈕
+  auto dartTowerBtn = std::make_shared<TowerButton>(
+      "dart_tower", Util::PTSDPosition(0, 0), // 位置會由容器設定
+      glm::vec2(60, 60), true, Tower::TowerType::dart,
+      250 // 250 金錢成本
+  );
+  m_sidebar->addTowerButton(dartTowerBtn);
+
+  auto spikeTowerBtn = std::make_shared<TowerButton>(
+      "spike", Util::PTSDPosition(0, 0), glm::vec2(0, 0), true,
+      Tower::TowerType::spike,
+      25 // 25 金錢成本
+  );
+  m_sidebar->addTowerButton(spikeTowerBtn);
+
+  for (auto &btn : m_sidebar->getAllTowerButtons()) {
+    clickables.push_back(btn);
+    LOG_INFO("MNGR  : 已添加按鈕 {} 到可點擊列表", btn->getName());
+  }
+  // 將側邊欄添加到渲染器
+  m_Renderer->AddChild(m_sidebar);
+
+  LOG_INFO("UI: Sidebar initialized");
 }

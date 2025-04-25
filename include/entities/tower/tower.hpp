@@ -11,8 +11,9 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
+#include "components/towerType.hpp"
+#include "components/canBuy.hpp"
 namespace Tower {
-enum class TowerType { dart, tack, ice, bomb, spike, glue, boomerang, super };
 enum class TowerState { unset, ready, cooldown };
 class Range : public Util::GameObject {
 private:
@@ -45,6 +46,7 @@ public:
   void setRadius(float radius) {
     m_radius = radius;
     auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
+    shape->SetColorHSV(0.1f, 0.001f, 0.5f, 0.5f);
     shape->SetSize({radius, radius});
     m_collisionComponent->setColParam(radius);
   }
@@ -79,16 +81,21 @@ public:
     m_Drawable = drawable;
   }
 };
-class Tower {
+class Tower: public CanBuy  {
 protected:
   TowerType m_type;
   TowerState m_state;
+  bool m_previewMode = false; // 添加預覽模式標誌
   std::function<void(std::shared_ptr<popper>)> m_popperCallback;
   std::shared_ptr<Body> m_body;
   std::shared_ptr<Range> m_range;
   std::shared_ptr<Path> m_path;
 
 public:
+  virtual void setRange(float range){
+    m_range->setRadius(range);
+  }
+
   virtual void setPosition(const Util::PTSDPosition &position) {
     m_body->setPosition(position);
     m_range->setPosition(position);
@@ -124,6 +131,37 @@ public:
   virtual std::shared_ptr<Body> getBody() { return m_body; }
 
   virtual std::shared_ptr<Range> getRange() { return m_range; }
+
+  // 添加設置狀態的方法
+  void setState(TowerState state) {
+    m_state = state;
+  }
+  
+  // 獲取當前狀態
+  TowerState getState() const {
+    return m_state;
+  }
+  
+  // 設置預覽模式
+  void setPreviewMode(bool previewMode) {
+    m_previewMode = previewMode;
+    
+    // 預覽模式下顯示範圍，正常模式下隱藏
+    if (m_range) {
+      m_range->setVisible(previewMode);
+    }
+    // 預覽模式下狀態為 unset，否則為 ready
+    setState(previewMode ? TowerState::unset : TowerState::ready);
+  }
+  
+  // 檢查是否為預覽模式
+  bool isPreviewMode() const {
+    return m_previewMode;
+  }
+
+  void onDrag(const Util::PTSDPosition& newPosition) override{
+    setPosition(newPosition);
+  }
 };
 } // namespace Tower
 #endif

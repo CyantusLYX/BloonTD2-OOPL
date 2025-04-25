@@ -1,8 +1,6 @@
 #include "UI/container/sidebar.hpp"
 #include "Util/Logger.hpp"
 #include "core/shape.hpp"
-#include "Util/GameObject.hpp"
-#include "Util/Text.hpp"
 
 namespace UI {
 
@@ -18,66 +16,41 @@ UISidebar::UISidebar(
     if (shape) {
         shape->SetColorRGB(180, 180, 180, 220); // 半透明灰色背景
     }
-    
+    m_Visible=true;
     // 設置較大的內邊距，美觀用
     setPadding(10.0f);
     setSpacing(5.0f);
     
-    // 計算每個區域的高度比例
+    // 設置垂直佈局，從上到下排列元件
+    setLayoutDirection(LayoutDirection::Vertical);
+    setAlignment(Alignment::Start); // 上對齊
+    
+    // 計算各區域高度比例
     float statusHeight = height * 0.12f;  // 12% 給狀態區
     float buyHeight = height * 0.38f;     // 38% 給購買區
     float infoHeight = height * 0.35f;    // 35% 給塔資訊區
     float controlHeight = height * 0.15f; // 15% 給控制區
     
-    // 創建狀態區域容器 (頂部)
-    m_statusSection = std::make_shared<UIContainer>(
-        Util::PTSDPosition(0, 0),  // 位置將在更新佈局時設置
-        glm::vec2(width - 2*getPadding(), statusHeight),
-        zIndex + 0.1f
+    // 創建狀態列元件
+    m_statusBar = std::make_shared<StatusBar>(
+        Util::PTSDPosition(0, 0), // 位置將由佈局設置
+        width - 2*getPadding(),   // 寬度減去內邊距
+        statusHeight,             // 高度
+        zIndex + 0.1f,            // Z-index略高於父容器
+        true                      // 固定大小
     );
-    m_statusSection->setPadding(5.0f);
     
-    // 創建狀態文字 (注意：文字需要包裝在 GameObject 中)
-    // 1. 首先創建 Text 對象
-    auto moneyTextDrawable = std::make_shared<Util::Text>(
-        "fonts/DroidSans.ttf", 18, "Money: 0", Util::Color(255, 255, 255));
-    auto livesTextDrawable = std::make_shared<Util::Text>(
-        "fonts/DroidSans.ttf", 18, "Lives: 0", Util::Color(255, 255, 255));
-    
-    // 2. 然後將 Text 包裝在 GameObject 中
-    m_moneyTextObj = std::make_shared<Util::GameObject>(
-        moneyTextDrawable, zIndex + 0.2f);
-    m_livesTextObj = std::make_shared<Util::GameObject>(
-        livesTextDrawable, zIndex + 0.2f);
-    
-    // 3. 將 GameObject 添加為子元素
-    m_statusSection->addChild(m_moneyTextObj);
-    m_statusSection->addChild(m_livesTextObj);
-    
-    // 4. 保存 Text 對象的引用以便於更新文字內容
-    m_moneyText = moneyTextDrawable;
-    m_livesText = livesTextDrawable;
-    
-    // 波數不在狀態區，可能在其他地方顯示
-    
-    // 創建購買區域容器
-    m_buySection = std::make_shared<UIContainer>(
-        Util::PTSDPosition(0, 0),  // 位置將在更新佈局時設置
-        glm::vec2(width - 2*getPadding(), buyHeight),
-        zIndex + 0.1f
+    // 創建塔按鈕面板元件
+    m_towerBtnPanel = std::make_shared<TowerButtonsPanel>(
+        Util::PTSDPosition(0, 0), // 位置將由佈局設置
+        width - 2*getPadding(),   // 寬度減去內邊距
+        buyHeight,                // 高度
+        zIndex + 0.1f             // Z-index略高於父容器
     );
-    m_buySection->setPadding(5.0f);
-    
-    // 添加"Buy Stuff"標題
-    auto buyTitleTextDrawable = std::make_shared<Util::Text>(
-        "fonts/DroidSans.ttf", 20, "Buy Stuff", Util::Color(255, 255, 255));
-    auto buyTitleObj = std::make_shared<Util::GameObject>(
-        buyTitleTextDrawable, zIndex + 0.2f);
-    m_buySection->addChild(buyTitleObj);
     
     // 創建塔資訊區域容器
     m_towerInfoSection = std::make_shared<UIContainer>(
-        Util::PTSDPosition(0, 0),  // 位置將在更新佈局時設置
+        Util::PTSDPosition(0, 0), // 位置將由佈局設置
         glm::vec2(width - 2*getPadding(), infoHeight),
         zIndex + 0.1f
     );
@@ -86,15 +59,15 @@ UISidebar::UISidebar(
     
     // 創建控制區域容器
     m_controlSection = std::make_shared<UIContainer>(
-        Util::PTSDPosition(0, 0),  // 位置將在更新佈局時設置
+        Util::PTSDPosition(0, 0), // 位置將由佈局設置
         glm::vec2(width - 2*getPadding(), controlHeight),
         zIndex + 0.1f
     );
     m_controlSection->setPadding(5.0f);
     
-    // 添加所有區域容器到側邊欄
-    addChild(m_statusSection);
-    addChild(m_buySection);
+    // 添加所有區域到側邊欄
+    addChild(m_statusBar);
+    addChild(m_towerBtnPanel);
     addChild(m_towerInfoSection);
     addChild(m_controlSection);
     
@@ -105,30 +78,61 @@ UISidebar::UISidebar(
 }
 
 void UISidebar::updateMoney(int amount) {
-    if (m_moneyText) {
-        m_moneyText->SetText("Money: " + std::to_string(amount));
+    if (m_statusBar) {
+        m_statusBar->updateMoney(amount);
     }
 }
 
 void UISidebar::updateLives(int amount) {
-    if (m_livesText) {
-        m_livesText->SetText("Lives: " + std::to_string(amount));
+    if (m_statusBar) {
+        m_statusBar->updateLives(amount);
+    }
+}
+
+void UISidebar::addTowerButton(const std::shared_ptr<TowerButton> &button) {
+    if (m_towerBtnPanel) {
+        m_towerBtnPanel->addTowerButton(button);
+    }
+}
+
+void UISidebar::clearTowerButtons() {
+    if (m_towerBtnPanel) {
+        m_towerBtnPanel->clearButtons();
     }
 }
 
 void UISidebar::clearSections() {
-    if (m_statusSection) m_statusSection->clearChildren();
-    if (m_buySection) m_buySection->clearChildren();
-    if (m_towerInfoSection) m_towerInfoSection->clearChildren();
-    if (m_controlSection) m_controlSection->clearChildren();
+    // 重置狀態列的值
+    if (m_statusBar) {
+        m_statusBar->updateMoney(0);
+        m_statusBar->updateLives(0);
+    }
     
-    // 重新添加基本的狀態文字
-    if (m_statusSection && m_moneyTextObj && m_livesTextObj) {
-        m_statusSection->addChild(m_moneyTextObj);
-        m_statusSection->addChild(m_livesTextObj);
+    // 清除塔按鈕
+    if (m_towerBtnPanel) {
+        m_towerBtnPanel->clearButtons();
+    }
+    
+    // 清除塔資訊區和控制區
+    if (m_towerInfoSection) {
+        m_towerInfoSection->clearChildren();
+    }
+    
+    if (m_controlSection) {
+        m_controlSection->clearChildren();
     }
 }
 
-// 其餘方法保持不變...
+std::vector<std::shared_ptr<TowerButton>> UISidebar::getAllTowerButtons() const {
+    if (m_towerBtnPanel) {
+        return m_towerBtnPanel->getAllButtons();
+    }
+    return {};  // 如果面板不存在則返回空vector
+}
+
+void UISidebar::updateLayout() {
+    // 調用基類的 updateLayout()，處理子元素的排列
+    UIContainer::updateLayout();
+}
 
 } // namespace UI

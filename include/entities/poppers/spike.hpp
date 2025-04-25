@@ -1,13 +1,13 @@
 #ifndef SPIKE_HPP
 #define SPIKE_HPP
 #include "Util/GameObject.hpp"
-#include "interfaces/draggable.hpp"
+#include "components/canBuy.hpp"
 #include "popper.hpp"
 #include <Util/Image.hpp>
 #include <Util/Position.hpp>
 #include <memory>
 #include <vector>
-class spike : public popper, public Interface::I_draggable{
+class spike : public popper, public CanBuy{
 private:
   std::shared_ptr<Util::GameObject> m_object;
   int life = 10;

@@ -36,7 +36,7 @@ private:
 
 public:
   StatusBar(const Util::PTSDPosition &position, float width, float height,
-            float zIndex = 10.0f);
+            float zIndex = 10.0f, bool fixedSize = true);
 
   void updateMoney(int amount);
   void updateLives(int amount);

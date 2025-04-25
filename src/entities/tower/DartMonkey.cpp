@@ -1,13 +1,15 @@
 #include "entities/tower/dartMonkey.hpp"
 #include "Util/Image.hpp"
 #include "Util/Time.hpp"
+#include "components/canBuy.hpp"
 #include "entities/tower/tower.hpp"
 
-DartMonkey::DartMonkey(const Util::PTSDPosition &position,float range): m_collision(Components::CollisionComponent(
-  position, range)) {
-  m_type = ::Tower::TowerType::dart;
-  m_state = ::Tower::TowerState::ready;
+DartMonkey::DartMonkey(const Util::PTSDPosition &position, float range)
+    : Tower::Tower(),
+      m_collision(Components::CollisionComponent(position, range)) {
   
+  // 明確設置狀態為 ready（預設塔可以攻擊）
+  m_state = ::Tower::TowerState::ready;
 
   // 創建塔身
   m_body = std::make_shared<::Tower::Body>(
@@ -16,7 +18,8 @@ DartMonkey::DartMonkey(const Util::PTSDPosition &position,float range): m_collis
 
   // 創建攻擊範圍指示器
   m_range = std::make_shared<::Tower::Range>(range, position);
-  m_range->setVisible(true); // 預設不顯示範圍
+  // 默認隱藏範圍
+  m_range->setVisible(false);
 }
 
 void DartMonkey::handleBloonsInRange(
@@ -55,17 +58,17 @@ void DartMonkey::handleBloonsInRange(
                                  targetBloon->getPosition().ToVec2());
 
   // 計算飛鏢到達目標需要的幀數
-float timeToTarget = distance / dartSpeed;
+  float timeToTarget = distance / dartSpeed;
 
-    // 根據氣球移動速度和預計飛行時間計算未來位置
-    float futureDistance =
-            bloonDistance + targetBloon->GetSpeed() * timeToTarget - 2.0f;
+  // 根據氣球移動速度和預計飛行時間計算未來位置
+  float futureDistance =
+      bloonDistance + targetBloon->GetSpeed() * timeToTarget - 2.0f;
 
-    // 使用路徑計算未來位置
-    Util::PTSDPosition futurePosition = targetBloon->getPosition();
-    if (m_path) {
-        futurePosition = m_path->getPositionAtDistance(futureDistance);
-    }
+  // 使用路徑計算未來位置
+  Util::PTSDPosition futurePosition = targetBloon->getPosition();
+  if (m_path) {
+    futurePosition = m_path->getPositionAtDistance(futureDistance);
+  }
 
   // 設置冷卻
   m_currentCooldown = m_cooldown;
@@ -85,6 +88,5 @@ float timeToTarget = distance / dartSpeed;
     m_state = ::Tower::TowerState::ready;
   }
 
-  //dragging
-    
+  // dragging
 }
