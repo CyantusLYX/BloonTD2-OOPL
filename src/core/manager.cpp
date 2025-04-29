@@ -15,7 +15,7 @@
 #include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
 #include "interfaces/move.hpp"
-#include <X11/X.h>
+
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -622,12 +622,12 @@ void Manager::next_wave() {
     LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
-
-  if (current_waves >= 0) {
+  //current_waves+=50;
+  if (current_waves >= 0 && current_waves <= 50) {
     LOG_INFO("MNGR  : new wave loaded");
     if (1) {
       try {
-        m_waveText_text->SetText(std::to_string(current_waves));
+        m_waveText_text->SetText(std::to_string(current_waves + 1));
         m_waveText->SetDrawable(m_waveText_text);
       } catch (std::exception &e) { // exception should be caught by reference
         LOG_CRITICAL("exception: {}", e.what());
@@ -636,12 +636,17 @@ void Manager::next_wave() {
     } else
       LOG_DEBUG("NONSTD: into textComponent-inner-else (manager.next_wave())");
   }
-  start_wave();
+  
+  if (current_waves > 50) {
+    m_Renderer->AddChild(m_gameover);
+    // m_game_state = game_state::over;
+  } else
+    start_wave();
 }
 
 void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
-      (current_waves != -1 || current_waves <= 50)) {
+      (current_waves != -1 && current_waves <= 50)) {
     set_playing();
   } else {
     LOG_ERROR("MNGR  : Invalid game state");
@@ -874,7 +879,8 @@ void Manager::updateUI() {
     m_sidebar->updateLives(life);
 
     // 更新波數文字（如果需要）
-    m_waveText_text->SetText(std::to_string(current_waves));
+    // m_waveText_text->SetText(std::to_string(current_waves > 50 ? current_waves:-1));
+    // m_waveText->SetDrawable(m_waveText_text);
 
     // 檢查是否有正在拖曳的塔，更新按鈕狀態
     if (m_sidebar->getTowerButtonsPanel()) {
@@ -898,14 +904,12 @@ void Manager::initUI() {
 
   // 創建側邊欄 (位於右側)
   float sidebarWidth = 150.0f;
-  
-  float sidebarX = screenWidth/2 - sidebarWidth/2;
-    
+
+  float sidebarX = screenWidth / 2 - sidebarWidth / 2;
+
   m_sidebar = std::make_shared<UI::UISidebar>(
       Util::PTSDPosition(sidebarX, 0.0f), // 正確放在右側
-      screenHeight, sidebarWidth,
-      12.0f
-  );
+      screenHeight, sidebarWidth, 12.0f);
   LOG_INFO("MNGR  : 側邊欄創建於位置 ({}, {}), 寬度: {}",
            screenWidth - sidebarWidth / 2.0f, 0, sidebarWidth);
 
@@ -919,6 +923,7 @@ void Manager::initUI() {
       glm::vec2(60, 60), true, Tower::TowerType::dart,
       250 // 250 金錢成本
   );
+  dartTowerBtn->setPosition(Util::PTSDPosition(0, 0));
   m_sidebar->addTowerButton(dartTowerBtn);
 
   auto spikeTowerBtn = std::make_shared<TowerButton>(

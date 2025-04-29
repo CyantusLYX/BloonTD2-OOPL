@@ -94,21 +94,22 @@ Util::PTSDPosition UIContainer::getWorldPosition(
 Util::PTSDPosition
 UIContainer::toLocalPosition(const Util::PTSDPosition &worldPos) const {
   // 將世界座標轉換為容器內的局部座標
-  glm::vec2 localPos =
-      (worldPos.ToVec2() - m_Transform.translation) / m_Transform.scale;
+  // glm::vec2 localPos =
+  //     (worldPos.ToVec2() - m_Transform.translation) / m_Transform.scale;
 
-  // 考慮旋轉（逆變換）
-  if (m_Transform.rotation != 0.0f) {
-    float cos_r = cos(-m_Transform.rotation);
-    float sin_r = sin(-m_Transform.rotation);
+  // // 考慮旋轉（逆變換）
+  // if (m_Transform.rotation != 0.0f) {
+  //   float cos_r = cos(-m_Transform.rotation);
+  //   float sin_r = sin(-m_Transform.rotation);
 
-    float rotatedX = localPos.x * cos_r - localPos.y * sin_r;
-    float rotatedY = localPos.x * sin_r + localPos.y * cos_r;
+  //   float rotatedX = localPos.x * cos_r - localPos.y * sin_r;
+  //   float rotatedY = localPos.x * sin_r + localPos.y * cos_r;
 
-    localPos = glm::vec2(rotatedX, rotatedY);
-  }
+  //   localPos = glm::vec2(rotatedX, rotatedY);
+  // }
 
-  return Util::PTSDPosition(localPos.x, localPos.y);
+  // return Util::PTSDPosition(localPos.x, localPos.y);
+  return worldPos;
 }
 
 void UIContainer::resizeToFitChildren() {

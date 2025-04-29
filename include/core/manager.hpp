@@ -2,14 +2,17 @@
 #define MANAGER_HPP
 
 #include "Util/Color.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Image.hpp"
 #include "Util/Renderer.hpp"
 #include "Util/Text.hpp"
 #include "entities/bloon.hpp"
 // 替換 Collapsible 引用
 #include "UI/button.hpp"
-#include "UI/container/sidebar.hpp"  // 添加 Sidebar 引用
+#include "UI/container/sidebar.hpp" // 添加 Sidebar 引用
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
+#include "components/towerType.hpp"
 #include "entities/poppers/popper.hpp"
 #include "entities/poppers/spike.hpp"
 #include "entities/tower/all_tower.hpp"
@@ -19,15 +22,14 @@
 #include "map.hpp"
 #include <X11/X.h>
 #include <cstdint>
-#include <memory>
-#include <vector>
-#include <unordered_map>
 #include <functional>
-#include "components/towerType.hpp"
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 class Manager {
 public:
-  enum class game_state { playing, gap, menu };
+  enum class game_state { playing, gap, menu, over };
   enum class mouse_status { free, drag };
   // game logics
   void updateDraggingObject(const Util::PTSDPosition &cursor_position);
@@ -62,7 +64,7 @@ public:
   ~Manager() = default;
 
   // 遊戲物件管理
-  void add_bloon(Bloon::Type type, float distance,float z_index=10);
+  void add_bloon(Bloon::Type type, float distance, float z_index = 10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
@@ -87,19 +89,20 @@ public:
   }
   void set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable);
   void end_dragging(); // ender_dragon()
-  bool drag_cd=false;
+  bool drag_cd = false;
 
   // Sidebar 相關方法
   void initUI();
   void updateUI();
-  
+
   // 塔建造相關
   void startDraggingTower(Tower::TowerType towerType);
   void placeCurrentTower(const Util::PTSDPosition &position);
   void cancelTowerPlacement();
 
   // 創建一個塔
-  std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type, const Util::PTSDPosition &position);
+  std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type,
+                                            const Util::PTSDPosition &position);
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }
@@ -115,11 +118,15 @@ public:
   int getCurrentWave() const { return current_waves; }
 
   // some resources
-  std::shared_ptr<Util::Text> m_waveText_text =
-      std::make_shared<Util::Text>(RESOURCE_DIR "/NotoSansTC-ExtraLight.ttf",
-                                   32, "Default", Util::Color(0, 0, 0), false);
+  std::shared_ptr<Util::Text> m_waveText_text = std::make_shared<Util::Text>(
+      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "Default",
+      Util::Color(0, 0, 0), false);
   std::shared_ptr<Util::GameObject> m_waveText =
       std::make_shared<Util::GameObject>(m_waveText_text, 5);
+  std::shared_ptr<Util::Image> m_gameover_img =
+      std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png");
+  std::shared_ptr<Util::GameObject> m_gameover =
+      std::make_shared<Util::GameObject>(m_gameover_img, 100);
 
 private:
   // 渲染和狀態
@@ -162,19 +169,22 @@ private:
   Tower::TowerType m_dragTowerType;
   int m_dragTowerCost = 0;
 
-  std::shared_ptr<popper> createPopper(Tower::TowerType type, const Util::PTSDPosition &position);
+  std::shared_ptr<popper> createPopper(Tower::TowerType type,
+                                       const Util::PTSDPosition &position);
   // 塔工廠函數類型定義
-  using TowerFactory = std::function<std::shared_ptr<Tower::Tower>(const Util::PTSDPosition&)>;
-  
+  using TowerFactory =
+      std::function<std::shared_ptr<Tower::Tower>(const Util::PTSDPosition &)>;
+
   // Popper 工廠函數類型定義
-  using PopperFactory = std::function<std::shared_ptr<popper>(const Util::PTSDPosition&)>;
-  
+  using PopperFactory =
+      std::function<std::shared_ptr<popper>(const Util::PTSDPosition &)>;
+
   // 塔工廠映射表
   std::unordered_map<Tower::TowerType, TowerFactory> m_towerFactories;
-  
+
   // Popper 工廠映射表
   std::unordered_map<Tower::TowerType, PopperFactory> m_popperFactories;
-  
+
   // 初始化塔工廠
   void initTowerFactories();
 };

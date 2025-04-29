@@ -11,8 +11,8 @@ TowerButton::TowerButton(const std::string &name,
       m_towerType(towerType),
       m_cost(cost) {
     
-    LOG_DEBUG("TOWER_BTN: 創建了一個 {} 塔按鈕，類型：{}, 成本：{}", 
-              name, static_cast<int>(towerType), cost);
+    LOG_DEBUG("TBTN  : 創建了一個 {} 塔按鈕，類型：{}, 成本：{}, 位置：{}", 
+              name, static_cast<int>(towerType), cost, pos.ToVec2());
 }
 
 Tower::TowerType TowerButton::getTowerType() const {
@@ -26,6 +26,6 @@ int TowerButton::getCost() const {
 void TowerButton::onClick(){
     Button::onClick();
     
-    LOG_DEBUG("TOWER_BTN: 玩家點擊了 {} 塔按鈕，類型：{}", 
+    LOG_DEBUG("TBTN  : 玩家點擊了 {} 塔按鈕，類型：{}", 
               getName(), static_cast<int>(m_towerType));
 }

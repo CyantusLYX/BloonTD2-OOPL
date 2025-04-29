@@ -42,6 +42,11 @@ void App::Start() {
 }
 
 void App::Update() {
+//   if(manager->get_game_state() == Manager::game_state::over){
+//     exit(-1);
+//   }
+//   else
+// {
   manager->cleanup_dead_objects();
   if (manager->get_game_state() != Manager::game_state::menu) {
     // 更新遊戲邏輯
@@ -63,7 +68,7 @@ void App::Update() {
     m_CurrentState = State::END;
   }
   manager->wave_check();
-  manager->update();
+  manager->update();//}
 }
 
 void App::End() { // NOLINT(this method will mutate members in the future)
