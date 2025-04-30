@@ -1,5 +1,6 @@
 #include "UI/buttons/tower_btn_conf.hpp"
 #include "Util/Logger.hpp"
+#include "conf.hpp"
 #include "config.hpp"
 
 namespace UI {
@@ -17,7 +18,7 @@ void TowerButtonConfigManager::Initialize() {
             Tower::TowerType::dart,
             "Dart Monkey",
             RESOURCE_DIR "/buttons/tower/dart_monkey.png",
-            250,
+            COST_DART,
             true
         )
     );
@@ -27,7 +28,7 @@ void TowerButtonConfigManager::Initialize() {
             Tower::TowerType::spike,
             "Spike",
             RESOURCE_DIR "/buttons/tower/spike.png",
-            25,
+            COST_SPIKES,
             true
         )
     );
@@ -37,7 +38,7 @@ void TowerButtonConfigManager::Initialize() {
             Tower::TowerType::tack,
             "Tack Shooter",
             RESOURCE_DIR "/buttons/tower/tack.png",
-            400,
+            COST_TACK,
             true
         )
     );
@@ -47,7 +48,7 @@ void TowerButtonConfigManager::Initialize() {
             Tower::TowerType::ice,
             "Ice Ball",
             RESOURCE_DIR "/buttons/tower/ice_ball.png",
-            750,
+            COST_ICE,
             false  // 暫時設為不可用
         )
     );

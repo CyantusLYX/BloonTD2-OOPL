@@ -9,7 +9,7 @@ Button::Button(const std::string &name, const Util::PTSDPosition &pos,
                const std::variant<glm::vec2, float> col_parm = 0.0f,
                bool can_click = true, const std::string &path = "")
     : Components::CollisionComponent(pos, col_parm),
-      Util::GameObject(nullptr, 1, {0, 0}, true) {
+      Util::GameObject(nullptr, 100, {0, 0}, true) {
   this->name = name;
   if (path.empty()) {
     m_Drawable = std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/B" +
@@ -17,7 +17,8 @@ Button::Button(const std::string &name, const Util::PTSDPosition &pos,
   } else {
     m_Drawable = std::make_shared<Util::Image>(path);
   }
-
+  auto image = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
+  image->UseAntiAliasing(false);
   // Set the GameObject transform position - this is the key fix
   m_Transform.translation = pos.ToVec2();
   if (col_parm.index() == 0)

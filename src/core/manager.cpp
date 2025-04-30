@@ -1,33 +1,4 @@
 #include "core/manager.hpp"
-#include "Util/GameObject.hpp"
-#include "Util/Image.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Position.hpp"
-#include "Util/Renderer.hpp"
-#include "Util/Text.hpp"
-#include "components/collisionComp.hpp"
-#include "components/towerType.hpp"
-#include "core/loader.hpp"
-#include "entities/bloon.hpp"
-#include "entities/poppers/spike.hpp"
-#include "entities/tower/tower_config.hpp"
-#include "interfaces/clickable.hpp"
-#include "interfaces/collision.hpp"
-#include "interfaces/draggable.hpp"
-#include "interfaces/move.hpp"
-#include <X11/X.h>
-#include <algorithm>
-#include <chrono>
-#include <cstddef>
-#include <filesystem>
-#include <glm/fwd.hpp>
-#include <memory>
-#include <random>
-#include <string>
-#include <vector>
-#include "UI/buttons/tower_btn.hpp"
-#include "UI/buttons/tower_btn_conf.hpp"
-#include <magic_enum/magic_enum.hpp>
 
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
@@ -80,53 +51,11 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
                               std::make_shared<Path>(paths[i], 40), false);
     this->add_map(map);
   }
-
-  // Add spike button to the top-right corner with adjusted position
-  /*  auto spike_button =
-       std::make_shared<Button>("spike", Util::PTSDPosition(280, 200), 50.0f,
-                                true); // Adjusted position to be visible
-   LOG_INFO("MNGR  : Adding spike button at visible top-right corner");
-   this->add_button(spike_button);
-   this->add_clickable(spike_button); */
-
   m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
-
-  // m_waveText->
-  // m_waveText->SetDrawable(std::make_shared<Util::Text>(RESOURCE_DIR
-  // "/NotoSansTC-ExtraLight.ttf", 12, "Default", Util::Color(255, 255, 255),
-  // false)); m_waveText->SetDrawable(nullptr);//std::make_shared<Util::Text>(
-  //     Util::Text("/usr/share/fonts/gsfonts/C059-Roman.otf", 20, "0",
-  //     Util::Color(255, 255, 255), false)));
   m_Renderer->AddChild(m_waveText);
   initUI();
 }
 
-// 初始化塔工廠映射表
-void Manager::initTowerFactories() {
-  // 註冊 DartMonkey 工廠函數
-  m_towerFactories[Tower::TowerType::dart] = [](const Util::PTSDPosition &pos) {
-    return std::make_shared<DartMonkey>(pos);
-  };
-
-  // 註冊 BoomerangMonkey 工廠函數（如果已實現）
-  /* m_towerFactories[Tower::TowerType::boomerang] = [](const Util::PTSDPosition
-  &pos) {
-      // 如果未實現，返回 nullptr 或拋出異常
-      LOG_ERROR("MNGR  : BoomerangMonkey 尚未實現");
-      return nullptr;
-      // 或者 return std::make_shared<BoomerangMonkey>(pos);
-  }; */
-
-  // 可以繼續添加其他塔類型...
-
-  // 初始化 popper 工廠映射表
-  m_popperFactories[Tower::TowerType::spike] =
-      [](const Util::PTSDPosition &pos) {
-        return std::make_shared<spike>(pos);
-      };
-
-  // 可以繼續添加其他 popper 類型...
-}
 
 // 根據類型創建塔
 std::shared_ptr<Tower::Tower>
@@ -894,22 +823,18 @@ void Manager::initUI() {
   float screenHeight = 480;
 
   // 創建側邊欄 (位於右側)
-  float sidebarWidth = 150.0f;
-  float sidebarX = screenWidth/2 - sidebarWidth/2;
-    
+  float sidebarWidth = 170.0f;
+  float sidebarX = screenWidth / 2 - sidebarWidth / 2;
+
   // 創建側邊欄管理器
   m_sidebarManager = std::make_shared<UI::SidebarManager>(
-      Util::PTSDPosition(sidebarX, 0.0f),
-      screenHeight,
-      sidebarWidth,
-      12.0f
-  );
-  
+      Util::PTSDPosition(sidebarX, 0.0f), screenHeight, sidebarWidth, 12.0f);
+
   // 設置渲染器引用
   m_sidebarManager->setRenderer(m_Renderer);
-  
-  LOG_INFO("MNGR  : 側邊欄創建於位置 ({}, {}), 寬度: {}",
-           sidebarX, 0, sidebarWidth);
+
+  LOG_INFO("MNGR  : 側邊欄創建於位置 ({}, {}), 寬度: {}", sidebarX, 0,
+           sidebarWidth);
 
   // 初始化遊戲狀態
   m_sidebarManager->updateMoney(money);
@@ -917,25 +842,25 @@ void Manager::initUI() {
 
   // 初始化塔按鈕配置
   UI::TowerButtonConfigManager::Initialize();
-  
+
   // 從配置中添加所有可用的塔按鈕
   auto towerConfigs = UI::TowerButtonConfigManager::GetAllAvailableConfigs();
-  for (const auto& config : towerConfigs) {
+  for (const auto &config : towerConfigs) {
     auto towerBtn = std::make_shared<TowerButton>(
-        config.name,  // 名稱
+        config.name,              // 名稱
         Util::PTSDPosition(0, 0), // 位置將由面板自動調整
-        60.0f, // 按鈕大小 (這裡做成圓形)
+        60.0f,                    // 按鈕大小 (這裡做成圓形)
         config.imagePath,
         money >= config.cost, // 是否可點擊取決於錢是否足夠
-        config.type, // 塔類型
-        config.cost  // 成本
+        config.type,          // 塔類型
+        config.cost           // 成本
     );
-    
+
     // 添加到側邊欄
     m_sidebarManager->addTowerButton(towerBtn);
-    
-    LOG_INFO("MNGR  : 已添加塔按鈕 {} (類型: {}, 成本: {})", 
-             config.name, static_cast<int>(config.type), config.cost);
+
+    LOG_INFO("MNGR  : 已添加塔按鈕 {} (類型: {}, 成本: {})", config.name,
+             static_cast<int>(config.type), config.cost);
   }
 
   // 獲取所有按鈕並添加到可點擊列表

@@ -22,7 +22,7 @@ SidebarManager::SidebarManager(const Util::PTSDPosition &position, float height,
 
   // 計算各區域高度比例
   float statusHeight = height * 0.12f; // 12% 給狀態區
-  float buyHeight = height * 0.38f;    // 38% 給購買區
+  float buyHeight = height * 0.15f;    // 15% 給購買區
   float infoHeight = height * 0.50f;   // 50% 給Flag區
 
   // 計算初始位置 - 直接計算正確位置而不是設為 (0,0)

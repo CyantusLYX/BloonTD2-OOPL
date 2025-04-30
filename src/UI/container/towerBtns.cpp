@@ -16,9 +16,8 @@ TowerButtonsPanel::TowerButtonsPanel(
         Util::ShapeType::Rectangle, 
         glm::vec2(width, height)
     );
-    m_backgroundShape->SetColorRGB(50, 50, 50, 180); // 半透明深灰色
     SetDrawable(m_backgroundShape);
-    
+    m_backgroundShape->SetColorRGB(50, 50, 50, 10); // 半透明深灰色
     // 設置位置 (相對於畫面中心)
     m_Transform.translation = position.ToVec2();
     

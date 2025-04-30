@@ -1,29 +1,45 @@
 #ifndef MANAGER_HPP
 #define MANAGER_HPP
 
+#include "UI/SidebarManager.hpp"
+#include "UI/button.hpp"
+#include "UI/buttons/tower_btn.hpp"
+#include "UI/buttons/tower_btn_conf.hpp"
 #include "Util/Color.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Image.hpp"
+#include "Util/Logger.hpp"
+#include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
 #include "Util/Text.hpp"
-#include "entities/bloon.hpp"
-// 替換 Collapsible 引用
-#include "UI/button.hpp"
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
+#include "components/towerType.hpp"
+#include "conf.hpp"
+#include "core/loader.hpp"
+#include "entities/bloon.hpp"
 #include "entities/poppers/popper.hpp"
 #include "entities/poppers/spike.hpp"
 #include "entities/tower/all_tower.hpp"
+#include "entities/tower/tower_config.hpp"
 #include "interfaces/clickable.hpp"
+#include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
 #include "interfaces/move.hpp"
 #include "map.hpp"
-#include <X11/X.h>
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
 #include <cstdint>
-#include <memory>
-#include <vector>
-#include <unordered_map>
+#include <filesystem>
 #include <functional>
-#include "components/towerType.hpp"
-#include "UI/SidebarManager.hpp"
+#include <glm/fwd.hpp>
+#include <magic_enum/magic_enum.hpp>
+#include <memory>
+#include <random>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class Manager {
 public:
@@ -62,7 +78,7 @@ public:
   ~Manager() = default;
 
   // 遊戲物件管理
-  void add_bloon(Bloon::Type type, float distance,float z_index=10);
+  void add_bloon(Bloon::Type type, float distance, float z_index = 10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
@@ -87,19 +103,20 @@ public:
   }
   void set_dragging(const std::shared_ptr<Interface::I_draggable> &draggable);
   void end_dragging(); // ender_dragon()
-  bool drag_cd=false;
+  bool drag_cd = false;
 
   // Sidebar 相關方法
   void initUI();
   void updateUI();
-  
+
   // 塔建造相關
   void startDraggingTower(Tower::TowerType towerType);
   void placeCurrentTower(const Util::PTSDPosition &position);
   void cancelTowerPlacement();
 
   // 創建一個塔
-  std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type, const Util::PTSDPosition &position);
+  std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type,
+                                            const Util::PTSDPosition &position);
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }
@@ -162,19 +179,22 @@ private:
   Tower::TowerType m_dragTowerType;
   int m_dragTowerCost = 0;
 
-  std::shared_ptr<popper> createPopper(Tower::TowerType type, const Util::PTSDPosition &position);
+  std::shared_ptr<popper> createPopper(Tower::TowerType type,
+                                       const Util::PTSDPosition &position);
   // 塔工廠函數類型定義
-  using TowerFactory = std::function<std::shared_ptr<Tower::Tower>(const Util::PTSDPosition&)>;
-  
+  using TowerFactory =
+      std::function<std::shared_ptr<Tower::Tower>(const Util::PTSDPosition &)>;
+
   // Popper 工廠函數類型定義
-  using PopperFactory = std::function<std::shared_ptr<popper>(const Util::PTSDPosition&)>;
-  
+  using PopperFactory =
+      std::function<std::shared_ptr<popper>(const Util::PTSDPosition &)>;
+
   // 塔工廠映射表
   std::unordered_map<Tower::TowerType, TowerFactory> m_towerFactories;
-  
+
   // Popper 工廠映射表
   std::unordered_map<Tower::TowerType, PopperFactory> m_popperFactories;
-  
+
   // 初始化塔工廠
   void initTowerFactories();
 };

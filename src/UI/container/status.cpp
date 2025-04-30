@@ -29,15 +29,11 @@ StatusItem::StatusItem(const std::string &title,
   );
   m_valueObj = std::make_shared<Util::GameObject>(m_valueText, zIndex + 0.1f);
   AddChild(m_valueObj);
-
-  LOG_DEBUG("StatusItem: Created with title '{}' and value '{}'", title,
-            initialValue);
 }
 
 void StatusItem::updateValue(const std::string &value) {
   if (m_valueText) {
     m_valueText->SetText(value);
-    LOG_DEBUG("StatusItem: Value updated to '{}'", value);
   }
 }
 
@@ -53,8 +49,6 @@ void StatusItem::setSize(float width, float height) {
 
   // 使用 updateTextPositions 設置正確位置
   updateTextPositions();
-
-  LOG_DEBUG("StatusItem: Size updated to {}x{}", width, height);
 }
 
 void StatusItem::setPosition(const Util::PTSDPosition &position) {
@@ -74,9 +68,6 @@ void StatusItem::updateTextPositions() {
       glm::vec2(myPosition.x - m_width / 4, myPosition.y);
   m_valueObj->m_Transform.translation =
       glm::vec2(myPosition.x + m_width / 4, myPosition.y);
-
-  LOG_DEBUG("StatusItem: Text positions updated at ({}, {})", myPosition.x,
-            myPosition.y);
 }
 
 StatusBar::StatusBar(const Util::PTSDPosition &position, float width,
@@ -87,7 +78,7 @@ StatusBar::StatusBar(const Util::PTSDPosition &position, float width,
   // 創建背景
   m_backgroundShape = std::make_shared<Util::Shape>(Util::ShapeType::Rectangle,
                                                     glm::vec2(width, height));
-  m_backgroundShape->SetColorRGB(30, 30, 30, 200); // 半透明深灰色
+  m_backgroundShape->SetColorRGB(30, 30, 30, 100); // 半透明深灰色
   SetDrawable(m_backgroundShape);
 
   // 設置位置

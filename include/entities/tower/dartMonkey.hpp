@@ -6,6 +6,7 @@
 #include "components/collisionComp.hpp"
 #include "entities/poppers/dart.hpp"
 #include "tower.hpp"
+#include "conf.hpp"
 
 class DartMonkey final : public Tower::Tower{
 private:
@@ -16,7 +17,7 @@ private:
   Components::CollisionComponent m_collision;
 
 public:
-  DartMonkey(const Util::PTSDPosition &position, float range = 150.0f);
+  DartMonkey(const Util::PTSDPosition &position, float range = float(RANGE_DART));
   ~DartMonkey() = default;
 
   // 處理射程內氣球的方法

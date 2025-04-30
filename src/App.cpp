@@ -39,13 +39,6 @@ void App::Start() {
       std::make_shared<spike>(manager->get_curr_map()->get_path()->getPositionAtPercentage(1));
   spike_at_end->setLife(1000000);
   manager->add_popper(spike_at_end);
-  auto test_shape = std::make_shared<Util::Shape>(
-      Util::ShapeType::Rectangle, glm::vec2(100, 100));
-  test_shape->SetColorRGB(180, 180, 180, 100);
-  auto test_object = std::make_shared<Util::GameObject>(test_shape, 1);
-  test_object->m_Transform.translation = Util::PTSDPosition(0, 0).ToVec2();
-  test_object->SetVisible(true);
-  manager->add_object(test_object);
 }
 
 void App::Update() {

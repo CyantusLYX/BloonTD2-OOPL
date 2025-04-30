@@ -2,6 +2,7 @@
 #define TOWER_HPP
 #include "Core/Drawable.hpp"
 #include "Util/GameObject.hpp"
+#include "Util/Image.hpp"
 #include "Util/Position.hpp"
 #include "components/collisionComp.hpp"
 #include "core/path.hpp"
