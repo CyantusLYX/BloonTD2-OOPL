@@ -25,7 +25,8 @@
 #include <random>
 #include <string>
 #include <vector>
-
+#include "UI/buttons/tower_btn.hpp"
+#include "UI/buttons/tower_btn_conf.hpp"
 #include <magic_enum/magic_enum.hpp>
 
 bool toggle_show_collision_at = 0;
@@ -90,8 +91,6 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
 
   m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
 
-  initUI();
-
   // m_waveText->
   // m_waveText->SetDrawable(std::make_shared<Util::Text>(RESOURCE_DIR
   // "/NotoSansTC-ExtraLight.ttf", 12, "Default", Util::Color(255, 255, 255),
@@ -99,6 +98,7 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   //     Util::Text("/usr/share/fonts/gsfonts/C059-Roman.otf", 20, "0",
   //     Util::Color(255, 255, 255), false)));
   m_Renderer->AddChild(m_waveText);
+  initUI();
 }
 
 // 初始化塔工廠映射表
@@ -868,25 +868,22 @@ void Manager::cancelTowerPlacement() {
 
 void Manager::updateUI() {
   // 檢查側邊欄是否存在
-  if (m_sidebar) {
+  if (m_sidebarManager) {
     // 更新金錢和生命值顯示
-    m_sidebar->updateMoney(money);
-    m_sidebar->updateLives(life);
+    m_sidebarManager->updateMoney(money);
+    m_sidebarManager->updateLives(life);
 
     // 更新波數文字（如果需要）
     m_waveText_text->SetText(std::to_string(current_waves));
 
-    // 檢查是否有正在拖曳的塔，更新按鈕狀態
-    if (m_sidebar->getTowerButtonsPanel()) {
-      // 獲取所有塔按鈕
-      auto buttons = m_sidebar->getAllTowerButtons();
+    // 檢查塔按鈕狀態
+    auto buttons = m_sidebarManager->getAllTowerButtons();
 
-      // 更新按鈕可點擊狀態（根據金錢是否足夠）
-      for (const auto &button : buttons) {
-        // 檢查金錢是否足夠
-        int cost = button->getCost();
-        button->setClickable(money >= cost);
-      }
+    // 更新按鈕可點擊狀態（根據金錢是否足夠）
+    for (const auto &button : buttons) {
+      // 檢查金錢是否足夠
+      int cost = button->getCost();
+      button->setClickable(money >= cost);
     }
   }
 }
@@ -898,42 +895,52 @@ void Manager::initUI() {
 
   // 創建側邊欄 (位於右側)
   float sidebarWidth = 150.0f;
-  
   float sidebarX = screenWidth/2 - sidebarWidth/2;
     
-  m_sidebar = std::make_shared<UI::UISidebar>(
-      Util::PTSDPosition(sidebarX, 0.0f), // 正確放在右側
-      screenHeight, sidebarWidth,
+  // 創建側邊欄管理器
+  m_sidebarManager = std::make_shared<UI::SidebarManager>(
+      Util::PTSDPosition(sidebarX, 0.0f),
+      screenHeight,
+      sidebarWidth,
       12.0f
   );
+  
+  // 設置渲染器引用
+  m_sidebarManager->setRenderer(m_Renderer);
+  
   LOG_INFO("MNGR  : 側邊欄創建於位置 ({}, {}), 寬度: {}",
-           screenWidth - sidebarWidth / 2.0f, 0, sidebarWidth);
+           sidebarX, 0, sidebarWidth);
 
   // 初始化遊戲狀態
-  m_sidebar->updateMoney(money);
-  m_sidebar->updateLives(life);
+  m_sidebarManager->updateMoney(money);
+  m_sidebarManager->updateLives(life);
 
-  // 添加塔按鈕
-  auto dartTowerBtn = std::make_shared<TowerButton>(
-      "dart_tower", Util::PTSDPosition(0, 0), // 位置會由容器設定
-      glm::vec2(60, 60), true, Tower::TowerType::dart,
-      250 // 250 金錢成本
-  );
-  m_sidebar->addTowerButton(dartTowerBtn);
+  // 初始化塔按鈕配置
+  UI::TowerButtonConfigManager::Initialize();
+  
+  // 從配置中添加所有可用的塔按鈕
+  auto towerConfigs = UI::TowerButtonConfigManager::GetAllAvailableConfigs();
+  for (const auto& config : towerConfigs) {
+    auto towerBtn = std::make_shared<TowerButton>(
+        config.name,  // 名稱
+        Util::PTSDPosition(0, 0), // 位置將由面板自動調整
+        60.0f, // 按鈕大小 (這裡做成圓形)
+        config.imagePath,
+        money >= config.cost, // 是否可點擊取決於錢是否足夠
+        config.type, // 塔類型
+        config.cost  // 成本
+    );
+    
+    // 添加到側邊欄
+    m_sidebarManager->addTowerButton(towerBtn);
+    
+    LOG_INFO("MNGR  : 已添加塔按鈕 {} (類型: {}, 成本: {})", 
+             config.name, static_cast<int>(config.type), config.cost);
+  }
 
-  auto spikeTowerBtn = std::make_shared<TowerButton>(
-      "spike", Util::PTSDPosition(0, 0), glm::vec2(0, 0), true,
-      Tower::TowerType::spike,
-      25 // 25 金錢成本
-  );
-  m_sidebar->addTowerButton(spikeTowerBtn);
-
-  for (auto &btn : m_sidebar->getAllTowerButtons()) {
+  // 獲取所有按鈕並添加到可點擊列表
+  for (auto &btn : m_sidebarManager->getAllTowerButtons()) {
     clickables.push_back(btn);
     LOG_INFO("MNGR  : 已添加按鈕 {} 到可點擊列表", btn->getName());
   }
-  // 將側邊欄添加到渲染器
-  m_Renderer->AddChild(m_sidebar);
-
-  LOG_INFO("UI: Sidebar initialized");
 }

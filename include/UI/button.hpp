@@ -12,11 +12,12 @@
 
 enum class State { non_clickable, clickable, clicked };
 class Button : public Components::CollisionComponent,
-                     public Util::GameObject,
-                     public Interface::I_clickable {
+               public Util::GameObject,
+               public Interface::I_clickable {
 public:
   Button(const std::string &name, const Util::PTSDPosition &pos,
-         std::variant<glm::vec2, float> col_parm, bool can_click);
+         std::variant<glm::vec2, float> col_parm, bool can_click,
+         const std::string &path);
   ~Button() override = default;
 
 private:
@@ -29,7 +30,7 @@ private:
 
 public:
   // enum class click_state {};
-  //void when_click_toggle(bool c_toggle); // change image
+  // void when_click_toggle(bool c_toggle); // change image
 
   virtual void onClick() override;
   virtual void onFocus() override;
@@ -44,5 +45,5 @@ public:
   const std::string &getName() const { return name; }
 
   void setPosition(const Util::PTSDPosition &position) override;
-}; 
+};
 #endif

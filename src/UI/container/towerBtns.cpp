@@ -9,168 +9,151 @@ TowerButtonsPanel::TowerButtonsPanel(
     float width,
     float height,
     float zIndex
-) : UIContainer(position, glm::vec2(width, height), zIndex) {
+) : GameObject(nullptr, zIndex), m_width(width), m_height(height) {
     
-    // 設置垂直排列
-    setLayoutDirection(LayoutDirection::Vertical);
-    setAlignment(Alignment::Start); // 上對齊
-    setPadding(5.0f);
-    setSpacing(5.0f);
-    
-    // 創建第一個按鈕行
-    auto firstRow = createRow();
-    m_rows.push_back(firstRow);
-    addChild(firstRow);
-}
-
-std::shared_ptr<UIContainer> TowerButtonsPanel::createRow() {
-    // 計算行容器的寬度
-    float rowWidth = getContentSize().x;
-    
-    // 創建新的行容器
-    auto row = std::make_shared<UIContainer>(
-        Util::PTSDPosition(0, 0), // 位置會由父容器設置
-        glm::vec2(rowWidth, m_buttonSize.y),
-        GetZIndex() + 0.1f
+    // 創建背景形狀
+    m_backgroundShape = std::make_shared<Util::Shape>(
+        Util::ShapeType::Rectangle, 
+        glm::vec2(width, height)
     );
+    m_backgroundShape->SetColorRGB(50, 50, 50, 180); // 半透明深灰色
+    SetDrawable(m_backgroundShape);
     
-    // 設置行容器為水平排列
-    row->setLayoutDirection(LayoutDirection::Horizontal);
-    row->setAlignment(Alignment::Start); // 左對齊
-    row->setPadding(0.0f);
-    row->setSpacing(5.0f);
+    // 設置位置 (相對於畫面中心)
+    m_Transform.translation = position.ToVec2();
     
-    return row;
+    LOG_DEBUG("TowerButtonsPanel: Created with dimensions {}x{} at position ({}, {})",
+              width, height, position.x, position.y);
 }
 
 void TowerButtonsPanel::addTowerButton(const std::shared_ptr<TowerButton> &button) {
-    // 調整按鈕大小
-    button->setSize(m_buttonSize);
+    if (!button) return;
     
-    // 獲取當前的最後一行
-    auto &lastRow = m_rows.back();
+    // 添加到按鈕列表
+    m_buttons.push_back(button);
     
-    // 檢查最後一行是否已滿
-    if (lastRow->getChildren().size() >= m_buttonsPerRow) {
-        // 創建新行
-        auto newRow = createRow();
-        m_rows.push_back(newRow);
-        addChild(newRow);
-        
-        // 將按鈕添加到新行
-        newRow->addChild(button);
-    } else {
-        // 將按鈕添加到現有行
-        lastRow->addChild(button);
-    }
+    // 添加為子物件
+    AddChild(button);
     
-    LOG_DEBUG("BTN_PANEL: 添加了一個新的塔按鈕，當前共有 {} 個按鈕", getAllButtons().size());
+    // 更新布局
+    updateLayout();
+    
+    LOG_DEBUG("TowerButtonsPanel: Added a new button, total buttons: {}", m_buttons.size());
 }
 
 void TowerButtonsPanel::setButtonsPerRow(size_t count) {
     if (count == 0) {
-        LOG_ERROR("BTN_PANEL: 每行按鈕數不能為零");
+        LOG_ERROR("TowerButtonsPanel: Buttons per row cannot be zero");
         return;
     }
     
     m_buttonsPerRow = count;
-    rearrangeButtons();
+    updateLayout();
+    
+    LOG_DEBUG("TowerButtonsPanel: Set buttons per row to {}", count);
 }
 
 void TowerButtonsPanel::setButtonSize(const glm::vec2 &size) {
     m_buttonSize = size;
-    rearrangeButtons();
+    updateLayout();
+    
+    LOG_DEBUG("TowerButtonsPanel: Set button size to {}x{}", size.x, size.y);
 }
 
 void TowerButtonsPanel::clearButtons() {
-    // 清除所有行和按鈕
-    for (auto &row : m_rows) {
-        row->clearChildren();
+    // 移除所有按鈕作為子物件
+    for (const auto& button : m_buttons) {
+        RemoveChild(button);
     }
-    clearChildren();
-    m_rows.clear();
     
-    // 重新創建第一行
-    auto firstRow = createRow();
-    m_rows.push_back(firstRow);
-    addChild(firstRow);
+    // 清空按鈕列表
+    m_buttons.clear();
     
-    LOG_DEBUG("BTN_PANEL: 已清除所有按鈕");
+    LOG_DEBUG("TowerButtonsPanel: Cleared all buttons");
 }
 
 std::vector<std::shared_ptr<TowerButton>> TowerButtonsPanel::getAllButtons() const {
-    std::vector<std::shared_ptr<TowerButton>> buttons;
+    return m_buttons;
+}
+
+void TowerButtonsPanel::setPosition(const Util::PTSDPosition &position) {
+    // 更新本身位置
+    m_Transform.translation = position.ToVec2();
     
-    // 從所有行收集按鈕
-    for (const auto &row : m_rows) {
-        for (const auto &child : row->getChildren()) {
-            auto button = std::dynamic_pointer_cast<TowerButton>(child);
-            if (button) {
-                buttons.push_back(button);
-            }
-        }
+    // 更新子元素位置
+    updateLayout();
+    
+    LOG_DEBUG("TowerButtonsPanel: Position updated to ({}, {})", position.x, position.y);
+}
+
+void TowerButtonsPanel::setSize(const glm::vec2 &size) {
+    m_width = size.x;
+    m_height = size.y;
+    
+    // 更新背景形狀
+    if (m_backgroundShape) {
+        m_backgroundShape->SetSize(size);
     }
     
-    return buttons;
+    // 更新按鈕位置
+    updateLayout();
+    
+    LOG_DEBUG("TowerButtonsPanel: Size updated to {}x{}", size.x, size.y);
 }
 
 void TowerButtonsPanel::rearrangeButtons() {
-    // 收集所有按鈕
-    auto buttons = getAllButtons();
-    
-    // 清除所有行和按鈕
-    clearButtons();
-    
-    // 重新添加所有按鈕
-    for (const auto &button : buttons) {
-        addTowerButton(button);
-    }
-    
-    LOG_DEBUG("BTN_PANEL: 重新排列了 {} 個按鈕", buttons.size());
+    updateLayout();
 }
 
 void TowerButtonsPanel::updateLayout() {
-    // 獲取容器尺寸
-    float contentWidth = getContentSize().x;
-    float contentHeight = getContentSize().y;
+    if (m_buttons.empty()) return;
     
-    // 計算按鈕布局參數
-    int buttonCount = m_Children.size();
-    if (buttonCount == 0) return;
+    // 獲取面板絕對位置（相對於畫面中心）
+    glm::vec2 panelPosition = m_Transform.translation;
     
-    float buttonSpacing = getSpacing();
-    float buttonSize = std::min((contentWidth - buttonSpacing * (2 - 1)) / 2, 
-                             (contentHeight - buttonSpacing * std::ceil(buttonCount / 2.0f - 1)) / std::ceil(buttonCount / 2.0f));
+    // 計算可用內容區域
+    float contentWidth = m_width - 2 * m_padding;
+    float contentHeight = m_height - 2 * m_padding;
     
-    // 確保合理的按鈕大小
-    buttonSize = std::max(buttonSize, 40.0f);
+    // 計算實際按鈕大小和間距
+    float buttonSpacing = m_spacing;
+    float maxButtonWidth = (contentWidth - buttonSpacing * (m_buttonsPerRow - 1)) / m_buttonsPerRow;
+    float buttonSize = std::min(maxButtonWidth, m_buttonSize.x);  // 使用預設大小和最大可用大小的較小值
     
-    // 計算實際佈局的起始點（容器左上角加上內邊距）
-    float startX = -contentWidth/2 + buttonSize/2 + getPadding();
-    float startY = -contentHeight/2 + buttonSize/2 + getPadding();
+    // 計算按鈕行數
+    size_t buttonCount = m_buttons.size();
+    size_t rowCount = (buttonCount + m_buttonsPerRow - 1) / m_buttonsPerRow;  // 向上取整
+    
+    // 檢查是否需要調整按鈕大小以適應高度
+    float totalRowsHeight = rowCount * buttonSize + (rowCount - 1) * buttonSpacing;
+    if (totalRowsHeight > contentHeight) {
+        // 按鈕太大，無法適應高度，需要調整大小
+        float maxButtonHeight = (contentHeight - buttonSpacing * (rowCount - 1)) / rowCount;
+        buttonSize = std::min(buttonSize, maxButtonHeight);
+    }
+    
+    // 計算起始位置（左上角）
+    float startX = panelPosition.x - m_width/2 + m_padding + buttonSize/2;
+    float startY = panelPosition.y + m_height/2 - m_padding - buttonSize/2;
     
     // 布局按鈕
-    for (int i = 0; i < buttonCount; i++) {
-        int row = i / 2;
-        int col = i % 2;
+    for (size_t i = 0; i < m_buttons.size(); ++i) {
+        // 計算行列位置
+        size_t row = i / m_buttonsPerRow;
+        size_t col = i % m_buttonsPerRow;
         
+        // 計算按鈕中心位置
         float x = startX + col * (buttonSize + buttonSpacing);
-        float y = startY + row * (buttonSize + buttonSpacing);
+        float y = startY - row * (buttonSize + buttonSpacing);
         
-        // 計算按鈕的世界位置（相對於容器）
-        Util::PTSDPosition position(x, y);
-        Util::PTSDPosition worldPosition = getWorldPosition(m_Children[i]);
+        // 設置按鈕位置（絕對座標）
+        m_buttons[i]->setPosition(Util::PTSDPosition(x, y));
         
-        // 更新按鈕位置和大小
-        auto button = std::dynamic_pointer_cast<TowerButton>(m_Children[i]);
-        if (button) {
-            // 關鍵：使用正確的方法設置按鈕位置
-            button->setPosition(worldPosition);
-            button->setSize(glm::vec2(buttonSize, buttonSize));
-            
-            LOG_DEBUG("TowerPanel: Button {} positioned at world ({}, {}), local ({}, {})", 
-                     button->getName(), worldPosition.x, worldPosition.y, x, y);
-        }
+        // 設置按鈕大小
+        m_buttons[i]->setSize(glm::vec2(buttonSize, buttonSize));
+        
+        LOG_DEBUG("TowerButtonsPanel: Button {} positioned at ({}, {})", 
+                 m_buttons[i]->getName(), x, y);
     }
 }
 

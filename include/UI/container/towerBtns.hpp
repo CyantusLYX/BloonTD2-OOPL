@@ -1,31 +1,37 @@
 #ifndef UI_TOWER_BUTTONS_HPP
 #define UI_TOWER_BUTTONS_HPP
 
-#include "UI/container/container.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Position.hpp"
+#include "core/shape.hpp"
 #include "UI/buttons/tower_btn.hpp"
 #include <memory>
 #include <vector>
 
 namespace UI {
 
-// 塔購買按鈕面板，自動管理並排列TowerButton
-class TowerButtonsPanel : public UIContainer {
+// 塔購買按鈕面板，自動管理並排列TowerButton，不再繼承UIContainer
+class TowerButtonsPanel : public Util::GameObject {
 private:
-    // 每行最大按鈕數
-    size_t m_buttonsPerRow = 4;
+    // 背景形狀
+    std::shared_ptr<Util::Shape> m_backgroundShape;
     
-    // 按鈕大小
-    glm::vec2 m_buttonSize = {60.0f, 60.0f};
+    // 按鈕相關設置
+    size_t m_buttonsPerRow = 4;  // 每行按鈕數量
+    glm::vec2 m_buttonSize = {35.0f, 35.0f};
     
-    // 當前的按鈕行
-    std::vector<std::shared_ptr<UIContainer>> m_rows;
-
-    // 創建新的按鈕行
-    std::shared_ptr<UIContainer> createRow();
+    // 所有按鈕
+    std::vector<std::shared_ptr<TowerButton>> m_buttons;
+    
+    // 內部布局參數
+    float m_width;
+    float m_height;
+    float m_padding = 2.0f;
+    float m_spacing = 5.0f;
     
     // 重新排列所有按鈕
     void rearrangeButtons();
-
+    
 public:
     // 構造函數
     TowerButtonsPanel(
@@ -49,8 +55,25 @@ public:
     
     // 獲取所有按鈕
     std::vector<std::shared_ptr<TowerButton>> getAllButtons() const;
-
-    void updateLayout() override;
+    
+    // 設置位置
+    void setPosition(const Util::PTSDPosition &position);
+    
+    // 設置大小
+    void setSize(const glm::vec2 &size);
+    
+    // 獲取大小
+    glm::vec2 getSize() const { return {m_width, m_height}; }
+    
+    // 布局參數設置
+    void setPadding(float padding) { m_padding = padding; updateLayout(); }
+    void setSpacing(float spacing) { m_spacing = spacing; updateLayout(); }
+    
+    // 更新布局
+    void updateLayout();
+    
+    // 獲取背景形狀
+    std::shared_ptr<Util::Shape> getBackgroundShape() const { return m_backgroundShape; }
 };
 
 } // namespace UI

@@ -16,6 +16,7 @@ public:
     TowerButton(const std::string &name, 
                 const Util::PTSDPosition &pos,
                 std::variant<glm::vec2, float> col_parm, 
+                const std::string &path,
                 bool can_click,
                 Tower::TowerType towerType,
                 int cost);

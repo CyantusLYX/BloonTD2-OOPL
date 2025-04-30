@@ -91,18 +91,18 @@ void Shape::Draw(const Core::Matrices &data) {
   s_Program->Bind();
 
   // 設置顏色和透明度 uniform - 使用 Color 的原始值
-  GLint colorLoc = glGetUniformLocation(s_Program->GetId(), "SHAPE : shapeColor");
+  GLint colorLoc = glGetUniformLocation(s_Program->GetId(), "shapeColor");
   glUniform4f(colorLoc,
               m_Color.r / 255.0f, // 將 Color 的 0-255 範圍轉換為 GL 的 0-1 範圍
               m_Color.g / 255.0f, m_Color.b / 255.0f, m_Color.a / 255.0f);
 
   // 設置是否有邊框的 uniform
-  GLint outlineLoc = glGetUniformLocation(s_Program->GetId(), "SHAPE : hasOutline");
+  GLint outlineLoc = glGetUniformLocation(s_Program->GetId(), "hasOutline");
   glUniform1i(outlineLoc, m_HasOutline ? 1 : 0);
 
   // 設置邊框寬度的 uniform
   GLint outlineWidthLoc =
-      glGetUniformLocation(s_Program->GetId(), "SHAPE : outlineWidth");
+      glGetUniformLocation(s_Program->GetId(), "outlineWidth");
   glUniform1f(outlineWidthLoc, m_OutlineWidth);
 
   // 根據形狀類型選擇合適的頂點陣列

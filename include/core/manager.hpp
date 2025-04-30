@@ -7,7 +7,6 @@
 #include "entities/bloon.hpp"
 // 替換 Collapsible 引用
 #include "UI/button.hpp"
-#include "UI/container/sidebar.hpp"  // 添加 Sidebar 引用
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
 #include "entities/poppers/popper.hpp"
@@ -24,6 +23,7 @@
 #include <unordered_map>
 #include <functional>
 #include "components/towerType.hpp"
+#include "UI/SidebarManager.hpp"
 
 class Manager {
 public:
@@ -157,7 +157,7 @@ private:
   std::vector<std::shared_ptr<Tower::Tower>> towers;
 
   // UI 相關
-  std::shared_ptr<UI::UISidebar> m_sidebar;
+  std::shared_ptr<UI::SidebarManager> m_sidebarManager;
   bool m_isTowerDragging = false;
   Tower::TowerType m_dragTowerType;
   int m_dragTowerCost = 0;
