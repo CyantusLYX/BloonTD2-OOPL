@@ -570,7 +570,7 @@ void Manager::next_wave() {
 
 void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
-      (current_waves != -1 || current_waves <= 50)) {
+      (current_waves != -1 && current_waves <= 50)) {
     set_playing();
   } else {
     LOG_ERROR("MNGR  : Invalid game state");
@@ -801,10 +801,7 @@ void Manager::updateUI() {
     // 更新金錢和生命值顯示
     m_sidebarManager->updateMoney(money);
     m_sidebarManager->updateLives(life);
-
-    // 更新波數文字（如果需要）
-    m_waveText_text->SetText(std::to_string(current_waves));
-
+    
     // 檢查塔按鈕狀態
     auto buttons = m_sidebarManager->getAllTowerButtons();
 
