@@ -57,7 +57,6 @@ void ShapeAnimation::Play() {
     }
     
     m_State = State::PLAY;
-    LOG_DEBUG("ShapeAnimation: Playing from frame {}", m_Index);
 }
 
 void ShapeAnimation::Pause() {
@@ -68,9 +67,6 @@ void ShapeAnimation::Pause() {
 }
 
 void ShapeAnimation::Draw(const Core::Matrices &data) {
-    // 添加調試日誌
-    LOG_DEBUG("ShapeAnimation: Drawing frame {} of {}",
-             m_Index, m_Frames.size());
     
     // 渲染當前幀
     if (!m_Frames.empty() && m_Index < m_Frames.size()) {

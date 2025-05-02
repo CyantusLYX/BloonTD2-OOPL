@@ -56,7 +56,6 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   initUI();
 }
 
-
 // 根據類型創建塔
 std::shared_ptr<Tower::Tower>
 Manager::createTower(Tower::TowerType type,
@@ -450,19 +449,22 @@ void Manager::cleanup_dead_objects() {
 
   // 從其他容器中移除死亡物件，使用 UUID 匹配
 
-  auto cleanup_container = [&dead_uuids](auto &container, auto extractor) {
-    container.erase(std::remove_if(container.begin(), container.end(),
-                                   [&dead_uuids, &extractor](const auto &item) {
-                                     auto mortal = extractor(item);
-                                     if (mortal) {
-                                       return std::find(dead_uuids.begin(),
-                                                        dead_uuids.end(),
-                                                        mortal->get_uuid()) !=
-                                              dead_uuids.end();
-                                     }
-                                     return false;
-                                   }),
-                    container.end());
+  std::unordered_set<std::string> dead_uuid_set(dead_uuids.begin(),
+                                                dead_uuids.end());
+
+  auto cleanup_container = [&dead_uuid_set](auto &container, auto extractor) {
+    container.erase(
+        std::remove_if(container.begin(), container.end(),
+                       [&dead_uuid_set, &extractor](const auto &item) {
+                         auto mortal = extractor(item);
+                         if (mortal) {
+                           // O(1) 查詢而不是 O(n)
+                           return dead_uuid_set.find(mortal->get_uuid()) !=
+                                  dead_uuid_set.end();
+                         }
+                         return false;
+                       }),
+        container.end());
   };
   // 使用通用函數清理各個容器
   cleanup_container(bloons, [](const auto &bloon) {
@@ -801,7 +803,7 @@ void Manager::updateUI() {
     // 更新金錢和生命值顯示
     m_sidebarManager->updateMoney(money);
     m_sidebarManager->updateLives(life);
-    
+
     // 檢查塔按鈕狀態
     auto buttons = m_sidebarManager->getAllTowerButtons();
 
