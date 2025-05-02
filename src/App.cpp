@@ -1,8 +1,11 @@
 #include "App.hpp"
+#include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
+#include "core/shape.hpp"
+#include "core/ShapeAnimation.hpp"
 #include "core/shape.hpp"
 #include "entities/bloon.hpp"
 #include "entities/poppers/spike.hpp"
@@ -37,6 +40,25 @@ void App::Start() {
       manager->get_curr_map()->get_path()->getPositionAtPercentage(1));
   spike_at_end->setLife(10000000);
   manager->add_popper(spike_at_end);
+  std::vector<glm::vec2> sizes(20, glm::vec2(30.0f, 30.0f)); // 固定大小
+  std::vector<Util::Color> colors;
+  // 紅色到藍色的漸變
+  for (int i = 0; i < 20; i++) {
+    float ratio = i / 19.0f;
+    Uint8 r = 255 * (1 - ratio);
+    Uint8 b = 255 * ratio;
+    colors.push_back(Util::Color(r, 0, b));
+  }
+
+  auto colorAnim = std::make_shared<Util::ShapeAnimation>(
+      Util::ShapeType::Circle, sizes, colors, true, 50, true);
+  colorAnim->Play();
+  auto colorAnimObj = std::make_shared<Util::GameObject>();
+  colorAnimObj->SetDrawable(colorAnim);
+  colorAnimObj->m_Transform.translation = {0, 0};
+  colorAnimObj->SetZIndex(10.0f);  // 設置z-index
+  colorAnimObj->SetVisible(true);  // 確保可見
+  manager->add_object(colorAnimObj);
 }
 
 void App::Update() {

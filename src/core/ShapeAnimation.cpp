@@ -68,9 +68,15 @@ void ShapeAnimation::Pause() {
 }
 
 void ShapeAnimation::Draw(const Core::Matrices &data) {
+    // 添加調試日誌
+    LOG_DEBUG("ShapeAnimation: Drawing frame {} of {}",
+             m_Index, m_Frames.size());
+    
     // 渲染當前幀
     if (!m_Frames.empty() && m_Index < m_Frames.size()) {
         m_Frames[m_Index]->Draw(data);
+    } else {
+        LOG_ERROR("ShapeAnimation: No frames to draw or invalid index");
     }
     
     // 更新動畫
@@ -120,4 +126,17 @@ void ShapeAnimation::Update() {
     }
 }
 
+glm::vec2 ShapeAnimation::GetSize() const {
+    if (m_Frames.empty()) {
+        return glm::vec2(0.0f, 0.0f);  // 如果沒有幀，返回零大小
+    }
+    
+    // 返回當前幀的大小
+    if (m_Index < m_Frames.size()) {
+        return m_Frames[m_Index]->GetSize();
+    }
+    
+    // 如果索引超出範圍，返回第一幀的大小
+    return m_Frames.front()->GetSize();
+}
 } // namespace Util

@@ -47,6 +47,7 @@ public:
     
     // 實現 Drawable 的 Draw 方法
     void Draw(const Core::Matrices &data) override;
+    glm::vec2 GetSize() const override;
     
     // 更新邏輯
     void Update();
