@@ -1,4 +1,11 @@
 #include "core/manager.hpp"
+#include "Util/GameObject.hpp"
+#include "Util/Input.hpp"
+#include "Util/Logger.hpp"
+#include "Util/SFX.hpp"
+#include "components/mortal.hpp"
+#include <glm/fwd.hpp>
+#include <memory>
 
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
@@ -243,7 +250,17 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
 }
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
-  bloon->get_bloon()->SetVisible(false);
+  
+  //if(bloon->get_bloon()->getPosition().ToVec2().y > get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y){
+    money++;
+    auto popimg_tmpobj = std::make_shared<popimg_class>();
+    popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
+    register_mortal(popimg_tmpobj);
+    popimgs.push_back(popimg_tmpobj);
+    m_Renderer->AddChild(popimg_tmpobj);
+    m_Renderer->RemoveChild(popimgs.back()->getobj());
+    bloon->get_bloon()->SetVisible(false);
+  //}else life--;
 
   // 產生一個不重複的 1~4 順序
   std::vector<int> values = {1, 2, 3, 4};
@@ -263,6 +280,8 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
   }
 
   bloon->kill();
+  // m_Renderer->RemoveChild(std::shared_ptr<Util::GameObject>
+  // (bloon->get_bloon()));
 }
 
 void Manager::add_popper(const std::shared_ptr<popper> &popper) {
@@ -405,6 +424,19 @@ void Manager::handlePoppers() {
         if (bloon->isCollide(popper->get_position())) {
           collided_bloons.push_back(bloon);
           collided_holders.push_back(holder);
+          if(std::dynamic_pointer_cast<end_spike>(popper)){
+            life--;
+            // this->add_clickable(bloon); // 使用新的方法
+
+            // bloon->kill();
+
+            // auto bloon_holder =
+            //     std::make_shared<Manager::bloon_holder>(bloon, distance, current_path);
+
+            // m_Renderer->RemoveChild(bloon);
+            // movings.push_back(bloon_holder);
+            // bloons.push_back(bloon_holder);
+          }
         }
       }
 
@@ -449,22 +481,19 @@ void Manager::cleanup_dead_objects() {
 
   // 從其他容器中移除死亡物件，使用 UUID 匹配
 
-  std::unordered_set<std::string> dead_uuid_set(dead_uuids.begin(),
-                                                dead_uuids.end());
-
-  auto cleanup_container = [&dead_uuid_set](auto &container, auto extractor) {
-    container.erase(
-        std::remove_if(container.begin(), container.end(),
-                       [&dead_uuid_set, &extractor](const auto &item) {
-                         auto mortal = extractor(item);
-                         if (mortal) {
-                           // O(1) 查詢而不是 O(n)
-                           return dead_uuid_set.find(mortal->get_uuid()) !=
-                                  dead_uuid_set.end();
-                         }
-                         return false;
-                       }),
-        container.end());
+  auto cleanup_container = [&dead_uuids](auto &container, auto extractor) {
+    container.erase(std::remove_if(container.begin(), container.end(),
+                                   [&dead_uuids, &extractor](const auto &item) {
+                                     auto mortal = extractor(item);
+                                     if (mortal) {
+                                       return std::find(dead_uuids.begin(),
+                                                        dead_uuids.end(),
+                                                        mortal->get_uuid()) !=
+                                              dead_uuids.end();
+                                     }
+                                     return false;
+                                   }),
+                    container.end());
   };
   // 使用通用函數清理各個容器
   cleanup_container(bloons, [](const auto &bloon) {
@@ -477,6 +506,10 @@ void Manager::cleanup_dead_objects() {
 
   cleanup_container(clickables, [](const auto &clickable) {
     return std::dynamic_pointer_cast<Mortal>(clickable);
+  });
+
+  cleanup_container(popimgs, [](const auto &popimg_class) {
+    return std::dynamic_pointer_cast<Mortal>(popimg_class);
   });
 }
 
@@ -553,12 +586,12 @@ void Manager::next_wave() {
     LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
-
-  if (current_waves >= 0) {
+  // current_waves+=50;
+  if (current_waves >= 0 && current_waves <= 50) {
     LOG_INFO("MNGR  : new wave loaded");
     if (1) {
       try {
-        m_waveText_text->SetText(std::to_string(current_waves));
+        m_waveText_text->SetText(std::to_string(current_waves + 1));
         m_waveText->SetDrawable(m_waveText_text);
       } catch (std::exception &e) { // exception should be caught by reference
         LOG_CRITICAL("exception: {}", e.what());
@@ -567,6 +600,14 @@ void Manager::next_wave() {
     } else
       LOG_DEBUG("NONSTD: into textComponent-inner-else (manager.next_wave())");
   }
+
+  // if (current_waves > 2) {
+  //   for(auto obj : m_Renderer->get_children()){
+  //     m_Renderer->RemoveChild(obj);
+  //   }
+  //   m_Renderer->AddChild(m_gameover);
+  //   // m_game_state = game_state::over;
+  // } else
   start_wave();
 }
 
@@ -688,7 +729,9 @@ void Manager::processBloonsState() {
   }
 
   // 在迴圈外處理爆炸，避免迭代器失效
+  int n = 0;
   for (auto &bloon : popped_bloons) {
+    LOG_DEBUG("pop {}", n++);
     pop_bloon(bloon);
   }
 }
@@ -868,3 +911,17 @@ void Manager::initUI() {
     LOG_INFO("MNGR  : 已添加按鈕 {} 到可點擊列表", btn->getName());
   }
 }
+
+void Manager::popimg_tick_manager() {
+  int max_tick = 10;
+  for (auto &pimg : popimgs) {
+    if (pimg->get_tick() > max_tick) {
+      m_Renderer->RemoveChild(pimg);
+      pimg->kill();
+      LOG_DEBUG("delete a popimg at its {}", pimg->get_tick());
+    } else
+      pimg->tick_add();
+    // LOG_DEBUG("{} popimg", popimgs.size());
+  }
+  // LOG_DEBUG("pm");
+};

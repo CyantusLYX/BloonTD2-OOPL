@@ -11,6 +11,7 @@
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
+#include "Util/SFX.hpp"
 #include "Util/Text.hpp"
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
@@ -43,7 +44,7 @@
 
 class Manager {
 public:
-  enum class game_state { playing, gap, menu };
+  enum class game_state { playing, gap, menu, over };
   enum class mouse_status { free, drag };
   // game logics
   void updateDraggingObject(const Util::PTSDPosition &cursor_position);
@@ -73,6 +74,42 @@ public:
     void pre_kill() override { m_bloon->kill(); }
   };
 
+  //sfx
+  class popimg_class : public Mortal, public Util::GameObject {
+    public:
+      popimg_class()
+          : Util::GameObject(
+                std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"), 15) {
+        sfx->LoadMedia("12.mp3");
+      };
+    
+      std::shared_ptr<Util::GameObject> getobj() {
+        return std::make_shared<Util::GameObject>(*this);
+      }
+      
+      std::shared_ptr<Util::GameObject> pop_n_return_img(const Util::PTSDPosition now) {
+        LOG_INFO("MNGR  : popimg");
+        sfx->Play();
+        this->m_Transform.translation = now.ToVec2();
+        return std::make_shared<Util::GameObject>(*this);
+      };
+      void tick_add(){tick++;}
+      int get_tick(){return tick;}
+
+    private:
+      int tick=0;
+      std::shared_ptr<Util::SFX> sfx =
+          std::make_shared<Util::SFX>(RESOURCE_DIR "/sounds");
+    };
+
+  class end_spike: public spike{
+    public:
+      end_spike(const Util::PTSDPosition &pos = {0, 0})
+          : spike(pos) {
+        setLife(10000000);
+      }
+  };
+
   // 建構函式和解構函式
   explicit Manager(std::shared_ptr<Util::Renderer> &renderer);
   ~Manager() = default;
@@ -86,6 +123,8 @@ public:
   void pop_bloon(std::shared_ptr<bloon_holder> bloon);
 
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
+
+  void popimg_tick_manager();
 
   // 遊戲狀態和流程控制
   void next_wave();
@@ -132,11 +171,15 @@ public:
   int getCurrentWave() const { return current_waves; }
 
   // some resources
-  std::shared_ptr<Util::Text> m_waveText_text =
-      std::make_shared<Util::Text>(RESOURCE_DIR "/NotoSansTC-ExtraLight.ttf",
-                                   32, "Default", Util::Color(0, 0, 0), false);
+  std::shared_ptr<Util::Text> m_waveText_text = std::make_shared<Util::Text>(
+      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "Default",
+      Util::Color(0, 0, 0), false);
   std::shared_ptr<Util::GameObject> m_waveText =
       std::make_shared<Util::GameObject>(m_waveText_text, 5);
+  std::shared_ptr<Util::Image> m_gameover_img =
+      std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png");
+  std::shared_ptr<Util::GameObject> m_gameover =
+      std::make_shared<Util::GameObject>(m_gameover_img, 100);
 
 private:
   // 渲染和狀態
@@ -172,6 +215,7 @@ private:
   std::vector<std::shared_ptr<popper>> poppers;
   std::vector<std::shared_ptr<Button>> buttons;
   std::vector<std::shared_ptr<Tower::Tower>> towers;
+  std::vector<std::shared_ptr<popimg_class>> popimgs;
 
   // UI 相關
   std::shared_ptr<UI::SidebarManager> m_sidebarManager;
@@ -197,6 +241,7 @@ private:
 
   // 初始化塔工廠
   void initTowerFactories();
+
 };
 
 #endif // MANAGER_HPP

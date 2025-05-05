@@ -1,13 +1,17 @@
 #include "entities/bloon.hpp"
 #include "Util/Image.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Position.hpp"
+#include "Util/SFX.hpp"
+#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 #include "components/collisionComp.hpp"
 #include <memory>
 
-Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos,float z_index)
-    : Util::GameObject(nullptr, z_index, {0,0}, true),
-      Components::CollisionComponent(pos, static_cast<float>(10.0)), // Initialize base class
+Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos, float z_index)
+    : Util::GameObject(nullptr, z_index, {0, 0}, true),
+      Components::CollisionComponent(
+          pos, static_cast<float>(10.0)), // Initialize base class
       m_Type(type), m_State(State::alive) {
   m_Transform.translation = pos.ToVec2();
   switch (type) {
@@ -57,15 +61,17 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos,float z_index)
     }
     break;
   }
-  
+
   // 設置可繪製資源
   m_Drawable = std::make_shared<Util::Image>(
       RESOURCE_DIR "/bloons/b" + std::to_string(static_cast<int>(m_Type) + 1) +
       ".png");
-  
+
   // 建立圓形碰撞組件
   float radius = static_cast<float>(m_Drawable->GetSize().x / 2);
-  m_collisionComponent = std::make_shared<Components::CollisionComponent>(pos, radius);
+  m_collisionComponent =
+      std::make_shared<Components::CollisionComponent>(pos, radius);
+
 }
 
 void Bloon::setFrozed(const float froze_time) {
@@ -73,7 +79,7 @@ void Bloon::setFrozed(const float froze_time) {
   meltTime = Util::Time::GetElapsedTimeMs() + froze_time;
 }
 
-void Bloon::setPosition(const Util::PTSDPosition& position) {
+void Bloon::setPosition(const Util::PTSDPosition &position) {
   m_Transform.translation = position.ToVec2();
   CollisionComponent::setPosition(position);
   if (m_collisionComponent) {
