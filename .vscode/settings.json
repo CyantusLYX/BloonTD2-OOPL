@@ -1,0 +1,10 @@
+{
+  "editor.tabSize": 2,
+  "clangd.arguments": [
+    "--compile-commands-dir=build.",   // 如果 compile_commands.json 在根目錄
+],
+"editor.fontSize": 13,
+"cmake.configureArgs": [
+  "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+]
+}

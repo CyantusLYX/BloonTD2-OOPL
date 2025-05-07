@@ -484,7 +484,6 @@ FodyWeavers.xsd
 *.sln.iml
 /.idea/
 # Custom writen VSCode .gitignore
-.vscode/
 
 # Default build directory for CMake extension
 build/

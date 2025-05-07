@@ -470,6 +470,9 @@ void Manager::cleanup_dead_objects() {
   for (const auto &mortal : mortals) {
     if (mortal->is_dead()) {
       dead_uuids.push_back(mortal->get_uuid());
+      auto gameObject = std::dynamic_pointer_cast<Util::GameObject>(mortal);
+      m_Renderer->RemoveChild(gameObject);
+      gameObject=nullptr; // 釋放資源
     }
   }
 
@@ -579,6 +582,9 @@ void Manager::next_wave() {
     set_gap();
     current_waves++;
     bloons_gen_list = loader::load_bloons(current_waves);
+    for (int _ = 0; _ < 50; _++) {
+      // bloons_gen_list.push_back(Bloon::Type::rainbow);
+    };
   } else if (m_game_state == game_state::playing && current_waves == 50) {
     set_menu();
     current_waves = -1;
