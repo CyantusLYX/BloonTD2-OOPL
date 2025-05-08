@@ -24,7 +24,7 @@ private:
     const float baseSpeed = 2.5f; // 氣球基礎速度
     float m_SpeedMult;            // 實際速度 = baseSpeed*m_SpeedMult
     int m_RBE;                    // Red Bloon Equivalent (用於生命值計算)
-    float meltTime{};
+    int freeze_counter = 0; // 冰凍計時器
     std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
     
     // 碰撞組件
@@ -38,12 +38,13 @@ public:
     // 碰撞相關方法
     void setPosition(const Util::PTSDPosition& position) override;
     Util::PTSDPosition getPosition() const override;
-    
-    // 原有氣球功能
-    void setFrozed(float froze_time);
+
+
+    void updateFreeze();
+    void setFrozed(int freeze_frame);
     void set_died() { m_State = State::died; }
     State GetCurrentState() const { return m_CurrentState; }
-    float GetSpeed() const { return baseSpeed * m_SpeedMult; }
+    float GetSpeed() const { return (m_State==Bloon::State::alive)?(baseSpeed * m_SpeedMult):(0.0f); }
     int GetRBE() const { return m_RBE; }
     Type GetType() const { return m_Type; }
     State GetState() const { return m_State; }

@@ -4,6 +4,7 @@
 #include "Util/Logger.hpp"
 #include "Util/SFX.hpp"
 #include "components/mortal.hpp"
+#include "entities/bloon.hpp"
 #include <glm/fwd.hpp>
 #include <memory>
 
@@ -250,16 +251,17 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
 }
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
-  
-  //if(bloon->get_bloon()->getPosition().ToVec2().y > get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y){
-    money++;
-    auto popimg_tmpobj = std::make_shared<popimg_class>();
-    popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
-    register_mortal(popimg_tmpobj);
-    popimgs.push_back(popimg_tmpobj);
-    m_Renderer->AddChild(popimg_tmpobj);
-    m_Renderer->RemoveChild(popimgs.back()->getobj());
-    bloon->get_bloon()->SetVisible(false);
+
+  // if(bloon->get_bloon()->getPosition().ToVec2().y >
+  // get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y){
+  money++;
+  auto popimg_tmpobj = std::make_shared<popimg_class>();
+  popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
+  register_mortal(popimg_tmpobj);
+  popimgs.push_back(popimg_tmpobj);
+  m_Renderer->AddChild(popimg_tmpobj);
+  m_Renderer->RemoveChild(popimgs.back()->getobj());
+  bloon->get_bloon()->SetVisible(false);
   //}else life--;
 
   // 產生一個不重複的 1~4 順序
@@ -424,14 +426,15 @@ void Manager::handlePoppers() {
         if (bloon->isCollide(popper->get_position())) {
           collided_bloons.push_back(bloon);
           collided_holders.push_back(holder);
-          if(std::dynamic_pointer_cast<end_spike>(popper)){
+          if (std::dynamic_pointer_cast<end_spike>(popper)) {
             life--;
             // this->add_clickable(bloon); // 使用新的方法
 
             // bloon->kill();
 
             // auto bloon_holder =
-            //     std::make_shared<Manager::bloon_holder>(bloon, distance, current_path);
+            //     std::make_shared<Manager::bloon_holder>(bloon, distance,
+            //     current_path);
 
             // m_Renderer->RemoveChild(bloon);
             // movings.push_back(bloon_holder);
@@ -472,7 +475,7 @@ void Manager::cleanup_dead_objects() {
       dead_uuids.push_back(mortal->get_uuid());
       auto gameObject = std::dynamic_pointer_cast<Util::GameObject>(mortal);
       m_Renderer->RemoveChild(gameObject);
-      gameObject=nullptr; // 釋放資源
+      gameObject = nullptr; // 釋放資源
     }
   }
 
@@ -728,9 +731,14 @@ void Manager::updateDraggingObject(const Util::PTSDPosition &cursor_position) {
 void Manager::processBloonsState() {
   std::vector<std::shared_ptr<bloon_holder>> popped_bloons;
 
-  for (auto &bloon : bloons) {
-    if (bloon->get_bloon()->GetState() == Bloon::State::pop) {
-      popped_bloons.push_back(bloon);
+  for (auto &bloonWrapper : bloons) {
+    auto bloon = bloonWrapper->get_bloon();
+    if (!bloon)
+      continue;
+    if (bloon->GetState() == Bloon::State::pop) {
+      popped_bloons.push_back(bloonWrapper);
+    } else if (bloon->GetState() == Bloon::State::frozed) {
+      bloon->updateFreeze();
     }
   }
 
@@ -919,12 +927,12 @@ void Manager::initUI() {
 }
 
 void Manager::popimg_tick_manager() {
-  int max_tick = 10;
+  int max_tick = 3;
   for (auto &pimg : popimgs) {
     if (pimg->get_tick() > max_tick) {
       m_Renderer->RemoveChild(pimg);
       pimg->kill();
-      LOG_DEBUG("delete a popimg at its {}", pimg->get_tick());
+      // LOG_DEBUG("delete a popimg at its {}", pimg->get_tick());
     } else
       pimg->tick_add();
     // LOG_DEBUG("{} popimg", popimgs.size());

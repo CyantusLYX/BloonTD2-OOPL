@@ -79,7 +79,7 @@ public:
     public:
       popimg_class()
           : Util::GameObject(
-                std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"), 15) {
+                std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"), 5) {
         sfx->LoadMedia("12.mp3");
       };
     
@@ -88,7 +88,6 @@ public:
       }
       
       std::shared_ptr<Util::GameObject> pop_n_return_img(const Util::PTSDPosition now) {
-        LOG_INFO("MNGR  : popimg");
         sfx->Play();
         this->m_Transform.translation = now.ToVec2();
         return std::make_shared<Util::GameObject>(*this);

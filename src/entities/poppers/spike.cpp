@@ -47,8 +47,6 @@ void spike::onDrag(const Util::PTSDPosition& newPosition) {
   m_position = newPosition;
   // 更新碰撞檢測位置
   CollisionComponent::setPosition(newPosition);
-  
-  LOG_INFO("釘子被拖曳到位置 ({}, {})", newPosition.x, newPosition.y);
 }
 
 void spike::onDragEnd() {
