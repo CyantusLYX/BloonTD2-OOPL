@@ -57,6 +57,8 @@ void App::Start() {
   colorAnimObj->SetZIndex(10.0f);  // 設置z-index
   colorAnimObj->SetVisible(true);  // 確保可見
   manager->add_object(colorAnimObj);
+  auto iceBallTower = std::make_shared<IceBall>(Util::PTSDPosition(-50, 100));
+  manager->add_tower(iceBallTower);
 }
 
 void App::Update() {
