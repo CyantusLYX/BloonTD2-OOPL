@@ -49,7 +49,7 @@ void TowerButtonConfigManager::Initialize() {
             "Ice Ball",
             RESOURCE_DIR "/buttons/tower/ice_ball.png",
             COST_ICE,
-            false  // 暫時設為不可用
+            true  // 暫時設為不可用
         )
     );
     

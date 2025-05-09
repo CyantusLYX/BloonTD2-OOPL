@@ -11,7 +11,7 @@
 
 class IceBall final : public Tower::Tower {
 private:
-    int m_cooldown = 80;       // 冰凍冷卻時間（幀數）
+    int m_cooldown = 160;       // 冰凍冷卻時間（幀數）
     int m_currentCooldown = 0; // 當前剩餘冷卻時間
     int m_freezeFrames = 60;   // 氣球凍結持續時間（幀數）
     bool m_draggable = false;  // 是否可拖曳

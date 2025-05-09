@@ -1,5 +1,7 @@
 #include "entities/tower/tower_config.hpp"
 #include "Util/Logger.hpp"
+#include "conf.hpp"
+#include "config.hpp"
 
 // 初始化靜態成員
 std::unordered_map<Tower::TowerType, BaseConfig> BuyableConfigManager::s_baseConfigs;
@@ -20,11 +22,21 @@ void BuyableConfigManager::Initialize() {
     dartConfig.range = 150.0f;
     s_towerConfigs[Tower::TowerType::dart] = dartConfig;
     s_baseConfigs[Tower::TowerType::dart] = dartConfig;
+
+    // 添加 ICEBall 配置
+    TowerConfig iceConfig;
+    iceConfig.name = "Ice Ball";
+    iceConfig.cost = COST_ICE;
+    iceConfig.imageFile = RESOURCE_DIR "/towers/ice_ball.png";
+    iceConfig.type = BuyableType::Tower;
+    iceConfig.range = 100.0f;
+    s_towerConfigs[Tower::TowerType::ice] = iceConfig;
+    s_baseConfigs[Tower::TowerType::ice] = iceConfig;
     
     // 添加 BoomerangMonkey 配置
     TowerConfig boomerangConfig;
     boomerangConfig.name = "Boomerang Monkey";
-    boomerangConfig.cost = 300;
+    boomerangConfig.cost = COST_BOOMERANG;
     boomerangConfig.imageFile = RESOURCE_DIR "/towers/boomerang_monkey.png";
     boomerangConfig.type = BuyableType::Tower;
     boomerangConfig.range = 180.0f;
@@ -34,7 +46,7 @@ void BuyableConfigManager::Initialize() {
     // 添加 Spike 配置
     PopperConfig spikeConfig;
     spikeConfig.name = "Spike";
-    spikeConfig.cost = 25;
+    spikeConfig.cost = COST_SPIKES;
     spikeConfig.imageFile = RESOURCE_DIR "/poppers/spike.png";
     spikeConfig.type = BuyableType::Popper;
     spikeConfig.durability = 10; // 可以刺破10個氣球
@@ -44,7 +56,7 @@ void BuyableConfigManager::Initialize() {
     // 添加 Glue 配置
     PopperConfig glueConfig;
     glueConfig.name = "Glue";
-    glueConfig.cost = 35;
+    glueConfig.cost = COST_GLUE;
     glueConfig.imageFile = RESOURCE_DIR "/poppers/glue.png";
     glueConfig.type = BuyableType::Popper;
     glueConfig.durability = 5; // 可以減速5個氣球
@@ -124,7 +136,6 @@ bool BuyableConfigManager::IsTower(Tower::TowerType type) {
         Tower::TowerType::bomb,
         Tower::TowerType::boomerang,
         Tower::TowerType::super
-        // 其他塔類型...
     };
     return towerTypes.find(type) != towerTypes.end();
 }

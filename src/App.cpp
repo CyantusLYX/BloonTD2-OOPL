@@ -16,7 +16,7 @@ bool drag_cd = false;
 void App::Start() {
   LOG_TRACE("Start");
   m_CurrentState = State::UPDATE;
-  manager->set_map(0);
+  manager->set_map(1);
 
   manager->add_bloon(Bloon::Type::red, 0);
   manager->set_playing();
@@ -57,7 +57,7 @@ void App::Start() {
   colorAnimObj->SetZIndex(10.0f);  // 設置z-index
   colorAnimObj->SetVisible(true);  // 確保可見
   manager->add_object(colorAnimObj);
-  auto iceBallTower = std::make_shared<IceBall>(Util::PTSDPosition(-50, 100));
+  auto iceBallTower = std::make_shared<IceBall>(Util::PTSDPosition(-100, 80));
   manager->add_tower(iceBallTower);
 }
 

@@ -38,19 +38,17 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
        to_pos({114, 436}), to_pos({235, 436}), to_pos({235, 346}),
        to_pos({235, 346}), to_pos({348, 346}), to_pos({348, 498})},
       // 中等難度地圖路徑 (目前與簡單難度相同)
-      {to_pos({-19, 236}), to_pos({185, 236}), to_pos({185, 110}),
-       to_pos({108, 110}), to_pos({108, 38}), to_pos({412, 38}),
-       to_pos({412, 117}), to_pos({290, 117}), to_pos({290, 204}),
-       to_pos({420, 204}), to_pos({420, 298}), to_pos({114, 298}),
-       to_pos({114, 436}), to_pos({235, 436}), to_pos({235, 346}),
-       to_pos({235, 346}), to_pos({348, 346}), to_pos({348, 498})},
+      {to_pos({74, -10}), to_pos({74, 192}), to_pos({160, 192}),
+       to_pos({160, 292}), to_pos({64, 292}), to_pos({64, 394}),
+       to_pos({246, 394}), to_pos({246, 90}), to_pos({427, 90}),
+       to_pos({427, 190}), to_pos({334, 190}), to_pos({334, 293}),
+       to_pos({418, 293}), to_pos({418, 502})},
       // 困難地圖路徑 (目前與簡單難度相同)
       {to_pos({-19, 236}), to_pos({185, 236}), to_pos({185, 110}),
        to_pos({108, 110}), to_pos({108, 38}), to_pos({412, 38}),
        to_pos({412, 117}), to_pos({290, 117}), to_pos({290, 204}),
        to_pos({420, 204}), to_pos({420, 298}), to_pos({114, 298}),
-       to_pos({114, 436}), to_pos({235, 436}), to_pos({235, 346}),
-       to_pos({235, 346}), to_pos({348, 346}), to_pos({348, 498})}};
+       to_pos({114, 436}), to_pos({235, 436})}};
 
   // 創建並添加地圖
   for (size_t i = 0; i < map_paths.size(); ++i) {
@@ -252,16 +250,17 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
 
-  // if(bloon->get_bloon()->getPosition().ToVec2().y >
-  // get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y){
-  money++;
-  auto popimg_tmpobj = std::make_shared<popimg_class>();
-  popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
-  register_mortal(popimg_tmpobj);
-  popimgs.push_back(popimg_tmpobj);
-  m_Renderer->AddChild(popimg_tmpobj);
-  m_Renderer->RemoveChild(popimgs.back()->getobj());
-  bloon->get_bloon()->SetVisible(false);
+  if (bloon->get_bloon()->getPosition().ToVec2().y >
+      get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y) {
+    money++;
+    auto popimg_tmpobj = std::make_shared<popimg_class>();
+    popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
+    register_mortal(popimg_tmpobj);
+    popimgs.push_back(popimg_tmpobj);
+    m_Renderer->AddChild(popimg_tmpobj);
+    m_Renderer->RemoveChild(popimgs.back()->getobj());
+    bloon->get_bloon()->SetVisible(false);
+  }
   //}else life--;
 
   // 產生一個不重複的 1~4 順序

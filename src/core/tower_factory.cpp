@@ -1,10 +1,14 @@
 
 #include "core/manager.hpp"
+#include "entities/tower/ice_ball.hpp"
 // 初始化塔工廠映射表
 void Manager::initTowerFactories() {
   // 註冊 DartMonkey 工廠函數
   m_towerFactories[Tower::TowerType::dart] = [](const Util::PTSDPosition &pos) {
     return std::make_shared<DartMonkey>(pos);
+  };
+  m_towerFactories[Tower::TowerType::ice] = [](const Util::PTSDPosition &pos) {
+    return std::make_shared<IceBall>(pos);
   };
 
   // 註冊 BoomerangMonkey 工廠函數（如果已實現）
