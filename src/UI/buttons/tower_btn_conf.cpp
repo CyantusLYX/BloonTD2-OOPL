@@ -49,7 +49,17 @@ void TowerButtonConfigManager::Initialize() {
             "Ice Ball",
             RESOURCE_DIR "/buttons/tower/ice_ball.png",
             COST_ICE,
-            true  // 暫時設為不可用
+            true
+        )
+    );
+    
+    s_configs.emplace(Tower::TowerType::bomb, 
+        TowerButtonConfig(
+            Tower::TowerType::bomb,
+            "CANNON",
+            RESOURCE_DIR "/buttons/tower/cannon.png",
+            COST_BOMB,
+            true
         )
     );
     

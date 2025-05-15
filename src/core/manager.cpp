@@ -79,6 +79,7 @@ Manager::createTower(Tower::TowerType type,
       // 從配置中載入塔屬性
       const auto &config = BuyableConfigManager::GetTowerConfig(type);
       tower->setRange(config.range);
+      tower->setSpecConfig(config.specConfig);
       //  如果塔有其他屬性可從這裡設置，如攻擊速度等
 
       return tower;
@@ -422,7 +423,9 @@ void Manager::handlePoppers() {
               bloon->getPosition().x, bloon->getPosition().y,
               popper->getPosition().x, popper->getPosition().y);
         // 使用氣球的碰撞檢測與 popper 的位置進行碰撞檢測
-        if (bloon->isCollide(popper->get_position())) {
+        auto popperCollider =
+            std::dynamic_pointer_cast<Interface::I_collider>(popper);
+        if (bloon->isCollide(popperCollider)) {
           collided_bloons.push_back(bloon);
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
@@ -473,8 +476,17 @@ void Manager::cleanup_dead_objects() {
     if (mortal->is_dead()) {
       dead_uuids.push_back(mortal->get_uuid());
       auto gameObject = std::dynamic_pointer_cast<Util::GameObject>(mortal);
-      m_Renderer->RemoveChild(gameObject);
-      gameObject = nullptr; // 釋放資源
+      if (gameObject) {
+        m_Renderer->RemoveChild(gameObject);
+        gameObject = nullptr;
+      } 
+      // 特別處理 popper 類型
+      else {
+        auto popperObj = std::dynamic_pointer_cast<popper>(mortal);
+        if (popperObj && popperObj->get_object()) {
+          m_Renderer->RemoveChild(popperObj->get_object());
+        }
+      }
     }
   }
 

@@ -2,6 +2,7 @@
 #define TOWER_CONFIG_HPP
 
 #include "entities/tower/tower.hpp"
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -11,6 +12,7 @@ enum class BuyableType {
     Tower,  // 普通塔
     Popper  // 釘子、膠水等
 };
+
 
 // 基本配置結構 - 所有可購買物品共有的屬性
 struct BaseConfig {
@@ -23,13 +25,13 @@ struct BaseConfig {
 // 塔專用配置結構
 struct TowerConfig : public BaseConfig {
     float range;           // 攻擊範圍
+    std::shared_ptr<SpecConfig> specConfig; // 特定塔的配置
 };
 
 // Popper 專用配置結構
 struct PopperConfig : public BaseConfig {
     int durability;        // 耐久度/生命值
 };
-
 // 配置管理器
 class BuyableConfigManager {
 private:

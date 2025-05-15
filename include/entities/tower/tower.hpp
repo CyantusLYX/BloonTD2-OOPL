@@ -14,6 +14,19 @@
 #include <vector>
 #include "components/towerType.hpp"
 #include "components/canBuy.hpp"
+
+class SpecConfig {
+public:
+    SpecConfig() = default;
+    virtual ~SpecConfig() = default;
+};
+class BombSpecConfig : public SpecConfig {
+public:
+    BombSpecConfig(float triggerRadius = 20.0f, float explosionRadius = 60.0f)
+        : triggerRadius(triggerRadius), explosionRadius(explosionRadius) {};
+    float triggerRadius; // 觸發範圍
+    float explosionRadius; // 爆炸範圍
+};
 namespace Tower {
 enum class TowerState { unset, ready, cooldown };
 class Range : public Util::GameObject {
@@ -48,13 +61,14 @@ public:
     m_radius = radius;
     auto shape = std::dynamic_pointer_cast<Util::Shape>(m_Drawable);
     shape->SetColorHSV(0.1f, 0.001f, 0.5f, 0.5f);
-    shape->SetSize({radius, radius});
+    shape->SetSize({radius*2, radius*2});
     m_collisionComponent->setColParam(radius);
   }
   std::shared_ptr<Components::CollisionComponent>
   getCollisionComponent() const {
     return m_collisionComponent;
   }
+  float getRadius() const { return m_radius; }
 };
 class Body : public Util::GameObject {
 private:
@@ -163,6 +177,8 @@ public:
   void onDrag(const Util::PTSDPosition& newPosition) override{
     setPosition(newPosition);
   }
+
+  void virtual setSpecConfig(std::shared_ptr<SpecConfig> specConfig) {};
 };
 } // namespace Tower
 #endif

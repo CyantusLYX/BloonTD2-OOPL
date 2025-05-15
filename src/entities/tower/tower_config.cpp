@@ -2,6 +2,8 @@
 #include "Util/Logger.hpp"
 #include "conf.hpp"
 #include "config.hpp"
+#include "entities/tower/tower.hpp"
+#include <memory>
 
 // 初始化靜態成員
 std::unordered_map<Tower::TowerType, BaseConfig> BuyableConfigManager::s_baseConfigs;
@@ -16,10 +18,10 @@ void BuyableConfigManager::Initialize() {
     // 添加 DartMonkey 配置
     TowerConfig dartConfig;
     dartConfig.name = "Dart Monkey";
-    dartConfig.cost = 250;
+    dartConfig.cost = COST_DART;
     dartConfig.imageFile = RESOURCE_DIR "/towers/dart_monkey.png";
     dartConfig.type = BuyableType::Tower;
-    dartConfig.range = 150.0f;
+    dartConfig.range = RANGE_DART;
     s_towerConfigs[Tower::TowerType::dart] = dartConfig;
     s_baseConfigs[Tower::TowerType::dart] = dartConfig;
 
@@ -29,17 +31,37 @@ void BuyableConfigManager::Initialize() {
     iceConfig.cost = COST_ICE;
     iceConfig.imageFile = RESOURCE_DIR "/towers/ice_ball.png";
     iceConfig.type = BuyableType::Tower;
-    iceConfig.range = 100.0f;
+    iceConfig.range = RANGE_ICE;
     s_towerConfigs[Tower::TowerType::ice] = iceConfig;
     s_baseConfigs[Tower::TowerType::ice] = iceConfig;
     
+    TowerConfig tackConfig;
+    tackConfig.name = "Tack Shooter";
+    tackConfig.cost = COST_TACK;
+    tackConfig.imageFile = RESOURCE_DIR "/towers/tack_shooter.png";
+    tackConfig.type = BuyableType::Tower;
+    tackConfig.range = RANGE_TACK;
+    s_towerConfigs[Tower::TowerType::tack] = tackConfig;
+    s_baseConfigs[Tower::TowerType::tack] = tackConfig;
+    
+    TowerConfig cannonConfig;
+    cannonConfig.name = "Cannon";
+    cannonConfig.cost = COST_BOMB;
+    cannonConfig.imageFile = RESOURCE_DIR "/towers/cannon.png";
+    cannonConfig.type = BuyableType::Tower;
+    cannonConfig.range = RANGE_BOMB;
+    cannonConfig.specConfig = std::make_shared<BombSpecConfig>();
+    s_towerConfigs[Tower::TowerType::bomb] = cannonConfig;
+    s_baseConfigs[Tower::TowerType::bomb] = cannonConfig;
+
+
     // 添加 BoomerangMonkey 配置
     TowerConfig boomerangConfig;
     boomerangConfig.name = "Boomerang Monkey";
     boomerangConfig.cost = COST_BOOMERANG;
     boomerangConfig.imageFile = RESOURCE_DIR "/towers/boomerang_monkey.png";
     boomerangConfig.type = BuyableType::Tower;
-    boomerangConfig.range = 180.0f;
+    boomerangConfig.range = RANGE_BOOMERANG;
     s_towerConfigs[Tower::TowerType::boomerang] = boomerangConfig;
     s_baseConfigs[Tower::TowerType::boomerang] = boomerangConfig;
     

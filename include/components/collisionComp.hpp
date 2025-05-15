@@ -3,6 +3,7 @@
 
 #include "interfaces/collision.hpp"
 #include "Util/Position.hpp"
+#include <memory>
 #include <variant>
 #include <glm/glm.hpp>
 
@@ -24,6 +25,9 @@ public:
     // I_collider 接口實現
     bool isCollide(const I_collider& other) const override;
     bool isCollide(const Util::PTSDPosition& point) const override;
+    bool isCollide(const std::shared_ptr<I_collider>& other) const {
+        return isCollide(*other);
+    }
     
     Interface::ColType getColType() const override { return m_colType; }
     virtual Util::PTSDPosition getPosition() const override { return m_position; }

@@ -25,15 +25,6 @@ void App::Start() {
   auto first_spike = std::make_shared<spike>(Util::PTSDPosition(-135, 4));
   // auto first_spike = std::make_shared<spike>(Util::PTSDPosition(0,0));
   manager->add_popper(first_spike);
-  auto dartMonkey = std::make_shared<DartMonkey>(Util::PTSDPosition(150, 100));
-  manager->add_tower(dartMonkey);
-  auto dartMonkey2 =
-      std::make_shared<DartMonkey>(Util::PTSDPosition(-200, 100));
-  manager->add_tower(dartMonkey2);
-  auto dartMonkey3 = std::make_shared<DartMonkey>(Util::PTSDPosition(150, 0));
-  manager->add_tower(dartMonkey3);
-  auto dartMonkey4 = std::make_shared<DartMonkey>(Util::PTSDPosition(150, 200));
-  manager->add_tower(dartMonkey4);
   auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() + manager->get_curr_map()->get_path()->getPositionAtPercentage(1).ToVec2();
   auto spike_at_end = std::make_shared<Manager::end_spike>(Util::PTSDPosition(pos_shift.x, pos_shift.y));
   spike_at_end->setLife(10000000);
