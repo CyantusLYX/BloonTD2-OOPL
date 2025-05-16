@@ -15,6 +15,9 @@ void Manager::initTowerFactories() {
   m_towerFactories[Tower::TowerType::bomb] = [](const Util::PTSDPosition &pos) {
     return std::make_shared<Cannon>(pos);
   };
+  m_towerFactories[Tower::TowerType::boomerang] = [](const Util::PTSDPosition &pos) {
+    return std::make_shared<BoomerangMonkey>(pos);
+  };
 
   // 初始化 popper 工廠映射表
   m_popperFactories[Tower::TowerType::spike] =

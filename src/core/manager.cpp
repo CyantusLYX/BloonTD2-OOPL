@@ -19,7 +19,7 @@ glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
 
 // Manager 建構函數
 Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
-    : m_Renderer(renderer), life(100), money(2000) {
+    : m_Renderer(renderer), life(100), money(200000) {
 
   // 初始化塔工廠
   initTowerFactories();
@@ -37,7 +37,6 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
        to_pos({420, 204}), to_pos({420, 298}), to_pos({114, 298}),
        to_pos({114, 436}), to_pos({235, 436}), to_pos({235, 346}),
        to_pos({235, 346}), to_pos({348, 346}), to_pos({348, 498})},
-      // 中等難度地圖路徑 (目前與簡單難度相同)
       {to_pos({74, -10}), to_pos({74, 192}), to_pos({160, 192}),
        to_pos({160, 292}), to_pos({64, 292}), to_pos({64, 394}),
        to_pos({246, 394}), to_pos({246, 90}), to_pos({427, 90}),

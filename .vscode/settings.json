@@ -3,8 +3,5 @@
   "clangd.arguments": [
     "--compile-commands-dir=build.",   // 如果 compile_commands.json 在根目錄
 ],
-"editor.fontSize": 14,
-"cmake.configureArgs": [
-  "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
-]
+"editor.fontSize": 14
 }

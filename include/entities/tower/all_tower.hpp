@@ -4,4 +4,5 @@
 #include "ice_ball.hpp"
 #include "tack_shooter.hpp"
 #include "cannon.hpp"
+#include "boomerang_monkey.hpp"
 #endif

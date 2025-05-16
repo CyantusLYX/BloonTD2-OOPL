@@ -22,6 +22,16 @@ void TowerButtonConfigManager::Initialize() {
             true
         )
     );
+
+    s_configs.emplace(Tower::TowerType::boomerang, 
+        TowerButtonConfig(
+            Tower::TowerType::boomerang,
+            "Boomerang Monkey",
+            RESOURCE_DIR "/buttons/tower/boomerang.png",
+            COST_BOOMERANG,
+            true
+        )
+    );
     
     s_configs.emplace(Tower::TowerType::spike, 
         TowerButtonConfig(
