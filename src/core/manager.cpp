@@ -447,11 +447,20 @@ void Manager::handlePoppers() {
       // 如果有碰撞的氣球，調用 hit() 函數
       if (!collided_bloons.empty()) {
         auto hit_results = popper->hit(collided_bloons);
-
         // 處理被擊中的氣球
         for (size_t i = 0; i < hit_results.size(); ++i) {
           if (hit_results[i]) {
-            // 使用 pop_bloon 來處理被擊中的氣球，而不是僅設置狀態
+            if (collided_bloons[i]->GetType() == Bloon::Type::lead) {
+              if (!popper->is_explosive()) {
+                continue;
+              }
+            } else {
+              if (collided_bloons[i]->GetState() == Bloon::State::frozed) {
+                if (!(popper->getCanPopFrozen() || popper->is_explosive())) {
+                  continue;
+                }
+              }
+            }
             pop_bloon(collided_holders[i]);
           }
         }
@@ -478,7 +487,7 @@ void Manager::cleanup_dead_objects() {
       if (gameObject) {
         m_Renderer->RemoveChild(gameObject);
         gameObject = nullptr;
-      } 
+      }
       // 特別處理 popper 類型
       else {
         auto popperObj = std::dynamic_pointer_cast<popper>(mortal);
