@@ -119,7 +119,7 @@ public:
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
-  void pop_bloon(std::shared_ptr<bloon_holder> bloon);
+  void pop_bloon(std::shared_ptr<bloon_holder> bloon,bool fx=true);
 
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
 

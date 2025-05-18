@@ -248,17 +248,19 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
   m_Renderer->AddChild(button); // 將按鈕加入渲染器
 }
 
-void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon) {
+void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon,bool fx) {
 
   if (bloon->get_bloon()->getPosition().ToVec2().y >
       get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y) {
     money++;
-    auto popimg_tmpobj = std::make_shared<popimg_class>();
-    popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
-    register_mortal(popimg_tmpobj);
-    popimgs.push_back(popimg_tmpobj);
-    m_Renderer->AddChild(popimg_tmpobj);
-    m_Renderer->RemoveChild(popimgs.back()->getobj());
+    if(fx){
+      auto popimg_tmpobj = std::make_shared<popimg_class>();
+      popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
+      register_mortal(popimg_tmpobj);
+      popimgs.push_back(popimg_tmpobj);
+      m_Renderer->AddChild(popimg_tmpobj);
+      m_Renderer->RemoveChild(popimgs.back()->getobj());
+    }
     bloon->get_bloon()->SetVisible(false);
   }
   //}else life--;
@@ -449,19 +451,26 @@ void Manager::handlePoppers() {
         auto hit_results = popper->hit(collided_bloons);
         // 處理被擊中的氣球
         for (size_t i = 0; i < hit_results.size(); ++i) {
-          if (hit_results[i]) {
-            if (collided_bloons[i]->GetType() == Bloon::Type::lead) {
-              if (!popper->is_explosive()) {
-                continue;
-              }
-            } else {
-              if (collided_bloons[i]->GetState() == Bloon::State::frozed) {
-                if (!(popper->getCanPopFrozen() || popper->is_explosive())) {
-                  continue;
-                }
-              }
-            }
-            pop_bloon(collided_holders[i]);
+          if (!hit_results[i]) {
+            continue;  // Skip bloons that weren't hit
+          }
+                  
+          auto& bloon = collided_bloons[i];
+          bool can_pop = true;
+                  
+          // Check if it's a lead bloon - only explosives can pop it
+          if (bloon->GetType() == Bloon::Type::lead && !popper->is_explosive()) {
+            can_pop = false;
+          }
+          // Check if it's a frozen bloon - needs special popper or explosive
+          else if (bloon->GetState() == Bloon::State::frozed && 
+                   !(popper->getCanPopFrozen() || popper->is_explosive())) {
+            can_pop = false;
+          }
+                  
+          if (can_pop) {
+            // Explosives pop without visual effects
+            pop_bloon(collided_holders[i], !popper->is_explosive());
           }
         }
       }
@@ -761,12 +770,13 @@ void Manager::processBloonsState() {
     }
   }
 
-  // 在迴圈外處理爆炸，避免迭代器失效
-  int n = 0;
-  for (auto &bloon : popped_bloons) {
-    LOG_DEBUG("pop {}", n++);
-    pop_bloon(bloon);
-  }
+  // // 在迴圈外處理爆炸，避免迭代器失效
+  // int n = 0;
+  // for (auto &bloon : popped_bloons) {
+  //   LOG_DEBUG("pop {}", n++);
+  //   pop_bloon(bloon);
+  // }
+  //not sure if this useful.
 }
 
 // 更新所有移動物件
