@@ -76,8 +76,21 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos, float z_index)
 
 void Bloon::setFrozed(const int freeze_frames) {
   m_State = State::frozed;
-  freeze_counter=freeze_frames;
+  freeze_counter = freeze_frames;
   //this->m_Drawable=
+}
+
+void Bloon::setGlued() {
+  // 只有當氣球處於活動狀態時才設為黏滯狀態
+  if (m_State == State::alive) {
+    m_State = State::glued;
+    LOG_TRACE("BLOON : 氣球被黏住了，減速 50%（永久效果）");
+    // 可以在此處添加視覺效果，如改變氣球顏色等
+  } else if (m_State != State::glued) {
+    // 其他狀態不受影響（如凍結）
+    LOG_TRACE("BLOON : 氣球當前狀態 {}, 無法應用黏滯效果", static_cast<int>(m_State));
+  }
+  // 如果已經處於黏滯狀態，則不需要做任何事
 }
 
 void Bloon::updateFreeze() {

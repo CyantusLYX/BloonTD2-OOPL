@@ -1,5 +1,6 @@
 #include "core/manager.hpp"
 #include "entities/tower/all_tower.hpp"
+#include "entities/poppers/glue.hpp"
 // 初始化塔工廠映射表
 void Manager::initTowerFactories() {
   // 註冊 DartMonkey 工廠函數
@@ -18,11 +19,20 @@ void Manager::initTowerFactories() {
   m_towerFactories[Tower::TowerType::boomerang] = [](const Util::PTSDPosition &pos) {
     return std::make_shared<BoomerangMonkey>(pos);
   };
+  m_towerFactories[Tower::TowerType::super] = [](const Util::PTSDPosition &pos) {
+    return std::make_shared<SuperMonkey>(pos);
+  };
 
   // 初始化 popper 工廠映射表
   m_popperFactories[Tower::TowerType::spike] =
       [](const Util::PTSDPosition &pos) {
         return std::make_shared<spike>(pos);
+      };
+        
+  // 添加 Glue 工廠函數
+  m_popperFactories[Tower::TowerType::glue] =
+      [](const Util::PTSDPosition &pos) {
+        return std::make_shared<Glue>(pos);
       };
 
   // 可以繼續添加其他 popper 類型...

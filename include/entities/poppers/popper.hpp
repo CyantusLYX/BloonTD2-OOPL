@@ -14,6 +14,7 @@ class popper : public Mortal, public Components::CollisionComponent {
 protected:
   bool explosive = false;
   bool canPopFrozen = false;
+  bool canPopBlack = false;
 public:
   popper(const Util::PTSDPosition &pos = {0, 0}, const std::variant<glm::vec2, float> &circle_r_or_rectangle_xy = 0.0f)
       : Components::CollisionComponent(pos, circle_r_or_rectangle_xy) {
@@ -24,5 +25,8 @@ public:
   virtual Util::PTSDPosition get_position() const=0;
   void setCanPopFrozen(bool canPopFrozen) { this->canPopFrozen = canPopFrozen; }
   bool getCanPopFrozen() const { return canPopFrozen; }
+  void setCanPopBlack(bool canPopBlack) { this->canPopBlack = canPopBlack; }
+  bool getCanPopBlack() const { return canPopBlack; }
+  void setExplosive(bool explosive) { this->explosive = explosive; }
 };
 #endif

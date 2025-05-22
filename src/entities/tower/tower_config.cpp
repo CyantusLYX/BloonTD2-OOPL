@@ -65,6 +65,16 @@ void BuyableConfigManager::Initialize() {
     s_towerConfigs[Tower::TowerType::boomerang] = boomerangConfig;
     s_baseConfigs[Tower::TowerType::boomerang] = boomerangConfig;
     
+    // 添加 SuperMonkey 配置
+    TowerConfig superConfig;
+    superConfig.name = "Super Monkey";
+    superConfig.cost = COST_SUPER;
+    superConfig.imageFile = RESOURCE_DIR "/towers/super_monkey.png";
+    superConfig.type = BuyableType::Tower;
+    superConfig.range = RANGE_SUPER;
+    s_towerConfigs[Tower::TowerType::super] = superConfig;
+    s_baseConfigs[Tower::TowerType::super] = superConfig;
+    
     // 添加 Spike 配置
     PopperConfig spikeConfig;
     spikeConfig.name = "Spike";
@@ -81,7 +91,7 @@ void BuyableConfigManager::Initialize() {
     glueConfig.cost = COST_GLUE;
     glueConfig.imageFile = RESOURCE_DIR "/poppers/glue.png";
     glueConfig.type = BuyableType::Popper;
-    glueConfig.durability = 5; // 可以減速5個氣球
+    glueConfig.durability = 20; // 可以減速20個氣球
     s_popperConfigs[Tower::TowerType::glue] = glueConfig;
     s_baseConfigs[Tower::TowerType::glue] = glueConfig;
     

@@ -7,11 +7,11 @@
 #include <Util/Position.hpp>
 #include <memory>
 #include <vector>
-class spike : public popper, public CanBuy{
+class spike : public popper, public CanBuy {
 private:
   std::shared_ptr<Util::GameObject> m_object;
   int life = 10;
-bool m_draggable = false; // 新增: 是否可拖曳的標記
+  bool m_draggable = false; // 新增: 是否可拖曳的標記
 
 public:
   spike(const Util::PTSDPosition &pos);
@@ -21,12 +21,14 @@ public:
     auto pos = m_object->m_Transform.translation;
     return Util::PTSDPosition(pos.x, pos.y);
   }
-  void setLife(int life){ this->life = life; }
+  void setLife(int life) { this->life = life; }
   virtual void onDragStart() override;
-    virtual void onDrag(const Util::PTSDPosition& newPosition) override;
-    virtual void onDragEnd() override;
-    
-    virtual bool isDraggable() const override { return m_draggable; }
-    virtual void setDraggable(bool draggable) override { m_draggable = draggable; }
+  virtual void onDrag(const Util::PTSDPosition &newPosition) override;
+  virtual void onDragEnd() override;
+
+  virtual bool isDraggable() const override { return m_draggable; }
+  virtual void setDraggable(bool draggable) override {
+    m_draggable = draggable;
+  }
 };
 #endif

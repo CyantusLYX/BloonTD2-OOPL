@@ -21,10 +21,10 @@ private:
     Bloon::State m_CurrentState = Bloon::State::alive;
     Type m_Type;
     State m_State;
-    const float baseSpeed = 2.5f; // 氣球基礎速度
+    const float baseSpeed = 1.8f; // 氣球基礎速度
     float m_SpeedMult;            // 實際速度 = baseSpeed*m_SpeedMult
     int m_RBE;                    // Red Bloon Equivalent (用於生命值計算)
-    int freeze_counter = 0; // 冰凍計時器
+    int freeze_counter = 0;       // 冰凍計時器
     std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
     
     // 碰撞組件
@@ -42,9 +42,18 @@ public:
 
     void updateFreeze();
     void setFrozed(int freeze_frame);
+    void setGlued();
     void set_died() { m_State = State::died; }
     State GetCurrentState() const { return m_CurrentState; }
-    float GetSpeed() const { return (m_State==Bloon::State::alive)?(baseSpeed * m_SpeedMult):(0.0f); }
+    float GetSpeed() const { 
+        if (m_State == Bloon::State::alive) {
+            return baseSpeed * m_SpeedMult; 
+        } else if (m_State == Bloon::State::glued) {
+            return baseSpeed * m_SpeedMult * 0.5f; // 黏滯時速度減半
+        } else {
+            return 0.0f; // 其他狀態（如凍結）速度為0
+        }
+    }
     int GetRBE() const { return m_RBE; }
     Type GetType() const { return m_Type; }
     State GetState() const { return m_State; }

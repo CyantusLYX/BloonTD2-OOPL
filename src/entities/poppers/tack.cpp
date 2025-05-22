@@ -7,7 +7,7 @@
 #include <cmath>
 
 Tack::Tack(const Util::PTSDPosition &start, float angle, float maxDistance)
-    : popper(start, 8.0f), // 使用較小的碰撞半徑
+    : popper(start, 15.0f), // 使用較小的碰撞半徑
       m_object(std::make_shared<Util::GameObject>(
           std::make_shared<Util::Image>(RESOURCE_DIR "/poppers/tack.png"), 5.0f)),
       m_maxDistance(maxDistance),

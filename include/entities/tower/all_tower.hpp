@@ -5,4 +5,5 @@
 #include "tack_shooter.hpp"
 #include "cannon.hpp"
 #include "boomerang_monkey.hpp"
+#include "superMonkey.hpp"
 #endif

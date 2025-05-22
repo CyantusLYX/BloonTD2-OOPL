@@ -5,6 +5,7 @@
 #include "Util/SFX.hpp"
 #include "components/mortal.hpp"
 #include "entities/bloon.hpp"
+#include "entities/poppers/glue.hpp"
 #include <glm/fwd.hpp>
 #include <memory>
 
@@ -104,8 +105,20 @@ Manager::createPopper(Tower::TowerType type,
     if (popper) {
       // 從配置中載入 popper 屬性
       const auto &config = BuyableConfigManager::GetPopperConfig(type);
-      auto spikePtr = std::dynamic_pointer_cast<spike>(popper);
-      spikePtr->setLife(config.durability);
+      
+      // 根據 popper 類型設置生命值
+      if (type == Tower::TowerType::spike) {
+        auto spikePtr = std::dynamic_pointer_cast<spike>(popper);
+        if (spikePtr) {
+          spikePtr->setLife(config.durability);
+        }
+      } else if (type == Tower::TowerType::glue) {
+        auto gluePtr = std::dynamic_pointer_cast<Glue>(popper);
+        if (gluePtr) {
+          gluePtr->setLife(config.durability);
+        }
+      }
+      
       return popper;
     }
   }
@@ -248,12 +261,12 @@ void Manager::add_button(const std::shared_ptr<Button> &button) {
   m_Renderer->AddChild(button); // 將按鈕加入渲染器
 }
 
-void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon,bool fx) {
+void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx) {
 
   if (bloon->get_bloon()->getPosition().ToVec2().y >
       get_curr_map()->get_path()->getPositionAtPercentage(.99).ToVec2().y) {
     money++;
-    if(fx){
+    if (fx) {
       auto popimg_tmpobj = std::make_shared<popimg_class>();
       popimg_tmpobj->pop_n_return_img(bloon->get_bloon()->getPosition());
       register_mortal(popimg_tmpobj);
@@ -301,7 +314,6 @@ void Manager::add_popper(const std::shared_ptr<popper> &popper) {
   }
 }
 
-// 修改點擊處理，確保第二次點擊時固定位置
 void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
   if (drag_cd) {
@@ -342,7 +354,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
     // 檢查物件是否能夠進行碰撞檢測
     bool isCollided = false;
 
-    // 透過介面來檢查碰撞，而不是強制轉換為特定類型
+    // 透過介面來檢查碰撞
     auto collidable =
         std::dynamic_pointer_cast<Interface::I_collider>(clickable);
     if (collidable) {
@@ -452,22 +464,27 @@ void Manager::handlePoppers() {
         // 處理被擊中的氣球
         for (size_t i = 0; i < hit_results.size(); ++i) {
           if (!hit_results[i]) {
-            continue;  // Skip bloons that weren't hit
+            continue; // Skip bloons that weren't hit
           }
-                  
-          auto& bloon = collided_bloons[i];
+
+          auto &bloon = collided_bloons[i];
           bool can_pop = true;
-                  
-          // Check if it's a lead bloon - only explosives can pop it
+
+          // 檢查是否為鉛氣球 - 只有爆炸型 popper 可以擊破
           if (bloon->GetType() == Bloon::Type::lead && !popper->is_explosive()) {
             can_pop = false;
           }
-          // Check if it's a frozen bloon - needs special popper or explosive
+          // 檢查是否為冰凍氣球 - 需要特殊 popper 或爆炸型
           else if (bloon->GetState() == Bloon::State::frozed && 
-                   !(popper->getCanPopFrozen() || popper->is_explosive())) {
+                  !(popper->getCanPopFrozen() || popper->is_explosive())) {
             can_pop = false;
           }
-                  
+          // 檢查是否為黑色氣球 - 黑色氣球免疫爆炸性武器，除非該爆炸武器有特殊增強
+          else if (bloon->GetType() == Bloon::Type::black && popper->is_explosive() && 
+                  !popper->getCanPopBlack()) {
+            can_pop = false;
+          }
+
           if (can_pop) {
             // Explosives pop without visual effects
             pop_bloon(collided_holders[i], !popper->is_explosive());
@@ -770,13 +787,11 @@ void Manager::processBloonsState() {
     }
   }
 
-  // // 在迴圈外處理爆炸，避免迭代器失效
-  // int n = 0;
-  // for (auto &bloon : popped_bloons) {
-  //   LOG_DEBUG("pop {}", n++);
-  //   pop_bloon(bloon);
-  // }
-  //not sure if this useful.
+  int n = 0;
+  for (auto &bloon : popped_bloons) {
+    LOG_DEBUG("pop {}", n++);
+    pop_bloon(bloon);
+  }
 }
 
 // 更新所有移動物件

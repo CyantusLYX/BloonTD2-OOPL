@@ -73,6 +73,27 @@ void TowerButtonConfigManager::Initialize() {
         )
     );
     
+    s_configs.emplace(Tower::TowerType::glue, 
+        TowerButtonConfig(
+            Tower::TowerType::glue,
+            "Glue Gunner",
+            RESOURCE_DIR "/buttons/tower/glue.png",
+            COST_GLUE,
+            true
+        )
+    );
+    
+
+    s_configs.emplace(Tower::TowerType::super, 
+        TowerButtonConfig(
+            Tower::TowerType::super,
+            "Super Monkey",
+            RESOURCE_DIR "/buttons/tower/super_monkey.png",
+            COST_SUPER,
+            true
+        )
+    );
+    
     LOG_INFO("TOWER_BTN_CONF: 已初始化 {} 個塔按鈕配置", s_configs.size());
 }
 
