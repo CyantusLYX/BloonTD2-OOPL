@@ -1,6 +1,7 @@
 #ifndef APP_HPP
 #define APP_HPP
 
+#include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
 #include "core/manager.hpp"
 #include "core/shape.hpp"
@@ -31,6 +32,7 @@ private:
   std::shared_ptr<Manager> manager = std::make_shared<Manager>(m_Renderer);
 private:
     State m_CurrentState = State::START;
+    Util::PTSDPosition previous_cursor_pos = {0,0};
 };
 
 #endif

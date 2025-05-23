@@ -8,8 +8,10 @@
 #include "entities/poppers/spike.hpp"
 #include "test/test.hpp"
 #include <Util/Time.hpp>
+#include <X11/X.h>
 #include <cmath>
 #include <glm/fwd.hpp>
+#include <imgui.h>
 #include <memory>
 #include "core/ShapeAnimation.hpp"
 bool drag_cd = false;
@@ -29,6 +31,8 @@ void App::Start() {
   spike_at_end->setCanPopFrozen(true);
   spike_at_end->setExplosive(true);
   manager->add_popper(spike_at_end);
+
+  manager->set_menu();
 }
 
 void App::Update() {
@@ -38,7 +42,16 @@ void App::Update() {
 //   else
 // {
   manager->cleanup_dead_objects();
-  if (manager->get_game_state() != Manager::game_state::menu) {
+  if (manager->get_game_state() == Manager::game_state::menu) {
+    auto now = Util::Input::GetCursorPosition();
+    if(now.ToVec2() != previous_cursor_pos.ToVec2()){
+    previous_cursor_pos = Util::Input::GetCursorPosition();
+    manager->menu_hover(now);
+  }
+  }else if(manager->get_game_state() == Manager::game_state::over){
+    
+  }
+  else if (manager->get_game_state() != Manager::game_state::menu) {
     // 更新遊戲邏輯
     manager->updateDraggingObject(Util::Input::GetCursorPosition());
     manager->processBloonsState();

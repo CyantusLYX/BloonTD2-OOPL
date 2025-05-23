@@ -1,7 +1,9 @@
 #include "core/manager.hpp"
+#include "UI/button.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Logger.hpp"
+#include "Util/Position.hpp"
 #include "Util/SFX.hpp"
 #include "components/mortal.hpp"
 #include "entities/bloon.hpp"
@@ -11,6 +13,7 @@
 
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
+bool voltog = 1;
 
 // 座標轉換輔助函數
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
@@ -59,7 +62,34 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   }
   m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
   m_Renderer->AddChild(m_waveText);
+
+  // sfx
+  add_button(sound);
+  add_clickable(sound);
+
+  // menu
+  emh_menu_buttons.push_back(std::make_shared<Button>(
+      "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50)));
+  emh_menu_buttons.push_back(std::make_shared<Button>(
+      "med", Util::PTSDPosition(-50, 100), glm::vec2(50, 50)));
+  emh_menu_buttons.push_back(std::make_shared<Button>(
+      "hard", Util::PTSDPosition(100, 100), glm::vec2(50, 50)));
+  for(auto btn:emh_menu_buttons){
+    add_button(btn);
+    add_clickable(btn);
+  }
+
   initUI();
+}
+
+void Manager::menu_hover(Util::PTSDPosition now) {
+  int c = current_diff;
+  for(int i = 0; i<3; i++){
+    auto btn = emh_menu_buttons[i];
+    if(btn->isCollide(now) && c != i){
+      set_map(i);
+    }
+  }
 }
 
 // 根據類型創建塔
@@ -105,7 +135,7 @@ Manager::createPopper(Tower::TowerType type,
     if (popper) {
       // 從配置中載入 popper 屬性
       const auto &config = BuyableConfigManager::GetPopperConfig(type);
-      
+
       // 根據 popper 類型設置生命值
       if (type == Tower::TowerType::spike) {
         auto spikePtr = std::dynamic_pointer_cast<spike>(popper);
@@ -118,7 +148,7 @@ Manager::createPopper(Tower::TowerType type,
           gluePtr->setLife(config.durability);
         }
       }
-      
+
       return popper;
     }
   }
@@ -395,6 +425,36 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
         } else if (buttonName == "menu") {
           // 選單按鈕功能
           m_game_state = game_state::menu;
+        } else if (buttonName == "sound") {
+          // 音效按鈕功能
+          voltog = !voltog;
+          for (auto a : popimgs) {
+            a->voltoggle(voltog);
+          }
+          button->SetDrawable(std::make_shared<Util::Image>(
+              voltog ? RESOURCE_DIR "/buttons/Bsound.png"
+                     : RESOURCE_DIR "/buttons/Bmute.png"));
+        } else if (buttonName == "easy") {
+          set_map(0);
+          for(auto btn:emh_menu_buttons){
+            btn->SetVisible(false);
+            btn->setClickable(false);
+          }
+          m_game_state = game_state::playing;
+        } else if (buttonName == "med") {
+          set_map(1);
+          for(auto btn:emh_menu_buttons){
+            btn->SetVisible(false);
+            btn->setClickable(false);
+          }
+          m_game_state = game_state::playing;
+        } else if (buttonName == "hard") {
+          set_map(2);
+          for(auto btn:emh_menu_buttons){
+            btn->SetVisible(false);
+            btn->setClickable(false);
+          }
+          m_game_state = game_state::playing;
         }
         // 處理可能的拖曳狀態
         auto draggable =
@@ -443,6 +503,15 @@ void Manager::handlePoppers() {
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
             life--;
+            if(life<0){
+              auto a = std::make_shared<Util::GameObject>(
+                std::make_shared<Util::Image>(
+                  RESOURCE_DIR "/titles/gg.png"),
+                100
+              );
+              m_Renderer->AddChild(a);
+              m_game_state = game_state::over;
+            }
             // this->add_clickable(bloon); // 使用新的方法
 
             // bloon->kill();
@@ -471,17 +540,19 @@ void Manager::handlePoppers() {
           bool can_pop = true;
 
           // 檢查是否為鉛氣球 - 只有爆炸型 popper 可以擊破
-          if (bloon->GetType() == Bloon::Type::lead && !popper->is_explosive()) {
+          if (bloon->GetType() == Bloon::Type::lead &&
+              !popper->is_explosive()) {
             can_pop = false;
           }
           // 檢查是否為冰凍氣球 - 需要特殊 popper 或爆炸型
-          else if (bloon->GetState() == Bloon::State::frozed && 
-                  !(popper->getCanPopFrozen() || popper->is_explosive())) {
+          else if (bloon->GetState() == Bloon::State::frozed &&
+                   !(popper->getCanPopFrozen() || popper->is_explosive())) {
             can_pop = false;
           }
-          // 檢查是否為黑色氣球 - 黑色氣球免疫爆炸性武器，除非該爆炸武器有特殊增強
-          else if (bloon->GetType() == Bloon::Type::black && popper->is_explosive() && 
-                  !popper->getCanPopBlack()) {
+          // 檢查是否為黑色氣球 -
+          // 黑色氣球免疫爆炸性武器，除非該爆炸武器有特殊增強
+          else if (bloon->GetType() == Bloon::Type::black &&
+                   popper->is_explosive() && !popper->getCanPopBlack()) {
             can_pop = false;
           }
 

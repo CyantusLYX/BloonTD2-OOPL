@@ -80,7 +80,7 @@ public:
       popimg_class()
           : Util::GameObject(
                 std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"), 5) {
-        sfx->LoadMedia("12.mp3");
+        sfx->LoadMedia(RESOURCE_DIR "/sounds/12.mp3");
       };
     
       std::shared_ptr<Util::GameObject> getobj() {
@@ -94,8 +94,16 @@ public:
       };
       void tick_add(){tick++;}
       int get_tick(){return tick;}
+      void voltoggle(bool voltog) {
+        if (voltog) {
+          sfx->SetVolume(vol);
+        } else {
+          sfx->SetVolume(0);
+        }
+      }
 
     private:
+      int vol = 100;
       int tick=0;
       std::shared_ptr<Util::SFX> sfx =
           std::make_shared<Util::SFX>(RESOURCE_DIR "/sounds");
@@ -221,6 +229,13 @@ private:
   bool m_isTowerDragging = false;
   Tower::TowerType m_dragTowerType;
   int m_dragTowerCost = 0;
+  public: void menu_hover(Util::PTSDPosition now);private:
+  std::shared_ptr<Button> sound = std::make_shared<Button>(
+      "sound", Util::PTSDPosition(-310, 230), glm::vec2(50, 50));
+  // sound->setSize({50, 50});
+  // std::shared_ptr<Button> easy_btn = std::make_shared<Button>(
+  //   "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50));
+  std::vector<std::shared_ptr<Button>> emh_menu_buttons;
 
   std::shared_ptr<popper> createPopper(Tower::TowerType type,
                                        const Util::PTSDPosition &position);
