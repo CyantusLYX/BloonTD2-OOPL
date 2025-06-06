@@ -14,6 +14,7 @@
 #include <vector>
 #include "components/towerType.hpp"
 #include "components/canBuy.hpp"
+#include "interfaces/clickable.hpp"
 
 class SpecConfig {
 public:
@@ -75,6 +76,9 @@ private:
   std::shared_ptr<Components::CollisionComponent> m_collisionComponent;
 
 public:
+  auto getCollisionComponent() const {
+    return m_collisionComponent;
+  }
   void setPosition(const Util::PTSDPosition &position) {
     m_Transform.translation = position.ToVec2();
     m_collisionComponent->setPosition(position);
@@ -96,8 +100,9 @@ public:
     m_Drawable = drawable;
   }
 };
-class Tower: public CanBuy  {
+class Tower: public CanBuy,public Interface::I_clickable  {
 protected:
+  bool Isupgradable = true;
   TowerType m_type;
   TowerState m_state;
   bool m_previewMode = false; // 添加預覽模式標誌
@@ -107,6 +112,21 @@ protected:
   std::shared_ptr<Path> m_path;
 
 public:
+  void setClickable(bool clickable) override{
+    Isupgradable = clickable;
+  }
+  bool isClickable() const override {
+    return Isupgradable;
+  }
+  void onClick() override {
+    if (Isupgradable) {
+      setPreviewMode(!m_previewMode);
+    }
+  }
+  void onFocus() override {}
+  bool isClick(const Util::PTSDPosition& pos) override{
+    return m_body->getCollisionComponent()->isCollide(pos);
+  }
   virtual void setRange(float range){
     m_range->setRadius(range);
   }

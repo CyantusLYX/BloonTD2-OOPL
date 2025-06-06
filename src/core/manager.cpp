@@ -391,7 +391,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
       isCollided = collidable->isCollide(cursor_position);
     }
 
-    if (isCollided) {
+    if (isCollided||clickable->isClick(cursor_position)) {
       LOG_DEBUG("MNGR  : 檢測到點擊");
 
       // 1. 首先嘗試處理特殊類型按鈕 - TowerButton
@@ -656,6 +656,9 @@ void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
   if (auto range = tower->getRange()) {
     m_Renderer->AddChild(range);
   }
+  if (auto clickable = std::dynamic_pointer_cast<Interface::I_clickable>(tower)) {
+    this->add_clickable(clickable);
+  }
 }
 
 void Manager::handleTowers() {
@@ -911,17 +914,8 @@ void Manager::placeCurrentTower(const Util::PTSDPosition &position) {
         // 更新位置確保精確
         tower->setPosition(position);
 
-        tower->setPopperCallback([this](std::shared_ptr<popper> p) {
-          this->add_popper(p);
-          auto move_popper = std::dynamic_pointer_cast<Interface::I_move>(p);
-          if (move_popper) {
-            this->add_moving(move_popper);
-          }
-        });
-
-        tower->setPath(current_path);
-
-        towers.push_back(tower);
+        // 使用 add_tower 函數來正確設置塔
+        add_tower(tower);
 
         LOG_DEBUG("MNGR  : 使用拖曳中的塔放置，位置: ({}, {})", position.x,
                   position.y);
