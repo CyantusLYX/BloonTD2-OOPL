@@ -6,30 +6,33 @@
 #include <glm/fwd.hpp>
 
 Button::Button(const std::string &name, const Util::PTSDPosition &pos,
-               const std::variant<glm::vec2, float> col_parm,
-               bool can_click, const std::string &path)
-    : Components::CollisionComponent(pos, col_parm),
+               const std::variant<glm::vec2, float> col_parm, bool can_click,
+               bool drawable, const std::string &path)
+    : Components::CollisionComponent(pos, col_parm), isDrawable(drawable),
       Util::GameObject(nullptr, 100, {0, 0}, true) {
   this->name = name;
-  if (path.empty()) {
-    m_Drawable = std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/B" +
-                                               name + ".png");
-  } else {
-    m_Drawable = std::make_shared<Util::Image>(path);
-  }
-  auto image = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
-  image->UseAntiAliasing(false);
-  // Set the GameObject transform position - this is the key fix
-  m_Transform.translation = pos.ToVec2();
-  if (col_parm.index() == 1){
-    setColParam(static_cast<float>(m_Drawable->GetSize().x / 2));
+  if (isDrawable) {
+    if (path.empty()) {
+      m_Drawable = std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/B" +
+                                                 name + ".png");
+    } else {
+      m_Drawable = std::make_shared<Util::Image>(path);
+    }
+    auto image = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
+    if (image) {
+      image->UseAntiAliasing(false);
+    }
+    // Set the GameObject transform position - this is the key fix
+    m_Transform.translation = pos.ToVec2();
+    if (col_parm.index() == 1) {
+      setColParam(static_cast<float>(m_Drawable->GetSize().x / 2));
       LOG_DEBUG("BUTTON: {}:{}", name, m_Drawable->GetSize().x / 2);
-  }
-  else {
-    const glm::vec2 a = {m_Drawable->GetSize().x, m_Drawable->GetSize().y};
-    setColParam(a);
-    shape.SetSize(a);
-    LOG_DEBUG("BUTTON: {}:{}", name, a);
+    } else {
+      const glm::vec2 a = {m_Drawable->GetSize().x, m_Drawable->GetSize().y};
+      setColParam(a);
+      shape.SetSize(a);
+      LOG_DEBUG("BUTTON: {}:{}", name, a);
+    }
   }
 }
 

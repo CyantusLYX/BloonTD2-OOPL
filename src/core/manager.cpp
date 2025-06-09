@@ -1,14 +1,4 @@
 #include "core/manager.hpp"
-#include "UI/button.hpp"
-#include "Util/GameObject.hpp"
-#include "Util/Input.hpp"
-#include "Util/Logger.hpp"
-#include "Util/Position.hpp"
-#include "Util/SFX.hpp"
-#include "components/mortal.hpp"
-#include "entities/bloon.hpp"
-#include "entities/poppers/glue.hpp"
-#include <glm/fwd.hpp>
 #include <memory>
 
 bool toggle_show_collision_at = 0;
@@ -74,7 +64,7 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
       "med", Util::PTSDPosition(-50, 100), glm::vec2(50, 50)));
   emh_menu_buttons.push_back(std::make_shared<Button>(
       "hard", Util::PTSDPosition(100, 100), glm::vec2(50, 50)));
-  for(auto btn:emh_menu_buttons){
+  for (auto btn : emh_menu_buttons) {
     add_button(btn);
     add_clickable(btn);
   }
@@ -84,9 +74,9 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
 
 void Manager::menu_hover(Util::PTSDPosition now) {
   int c = current_diff;
-  for(int i = 0; i<3; i++){
+  for (int i = 0; i < 3; i++) {
     auto btn = emh_menu_buttons[i];
-    if(btn->isCollide(now) && c != i){
+    if (btn->isCollide(now) && c != i) {
       set_map(i);
     }
   }
@@ -287,8 +277,9 @@ void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
 
 void Manager::add_button(const std::shared_ptr<Button> &button) {
   buttons.push_back(button);
-
-  m_Renderer->AddChild(button); // 將按鈕加入渲染器
+  if (button->isDrawable)
+    m_Renderer->AddChild(button); // 將按鈕加入渲染器
+  register_mortal(button);
 }
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx) {
@@ -391,7 +382,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
       isCollided = collidable->isCollide(cursor_position);
     }
 
-    if (isCollided||clickable->isClick(cursor_position)) {
+    if (isCollided || clickable->isClick(cursor_position)) {
       LOG_DEBUG("MNGR  : 檢測到點擊");
 
       // 1. 首先嘗試處理特殊類型按鈕 - TowerButton
@@ -408,7 +399,14 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
         break;
       }
-
+      auto clickedTower = std::dynamic_pointer_cast<Tower::Tower>(clickable);
+      if (clickedTower) {
+        auto newUpgradesPanel =
+            std::make_shared<UI::UpgradesPanel>(clickedTower);
+        add_button(newUpgradesPanel->getSellButton());
+        add_clickable(newUpgradesPanel->getSellButton());
+        set_flag(newUpgradesPanel);
+      }
       // 2. 然後處理普通按鈕
       auto button = std::dynamic_pointer_cast<Button>(clickable);
       if (button) {
@@ -436,25 +434,37 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
                      : RESOURCE_DIR "/buttons/Bmute.png"));
         } else if (buttonName == "easy") {
           set_map(0);
-          for(auto btn:emh_menu_buttons){
+          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
-          m_game_state = game_state::playing;
+          set_playing();
         } else if (buttonName == "med") {
           set_map(1);
-          for(auto btn:emh_menu_buttons){
+          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
-          m_game_state = game_state::playing;
+          set_playing();
         } else if (buttonName == "hard") {
           set_map(2);
-          for(auto btn:emh_menu_buttons){
+          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
-          m_game_state = game_state::playing;
+          set_playing();
+        } else if (buttonName == "sell") {
+          // 賣出按鈕功能
+          auto sellButton = std::dynamic_pointer_cast<UI::SellButton>(button);
+          if (sellButton) {
+            sellButton->onClick();
+          }
+          money += sellButton->getSellPrice();
+          sellButton->getTower()->kill(); // 賣出塔
+          unSelectFlag();
         }
         // 處理可能的拖曳狀態
         auto draggable =
@@ -503,12 +513,10 @@ void Manager::handlePoppers() {
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
             life--;
-            if(life<0){
+            if (life < 0) {
               auto a = std::make_shared<Util::GameObject>(
-                std::make_shared<Util::Image>(
-                  RESOURCE_DIR "/titles/gg.png"),
-                100
-              );
+                  std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"),
+                  100);
               m_Renderer->AddChild(a);
               m_game_state = game_state::over;
             }
@@ -572,6 +580,11 @@ void Manager::handlePoppers() {
 
 void Manager::register_mortal(std::shared_ptr<Mortal> mortal) {
   mortals.push_back(mortal);
+  for (auto child : mortal->get_children()) {
+    if (auto child_mortal = std::dynamic_pointer_cast<Mortal>(child)) {
+      mortals.push_back(child_mortal);
+    }
+  }
 }
 
 void Manager::cleanup_dead_objects() {
@@ -618,6 +631,11 @@ void Manager::cleanup_dead_objects() {
                     container.end());
   };
   // 使用通用函數清理各個容器
+
+  cleanup_container(buttons, [](const auto &button) {
+    return std::dynamic_pointer_cast<Mortal>(button);
+  });
+
   cleanup_container(bloons, [](const auto &bloon) {
     return std::dynamic_pointer_cast<Mortal>(bloon->get_bloon());
   });
@@ -632,6 +650,9 @@ void Manager::cleanup_dead_objects() {
 
   cleanup_container(popimgs, [](const auto &popimg_class) {
     return std::dynamic_pointer_cast<Mortal>(popimg_class);
+  });
+  cleanup_container(towers, [](const auto &tower) {
+    return std::dynamic_pointer_cast<Mortal>(tower);
   });
 }
 
@@ -652,13 +673,17 @@ void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
   // 將塔的視覺元素加入渲染器
   if (auto body = tower->getBody()) {
     m_Renderer->AddChild(body);
+    mortals.push_back(body);
   }
   if (auto range = tower->getRange()) {
     m_Renderer->AddChild(range);
+    mortals.push_back(range);
   }
-  if (auto clickable = std::dynamic_pointer_cast<Interface::I_clickable>(tower)) {
+  if (auto clickable =
+          std::dynamic_pointer_cast<Interface::I_clickable>(tower)) {
     this->add_clickable(clickable);
   }
+  mortals.push_back(tower); // 註冊為可死亡物件
 }
 
 void Manager::handleTowers() {
@@ -1007,6 +1032,9 @@ void Manager::initUI() {
 
   // 初始化塔按鈕配置
   UI::TowerButtonConfigManager::Initialize();
+  
+  // 初始化升級按鈕配置
+  UI::UpgradeButtonConfigManager::Initialize();
 
   // 從配置中添加所有可用的塔按鈕
   auto towerConfigs = UI::TowerButtonConfigManager::GetAllAvailableConfigs();
@@ -1048,3 +1076,31 @@ void Manager::popimg_tick_manager() {
   }
   // LOG_DEBUG("pm");
 };
+
+// 在路徑終點生成終極釘子
+void Manager::createSpikeAtEnd() {
+  if (!current_map || !current_path) {
+    LOG_ERROR("MNGR  : 無法創建終點釘子 - 地圖或路徑未設置");
+    return;
+  }
+
+  auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() +
+                   current_path->getPositionAtPercentage(1).ToVec2();
+  auto spike_at_end = std::make_shared<Manager::end_spike>(
+      Util::PTSDPosition(pos_shift.x, pos_shift.y));
+  spike_at_end->setLife(10000000);
+  spike_at_end->setCanPopBlack(true);
+  spike_at_end->setCanPopFrozen(true);
+  spike_at_end->setExplosive(true);
+  add_popper(spike_at_end);
+
+  LOG_DEBUG("MNGR  : 在路徑終點創建終極釘子，位置: ({}, {})", pos_shift.x,
+            pos_shift.y);
+}
+
+void Manager::unSelectFlag() {
+  if (current_flag) {
+    current_flag->kill();
+    set_flag(nullptr);
+  }
+}

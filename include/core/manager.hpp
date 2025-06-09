@@ -1,13 +1,16 @@
 #ifndef MANAGER_HPP
 #define MANAGER_HPP
 
+#include "UI/Flag.hpp"
 #include "UI/SidebarManager.hpp"
-#include "UI/button.hpp"
 #include "UI/buttons/tower_btn.hpp"
 #include "UI/buttons/tower_btn_conf.hpp"
+#include "UI/buttons/upgrade_btn_conf.hpp"
+#include "UI/container/upgrades.hpp"
 #include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Input.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
@@ -19,6 +22,7 @@
 #include "conf.hpp"
 #include "core/loader.hpp"
 #include "entities/bloon.hpp"
+#include "entities/poppers/glue.hpp"
 #include "entities/poppers/popper.hpp"
 #include "entities/poppers/spike.hpp"
 #include "entities/tower/all_tower.hpp"
@@ -74,47 +78,48 @@ public:
     void pre_kill() override { m_bloon->kill(); }
   };
 
-  //sfx
+  // sfx
   class popimg_class : public Mortal, public Util::GameObject {
-    public:
-      popimg_class()
-          : Util::GameObject(
-                std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"), 5) {
-        sfx->LoadMedia(RESOURCE_DIR "/sounds/12.mp3");
-      };
-    
-      std::shared_ptr<Util::GameObject> getobj() {
-        return std::make_shared<Util::GameObject>(*this);
-      }
-      
-      std::shared_ptr<Util::GameObject> pop_n_return_img(const Util::PTSDPosition now) {
-        sfx->Play();
-        this->m_Transform.translation = now.ToVec2();
-        return std::make_shared<Util::GameObject>(*this);
-      };
-      void tick_add(){tick++;}
-      int get_tick(){return tick;}
-      void voltoggle(bool voltog) {
-        if (voltog) {
-          sfx->SetVolume(vol);
-        } else {
-          sfx->SetVolume(0);
-        }
-      }
-
-    private:
-      int vol = 100;
-      int tick=0;
-      std::shared_ptr<Util::SFX> sfx =
-          std::make_shared<Util::SFX>(RESOURCE_DIR "/sounds");
+  public:
+    popimg_class()
+        : Util::GameObject(
+              std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"),
+              5) {
+      sfx->LoadMedia(RESOURCE_DIR "/sounds/12.mp3");
     };
 
-  class end_spike: public spike{
-    public:
-      end_spike(const Util::PTSDPosition &pos = {0, 0})
-          : spike(pos) {
-        setLife(10000000);
+    std::shared_ptr<Util::GameObject> getobj() {
+      return std::make_shared<Util::GameObject>(*this);
+    }
+
+    std::shared_ptr<Util::GameObject>
+    pop_n_return_img(const Util::PTSDPosition now) {
+      sfx->Play();
+      this->m_Transform.translation = now.ToVec2();
+      return std::make_shared<Util::GameObject>(*this);
+    };
+    void tick_add() { tick++; }
+    int get_tick() { return tick; }
+    void voltoggle(bool voltog) {
+      if (voltog) {
+        sfx->SetVolume(vol);
+      } else {
+        sfx->SetVolume(0);
       }
+    }
+
+  private:
+    int vol = 100;
+    int tick = 0;
+    std::shared_ptr<Util::SFX> sfx =
+        std::make_shared<Util::SFX>(RESOURCE_DIR "/sounds");
+  };
+
+  class end_spike : public spike {
+  public:
+    end_spike(const Util::PTSDPosition &pos = {0, 0}) : spike(pos) {
+      setLife(10000000);
+    }
   };
 
   // 建構函式和解構函式
@@ -127,7 +132,16 @@ public:
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
-  void pop_bloon(std::shared_ptr<bloon_holder> bloon,bool fx=true);
+  void pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx = true);
+  void set_flag(const std::shared_ptr<UI::Flag> &flag) {
+    if (flag != nullptr) {
+      m_Renderer->AddChild(flag);
+      register_mortal(flag);
+    }
+    if (current_flag)
+      current_flag->kill();
+    current_flag = flag;
+  }
 
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
 
@@ -151,9 +165,13 @@ public:
   void end_dragging(); // ender_dragon()
   bool drag_cd = false;
 
-  // Sidebar 相關方法
+  // UI 相關方法
+  void unselectAll(){
+    unSelectFlag();
+  };
   void initUI();
   void updateUI();
+  void unSelectFlag();
 
   // 塔建造相關
   void startDraggingTower(Tower::TowerType towerType);
@@ -163,6 +181,9 @@ public:
   // 創建一個塔
   std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type,
                                             const Util::PTSDPosition &position);
+
+  // 在路徑終點創建終極釘子
+  void createSpikeAtEnd();
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }
@@ -187,6 +208,7 @@ public:
       std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png");
   std::shared_ptr<Util::GameObject> m_gameover =
       std::make_shared<Util::GameObject>(m_gameover_img, 100);
+  std::shared_ptr<UI::Flag> current_flag;
 
 private:
   // 渲染和狀態
@@ -229,7 +251,11 @@ private:
   bool m_isTowerDragging = false;
   Tower::TowerType m_dragTowerType;
   int m_dragTowerCost = 0;
-  public: void menu_hover(Util::PTSDPosition now);private:
+
+public:
+  void menu_hover(Util::PTSDPosition now);
+
+private:
   std::shared_ptr<Button> sound = std::make_shared<Button>(
       "sound", Util::PTSDPosition(-310, 230), glm::vec2(50, 50));
   // sound->setSize({50, 50});
@@ -255,7 +281,6 @@ private:
 
   // 初始化塔工廠
   void initTowerFactories();
-
 };
 
 #endif // MANAGER_HPP

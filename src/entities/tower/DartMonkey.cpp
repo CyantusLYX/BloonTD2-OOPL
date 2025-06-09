@@ -2,12 +2,13 @@
 #include "Util/Image.hpp"
 #include "Util/Time.hpp"
 #include "components/canBuy.hpp"
+#include "conf.hpp"
 #include "entities/tower/tower.hpp"
 
 DartMonkey::DartMonkey(const Util::PTSDPosition &position, float range)
     : Tower::Tower(),
       m_collision(Components::CollisionComponent(position, range)) {
-  
+
   // 明確設置狀態為 ready（預設塔可以攻擊）
   m_state = ::Tower::TowerState::ready;
 
@@ -20,6 +21,14 @@ DartMonkey::DartMonkey(const Util::PTSDPosition &position, float range)
   m_range = std::make_shared<::Tower::Range>(range, position);
   // 默認隱藏範圍
   m_range->setVisible(false);
+  m_info = {
+      "Dart Monkey",             // 塔的名稱
+      ::Tower::AtkSpeed::Fast, // 攻擊速度
+      range,                     // 攻擊範圍
+      false,                     // 是否有第一個升級
+      false,                     // 是否有第二個升級
+      COST_DART                  // 投資成本
+  };
 }
 
 void DartMonkey::handleBloonsInRange(
@@ -78,10 +87,12 @@ void DartMonkey::handleBloonsInRange(
   m_body->m_Transform.rotation = atan2(deltaY, deltaX);
   m_body->m_Transform.rotation -= M_PI / 2; // 調整旋轉角度
   // 建立飛鏢 - 瞄準預測位置而非當前位置
-  auto dart = std::make_shared<Dart>(getPosition(), // 從猴子位置發射
-                                     futurePosition // 朝向預測的未來位置
-  );
-
+  auto dart = std::make_shared<Dart>(getPosition(),  // 從猴子位置發射
+                                     futurePosition, // 朝向預測的未來位置
+                                     m_info.firstUpgrade ? 2 : 1);
+  if (m_info.firstUpgrade) {
+    dart->setCanPopFrozen(true);
+  }
   // 使用 popperCallback 將飛鏢加入 popper 列表
   if (m_popperCallback) {
     m_popperCallback(dart);
