@@ -51,15 +51,19 @@ void App::Update() {
   }else if(manager->get_game_state() == Manager::game_state::over){
     
   }
-  else if (manager->get_game_state() != Manager::game_state::menu) {
-    // 更新遊戲邏輯
-    manager->updateDraggingObject(Util::Input::GetCursorPosition());
-    manager->processBloonsState();
-    manager->updateAllMovingObjects();
-    manager->handlePoppers();
-    manager->handleTowers();
-    manager->popimg_tick_manager();
+  else if (manager->get_game_state() == Manager::game_state::gap){
+
   }
+  else if (manager->get_game_state() == Manager::game_state::playing) {
+    // 更新遊戲邏輯
+    //manager->updateDraggingObject(Util::Input::GetCursorPosition());
+  }
+  manager->processBloonsState();
+  manager->handlePoppers();
+  manager->handleTowers();
+  manager->popimg_tick_manager();
+  manager->updateAllMovingObjects();
+  manager->updateDraggingObject(Util::Input::GetCursorPosition());
 
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {

@@ -1,11 +1,14 @@
 #include "core/manager.hpp"
 #include "UI/button.hpp"
+#include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/SFX.hpp"
 #include "components/mortal.hpp"
+#include "core/ShapeAnimation.hpp"
+#include "core/shape.hpp"
 #include "entities/bloon.hpp"
 #include "entities/poppers/glue.hpp"
 #include <glm/fwd.hpp>
@@ -67,6 +70,32 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   add_button(sound);
   add_clickable(sound);
 
+  // start_round
+  b_start_round->SetZIndex(100);
+  add_button(b_start_round);
+  add_clickable(b_start_round);
+
+  // start_round animation
+  std::vector<glm::vec2> a_sizes = std::vector<glm::vec2>{};
+  std::vector<Util::Color> a_colors = std::vector<Util::Color>{};
+
+  for (int i = 0; i < 16; i++) {
+    a_sizes.push_back(b_start_round->GetScaledSize());
+    a_colors.push_back(Util::Color(0, 255, 0, 255 / (i + 1)));
+  }
+  for (int i = 0; i < 16; i++) {
+    a_sizes.push_back(b_start_round->GetScaledSize());
+    a_colors.push_back(Util::Color(0, 255, 0, 255 / (16 - i)));
+  }
+
+  auto startround_shapeanim = std::make_shared<Util::ShapeAnimation>(
+      Util::ShapeType::Rectangle, a_sizes, a_colors, true, 50, true, 100);
+
+  startround_anim = std::make_shared<Util::GameObject>(
+      startround_shapeanim, 50.1f, Util::PTSDPosition(-235, 200), true);
+
+  add_object(startround_anim);
+
   // menu
   emh_menu_buttons.push_back(std::make_shared<Button>(
       "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50)));
@@ -74,7 +103,7 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
       "med", Util::PTSDPosition(-50, 100), glm::vec2(50, 50)));
   emh_menu_buttons.push_back(std::make_shared<Button>(
       "hard", Util::PTSDPosition(100, 100), glm::vec2(50, 50)));
-  for(auto btn:emh_menu_buttons){
+  for (auto btn : emh_menu_buttons) {
     add_button(btn);
     add_clickable(btn);
   }
@@ -84,10 +113,18 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
 
 void Manager::menu_hover(Util::PTSDPosition now) {
   int c = current_diff;
-  for(int i = 0; i<3; i++){
+  for (int i = 0; i < 3; i++) {
     auto btn = emh_menu_buttons[i];
-    if(btn->isCollide(now) && c != i){
+    if (btn->isCollide(now) && c != i) {
       set_map(i);
+      //   btn->SetDrawable(
+      //       std::make_shared<Util::Image>(RESOURCE_DIR
+      //       "/buttons/Bplay.png"));
+      // }
+      // else{
+      //   btn->SetDrawable(
+      //     std::make_shared<Util::Image>(std::string(RESOURCE_DIR
+      //     "/buttons/B") + btn->getName() + ".png"));
     }
   }
 }
@@ -396,7 +433,8 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
       // 1. 首先嘗試處理特殊類型按鈕 - TowerButton
       auto towerButton = std::dynamic_pointer_cast<TowerButton>(clickable);
-      if (towerButton) {
+      if (towerButton && (m_game_state == game_state::playing ||
+                          m_game_state == game_state::gap)) {
         LOG_DEBUG("MNGR  : 檢測到塔按鈕點擊，類型: {}",
                   static_cast<int>(towerButton->getTowerType()));
 
@@ -436,26 +474,38 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
                      : RESOURCE_DIR "/buttons/Bmute.png"));
         } else if (buttonName == "easy") {
           set_map(0);
-          for(auto btn:emh_menu_buttons){
+          for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
-          m_game_state = game_state::playing;
+          m_game_state = game_state::gap;
         } else if (buttonName == "med") {
           set_map(1);
-          for(auto btn:emh_menu_buttons){
+          for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
-          m_game_state = game_state::playing;
+          m_game_state = game_state::gap;
         } else if (buttonName == "hard") {
           set_map(2);
-          for(auto btn:emh_menu_buttons){
+          for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
-          m_game_state = game_state::playing;
+          m_game_state = game_state::gap;
+        } else if (buttonName == "start_round") {
+          // 開始新一輪
+          if (m_game_state == game_state::gap) {
+            m_game_state = game_state::playing;
+            next_wave();
+            f_wave_end = 0;
+          } else if (m_game_state == game_state::playing) {
+            LOG_DEBUG("MNGR  : 已經在進行中，無法再次開始");
+          }
+        } else {
+          LOG_ERROR("MNGR  : 未知按鈕名稱或按鈕目前無法使用: {}", buttonName);
         }
+
         // 處理可能的拖曳狀態
         auto draggable =
             std::dynamic_pointer_cast<Interface::I_draggable>(clickable);
@@ -503,12 +553,10 @@ void Manager::handlePoppers() {
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
             life--;
-            if(life<0){
+            if (life < 0) {
               auto a = std::make_shared<Util::GameObject>(
-                std::make_shared<Util::Image>(
-                  RESOURCE_DIR "/titles/gg.png"),
-                100
-              );
+                  std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"),
+                  100);
               m_Renderer->AddChild(a);
               m_game_state = game_state::over;
             }
@@ -699,6 +747,7 @@ void Manager::next_wave() {
     bloons_gen_list = loader::load_bloons(current_waves);
   } else if (m_game_state == game_state::playing) {
     set_gap();
+    LOG_DEBUG("MNGR  : nwave psgap");
     current_waves++;
     bloons_gen_list = loader::load_bloons(current_waves);
     for (int _ = 0; _ < 50; _++) {
@@ -711,6 +760,7 @@ void Manager::next_wave() {
     LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
+
   // current_waves+=50;
   if (current_waves >= 0 && current_waves <= 50) {
     LOG_INFO("MNGR  : new wave loaded");
@@ -752,11 +802,14 @@ void Manager::wave_check() {
   if (m_game_state == game_state::gap || m_game_state == game_state::menu) {
     return;
   }
-  if (bloons.size() == 0 && bloons_gen_list.size() == 0) {
+  if (bloons.size() == 0 && bloons_gen_list.size() == 0 &&
+      m_game_state == game_state::playing && !f_wave_end) {
     counter = 0;
-    next_wave();
+    f_wave_end = true;
     return;
   }
+  if (f_wave_end)
+    set_gap();
 
   if (current_waves >= 0) {
     bloonInterval = 15 - current_waves;
@@ -791,6 +844,11 @@ void Manager::update() {
     // 全局變數 drag_cooldown，在 handleClickAt 中使用
     drag_cd = false;
   }
+
+  if (m_game_state == game_state::gap)
+    startround_anim->SetVisible(true);
+  else
+    startround_anim->SetVisible(false);
 }
 
 // bloon_holder 內部類別實現

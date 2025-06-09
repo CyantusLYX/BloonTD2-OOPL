@@ -74,47 +74,48 @@ public:
     void pre_kill() override { m_bloon->kill(); }
   };
 
-  //sfx
+  // sfx
   class popimg_class : public Mortal, public Util::GameObject {
-    public:
-      popimg_class()
-          : Util::GameObject(
-                std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"), 5) {
-        sfx->LoadMedia(RESOURCE_DIR "/sounds/12.mp3");
-      };
-    
-      std::shared_ptr<Util::GameObject> getobj() {
-        return std::make_shared<Util::GameObject>(*this);
-      }
-      
-      std::shared_ptr<Util::GameObject> pop_n_return_img(const Util::PTSDPosition now) {
-        sfx->Play();
-        this->m_Transform.translation = now.ToVec2();
-        return std::make_shared<Util::GameObject>(*this);
-      };
-      void tick_add(){tick++;}
-      int get_tick(){return tick;}
-      void voltoggle(bool voltog) {
-        if (voltog) {
-          sfx->SetVolume(vol);
-        } else {
-          sfx->SetVolume(0);
-        }
-      }
-
-    private:
-      int vol = 100;
-      int tick=0;
-      std::shared_ptr<Util::SFX> sfx =
-          std::make_shared<Util::SFX>(RESOURCE_DIR "/sounds");
+  public:
+    popimg_class()
+        : Util::GameObject(
+              std::make_shared<Util::Image>(RESOURCE_DIR "/bloons/bpop.png"),
+              5) {
+      sfx->LoadMedia(RESOURCE_DIR "/sounds/12.mp3");
     };
 
-  class end_spike: public spike{
-    public:
-      end_spike(const Util::PTSDPosition &pos = {0, 0})
-          : spike(pos) {
-        setLife(10000000);
+    std::shared_ptr<Util::GameObject> getobj() {
+      return std::make_shared<Util::GameObject>(*this);
+    }
+
+    std::shared_ptr<Util::GameObject>
+    pop_n_return_img(const Util::PTSDPosition now) {
+      sfx->Play();
+      this->m_Transform.translation = now.ToVec2();
+      return std::make_shared<Util::GameObject>(*this);
+    };
+    void tick_add() { tick++; }
+    int get_tick() { return tick; }
+    void voltoggle(bool voltog) {
+      if (voltog) {
+        sfx->SetVolume(vol);
+      } else {
+        sfx->SetVolume(0);
       }
+    }
+
+  private:
+    int vol = 100;
+    int tick = 0;
+    std::shared_ptr<Util::SFX> sfx =
+        std::make_shared<Util::SFX>(RESOURCE_DIR "/sounds");
+  };
+
+  class end_spike : public spike {
+  public:
+    end_spike(const Util::PTSDPosition &pos = {0, 0}) : spike(pos) {
+      setLife(10000000);
+    }
   };
 
   // 建構函式和解構函式
@@ -127,7 +128,7 @@ public:
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
-  void pop_bloon(std::shared_ptr<bloon_holder> bloon,bool fx=true);
+  void pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx = true);
 
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
 
@@ -141,6 +142,7 @@ public:
   void set_gap() { m_game_state = game_state::gap; };
   void set_playing() { m_game_state = game_state::playing; };
   void wave_check();
+  bool f_wave_end = 0;
   void add_map(const std::shared_ptr<Map> &map);
   void update();
   // 點擊和拖曳相關
@@ -179,7 +181,7 @@ public:
 
   // some resources
   std::shared_ptr<Util::Text> m_waveText_text = std::make_shared<Util::Text>(
-      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "Default",
+      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "1",
       Util::Color(0, 0, 0), false);
   std::shared_ptr<Util::GameObject> m_waveText =
       std::make_shared<Util::GameObject>(m_waveText_text, 5);
@@ -229,9 +231,18 @@ private:
   bool m_isTowerDragging = false;
   Tower::TowerType m_dragTowerType;
   int m_dragTowerCost = 0;
-  public: void menu_hover(Util::PTSDPosition now);private:
+
+public:
+  void menu_hover(Util::PTSDPosition now);
+
+private:
   std::shared_ptr<Button> sound = std::make_shared<Button>(
       "sound", Util::PTSDPosition(-310, 230), glm::vec2(50, 50));
+  std::shared_ptr<Button> b_start_round = std::make_shared<Button>(
+      "start_round", Util::PTSDPosition(235, -200), glm::vec2(50, 50));
+  
+
+  std::shared_ptr<Util::GameObject> startround_anim;
   // sound->setSize({50, 50});
   // std::shared_ptr<Button> easy_btn = std::make_shared<Button>(
   //   "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50));
@@ -255,7 +266,6 @@ private:
 
   // 初始化塔工廠
   void initTowerFactories();
-
 };
 
 #endif // MANAGER_HPP
