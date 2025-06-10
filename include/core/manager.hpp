@@ -45,6 +45,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "interfaces/interfaces.hpp"
 
 class Manager {
 public:
@@ -132,6 +133,13 @@ public:
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
+  void add_updatable(
+      const std::shared_ptr<Interface::IUpdatable> &updatable) {
+    updatables.push_back(updatable);
+    for (const auto &child : updatable->get_children()) {
+      updatables.push_back(child);
+    }
+  }
   void pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx = true);
   void set_flag(const std::shared_ptr<UI::Flag> &flag) {
     if (flag != nullptr) {
@@ -209,6 +217,7 @@ public:
   std::shared_ptr<Util::GameObject> m_gameover =
       std::make_shared<Util::GameObject>(m_gameover_img, 100);
   std::shared_ptr<UI::Flag> current_flag;
+  
 
 private:
   // 渲染和狀態
@@ -245,6 +254,7 @@ private:
   std::vector<std::shared_ptr<Button>> buttons;
   std::vector<std::shared_ptr<Tower::Tower>> towers;
   std::vector<std::shared_ptr<popimg_class>> popimgs;
+  std::vector<std::shared_ptr<Interface::IUpdatable>> updatables;
 
   // UI 相關
   std::shared_ptr<UI::SidebarManager> m_sidebarManager;

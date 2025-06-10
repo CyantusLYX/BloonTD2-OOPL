@@ -34,9 +34,10 @@ public:
   void onDragEnd() override { LOG_DEBUG("DTMky : Dragging end"); };
   bool isDraggable() const override { return m_draggable; }
   void setDraggable(bool draggable) override { m_draggable = draggable; }
-  void setSecondUpgrade(int cost) override {
-    m_info.secondUpgrade = true;
+  void setFirstUpgrade(int cost) override {
+    m_info.firstUpgrade = true;
     m_info.investmentCost += cost;
+    m_info.attackRange += 25.0f; // 增加攻擊範圍
     m_range->setRadius(RANGE_DART+25.0f); // 增加射程
   }
   // components::collisionComp

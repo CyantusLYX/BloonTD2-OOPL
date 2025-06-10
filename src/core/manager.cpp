@@ -402,9 +402,12 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
       auto clickedTower = std::dynamic_pointer_cast<Tower::Tower>(clickable);
       if (clickedTower) {
         auto newUpgradesPanel =
-            std::make_shared<UI::UpgradesPanel>(clickedTower);
-        add_button(newUpgradesPanel->getSellButton());
-        add_clickable(newUpgradesPanel->getSellButton());
+            std::make_shared<UI::UpgradesPanel>(clickedTower, money);
+        for (auto button : newUpgradesPanel->getButtons()) {
+          add_button(button);
+          add_clickable(button);
+        }
+        add_updatable(newUpgradesPanel);
         set_flag(newUpgradesPanel);
       }
       // 2. 然後處理普通按鈕
@@ -465,6 +468,22 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           money += sellButton->getSellPrice();
           sellButton->getTower()->kill(); // 賣出塔
           unSelectFlag();
+        } else if (buttonName == "upgrade") {
+          // 升級按鈕功能
+          auto upgradeButton =
+              std::dynamic_pointer_cast<UI::UpgradeButton>(button);
+          if (upgradeButton) {
+            upgradeButton->onClick();
+            money -= upgradeButton->getCost();
+          }
+        } else if (buttonName == "cancel") {
+          // 取消按鈕功能
+          cancelTowerPlacement();
+        } else if (buttonName == "back") {
+          // 返回按鈕功能
+          unSelectFlag();
+        } else {
+          LOG_ERROR("MNGR  : 未處理的按鈕點擊：{}", buttonName);
         }
         // 處理可能的拖曳狀態
         auto draggable =
@@ -654,6 +673,9 @@ void Manager::cleanup_dead_objects() {
   cleanup_container(towers, [](const auto &tower) {
     return std::dynamic_pointer_cast<Mortal>(tower);
   });
+  cleanup_container(updatables, [](const auto &updatable) {
+    return std::dynamic_pointer_cast<Mortal>(updatable);
+  });
 }
 
 void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
@@ -818,6 +840,11 @@ void Manager::update() {
   } else {
     // 全局變數 drag_cooldown，在 handleClickAt 中使用
     drag_cd = false;
+  }
+  for (auto updatable : updatables) {
+    auto mortal = std::dynamic_pointer_cast<Mortal>(updatable); // 確保是 Mortal
+    if (mortal->is_alive())
+      updatable->update();
   }
 }
 
@@ -1032,7 +1059,7 @@ void Manager::initUI() {
 
   // 初始化塔按鈕配置
   UI::TowerButtonConfigManager::Initialize();
-  
+
   // 初始化升級按鈕配置
   UI::UpgradeButtonConfigManager::Initialize();
 

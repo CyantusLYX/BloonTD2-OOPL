@@ -89,7 +89,7 @@ void DartMonkey::handleBloonsInRange(
   // 建立飛鏢 - 瞄準預測位置而非當前位置
   auto dart = std::make_shared<Dart>(getPosition(),  // 從猴子位置發射
                                      futurePosition, // 朝向預測的未來位置
-                                     m_info.firstUpgrade ? 2 : 1);
+                                     m_info.secondUpgrade ? 2 : 1);
   if (m_info.firstUpgrade) {
     dart->setCanPopFrozen(true);
   }

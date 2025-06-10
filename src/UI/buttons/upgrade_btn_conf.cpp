@@ -111,15 +111,15 @@ void UpgradeButtonConfigManager::Initialize() {
         TowerUpgradeConfig(
             Tower::TowerType::super,
             UpgradeButtonConfig(
-                {"Laser", "Blasts"},
+                {"Epic", "Range"},
                 RESOURCE_DIR "/buttons/upgrades/super_upgrade1.png",
-                2500,
+                COST_SUPER_RANGE_UPGRADE,
                 true
             ),
             UpgradeButtonConfig(
-                {"Plasma", "Blasts"},
+                {"Laser", "Vision"},
                 RESOURCE_DIR "/buttons/upgrades/super_upgrade2.png",
-                3000,
+                COST_SUPER_LASER_UPGRADE,
                 true
             )
         )

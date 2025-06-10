@@ -137,6 +137,7 @@ protected:
 
 public:
   TowerInfo getInfo() const { return m_info; }
+  TowerType getType() const { return m_type; }
   virtual void setFirstUpgrade(int cost) { m_info.firstUpgrade = true; m_info.investmentCost += cost; };
   virtual void setSecondUpgrade(int cost) { m_info.secondUpgrade = true; m_info.investmentCost += cost; };
   virtual bool isUpgradable() const { return Isupgradable; }
