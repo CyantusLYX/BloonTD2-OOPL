@@ -74,6 +74,8 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   b_start_round->SetZIndex(100);
   add_button(b_start_round);
   add_clickable(b_start_round);
+  add_button(end_game);
+  add_clickable(end_game);
 
   // start_round animation
   std::vector<glm::vec2> a_sizes = std::vector<glm::vec2>{};
@@ -92,7 +94,7 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
       Util::ShapeType::Rectangle, a_sizes, a_colors, true, 50, true, 100);
 
   startround_anim = std::make_shared<Util::GameObject>(
-      startround_shapeanim, 50.1f, Util::PTSDPosition(-235, 200), true);
+      startround_shapeanim, 50.1f, Util::PTSDPosition(-235, 180), true);
 
   add_object(startround_anim);
 
@@ -106,8 +108,15 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   for (auto btn : emh_menu_buttons) {
     add_button(btn);
     add_clickable(btn);
+    emh_medals.push_back(
+      std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(
+          RESOURCE_DIR "/buttons/medal_slot.png"), 10));
+    add_object(emh_medals.back());
   }
-
+  for(int i = 0;i<3;i++){
+    emh_medals[i]->m_Transform.translation = Util::PTSDPosition(-200 + i * 150, 40).ToVec2();
+  }
+  
   initUI();
 }
 
@@ -287,6 +296,7 @@ void Manager::set_map(int diff) {
   current_map = maps[diff];
   current_diff = diff;
   current_path = maps[diff]->get_path();
+  current_waves = -1; // 重置當前波數
 }
 
 std::shared_ptr<Map> Manager::get_curr_map() { return maps[current_diff]; }
@@ -381,6 +391,22 @@ void Manager::add_popper(const std::shared_ptr<popper> &popper) {
   }
 }
 
+void Manager::menu_control(int diff) {
+  set_map(diff);
+  menu_control(false);
+  m_game_state = game_state::gap;
+}
+
+void Manager::menu_control(bool visible) {
+  for (auto btn : emh_menu_buttons) {
+    btn->SetVisible(visible);
+    btn->setClickable(visible);
+  }
+  for(auto medal : emh_medals){
+    medal->SetVisible(visible);
+  }
+}
+
 void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
   if (drag_cd) {
@@ -460,9 +486,14 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
         if (buttonName == "start") {
           // 開始按鈕功能
           next_wave();
-        } else if (buttonName == "menu") {
+        } else if (buttonName == "end_game") {
           // 選單按鈕功能
+          //移除所有氣球
+          for (auto &holder : bloons) {
+            m_Renderer->RemoveChild(holder->get_bloon());
+          }
           m_game_state = game_state::menu;
+          menu_control(true);
         } else if (buttonName == "sound") {
           // 音效按鈕功能
           voltog = !voltog;
@@ -473,26 +504,11 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
               voltog ? RESOURCE_DIR "/buttons/Bsound.png"
                      : RESOURCE_DIR "/buttons/Bmute.png"));
         } else if (buttonName == "easy") {
-          set_map(0);
-          for (auto btn : emh_menu_buttons) {
-            btn->SetVisible(false);
-            btn->setClickable(false);
-          }
-          m_game_state = game_state::gap;
+          menu_control(0);
         } else if (buttonName == "med") {
-          set_map(1);
-          for (auto btn : emh_menu_buttons) {
-            btn->SetVisible(false);
-            btn->setClickable(false);
-          }
-          m_game_state = game_state::gap;
+          menu_control(1);
         } else if (buttonName == "hard") {
-          set_map(2);
-          for (auto btn : emh_menu_buttons) {
-            btn->SetVisible(false);
-            btn->setClickable(false);
-          }
-          m_game_state = game_state::gap;
+          menu_control(2);
         } else if (buttonName == "start_round") {
           // 開始新一輪
           if (m_game_state == game_state::gap) {
@@ -806,6 +822,7 @@ void Manager::wave_check() {
       m_game_state == game_state::playing && !f_wave_end) {
     counter = 0;
     f_wave_end = true;
+    m_waveText_text->SetText(std::to_string(current_waves + 2));
     return;
   }
   if (f_wave_end)
@@ -1112,3 +1129,30 @@ void Manager::popimg_tick_manager() {
   }
   // LOG_DEBUG("pm");
 };
+
+void Manager::medal_setter(int diff){
+  static bool win[3] = {false, false, false};
+  if (diff < 0 || diff > 2) {
+    LOG_ERROR("MNGR  : Invalid difficulty level for medal setter");
+    return;
+  }
+
+  if(win[diff]) {
+    LOG_DEBUG("MNGR  : 已經獲得過此難度的獎牌，無需重複設置");
+    return;
+  }
+
+  // 根據難度設置獎牌
+  if (diff == 0) {
+    emh_medals[0]->SetDrawable(
+        std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/Bmedal_e.png"));
+  } else if (diff == 1) {
+    emh_medals[1]->SetDrawable(
+        std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/Bmedal_m.png"));
+  } else if (diff == 2) {
+    emh_medals[2]->SetDrawable(
+        std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/Bmedal_h.png"));
+  }
+
+  LOG_INFO("MNGR  : 獎牌 {} 已設置為 1", diff);
+}

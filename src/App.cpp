@@ -3,6 +3,7 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
+#include "core/ShapeAnimation.hpp"
 #include "core/shape.hpp"
 #include "entities/bloon.hpp"
 #include "entities/poppers/spike.hpp"
@@ -13,7 +14,6 @@
 #include <glm/fwd.hpp>
 #include <imgui.h>
 #include <memory>
-#include "core/ShapeAnimation.hpp"
 bool drag_cd = false;
 void App::Start() {
   LOG_TRACE("Start");
@@ -24,8 +24,11 @@ void App::Start() {
   manager->set_playing();
   auto first_bloon = manager->get_bloons()[0];
   manager->pop_bloon(first_bloon);
-  auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() + manager->get_curr_map()->get_path()->getPositionAtPercentage(1).ToVec2();
-  auto spike_at_end = std::make_shared<Manager::end_spike>(Util::PTSDPosition(pos_shift.x, pos_shift.y));
+  auto pos_shift =
+      Util::PTSDPosition(0, -5).ToVec2() +
+      manager->get_curr_map()->get_path()->getPositionAtPercentage(1).ToVec2();
+  auto spike_at_end = std::make_shared<Manager::end_spike>(
+      Util::PTSDPosition(pos_shift.x, pos_shift.y));
   spike_at_end->setLife(10000000);
   spike_at_end->setCanPopBlack(true);
   spike_at_end->setCanPopFrozen(true);
@@ -36,27 +39,26 @@ void App::Start() {
 }
 
 void App::Update() {
-//   if(manager->get_game_state() == Manager::game_state::over){
-//     exit(-1);
-//   }
-//   else
-// {
+  //   if(manager->get_game_state() == Manager::game_state::over){
+  //     exit(-1);
+  //   }
+  //   else
+  // {
   manager->cleanup_dead_objects();
   if (manager->get_game_state() == Manager::game_state::menu) {
-    auto now = Util::Input::GetCursorPosition();
-    if(now.ToVec2() != previous_cursor_pos.ToVec2()){
-    previous_cursor_pos = Util::Input::GetCursorPosition();
-    manager->menu_hover(now);
-  }
-  }else if(manager->get_game_state() == Manager::game_state::over){
     
-  }
-  else if (manager->get_game_state() == Manager::game_state::gap){
+    auto now = Util::Input::GetCursorPosition();
+    if (now.ToVec2() != previous_cursor_pos.ToVec2()) {
+      previous_cursor_pos = Util::Input::GetCursorPosition();
+      manager->menu_hover(now);
+    }
+  } else if (manager->get_game_state() == Manager::game_state::over) {
 
-  }
-  else if (manager->get_game_state() == Manager::game_state::playing) {
+  } else if (manager->get_game_state() == Manager::game_state::gap) {
+
+  } else if (manager->get_game_state() == Manager::game_state::playing) {
     // 更新遊戲邏輯
-    //manager->updateDraggingObject(Util::Input::GetCursorPosition());
+    // manager->updateDraggingObject(Util::Input::GetCursorPosition());
   }
   manager->processBloonsState();
   manager->handlePoppers();
@@ -76,7 +78,7 @@ void App::Update() {
     m_CurrentState = State::END;
   }
   manager->wave_check();
-  manager->update();//}
+  manager->update(); //}
 }
 
 void App::End() { // NOLINT(this method will mutate members in the future)

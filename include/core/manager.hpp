@@ -142,6 +142,8 @@ public:
   void set_gap() { m_game_state = game_state::gap; };
   void set_playing() { m_game_state = game_state::playing; };
   void wave_check();
+  void menu_control(int diff);
+  void menu_control(bool visible);
   bool f_wave_end = 0;
   void add_map(const std::shared_ptr<Map> &map);
   void update();
@@ -239,14 +241,16 @@ private:
   std::shared_ptr<Button> sound = std::make_shared<Button>(
       "sound", Util::PTSDPosition(-310, 230), glm::vec2(50, 50));
   std::shared_ptr<Button> b_start_round = std::make_shared<Button>(
-      "start_round", Util::PTSDPosition(235, -200), glm::vec2(50, 50));
-  
-
+      "start_round", Util::PTSDPosition(235, -180), glm::vec2(50, 50));
+  std::shared_ptr<Button> end_game = std::make_shared<Button>(
+    "end_game", Util::PTSDPosition(235, -220), glm::vec2(50, 50));
+  void medal_setter(int diff);
   std::shared_ptr<Util::GameObject> startround_anim;
   // sound->setSize({50, 50});
   // std::shared_ptr<Button> easy_btn = std::make_shared<Button>(
   //   "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50));
   std::vector<std::shared_ptr<Button>> emh_menu_buttons;
+  std::vector<std::shared_ptr<Util::GameObject>> emh_medals;
 
   std::shared_ptr<popper> createPopper(Tower::TowerType type,
                                        const Util::PTSDPosition &position);
