@@ -1,5 +1,6 @@
 #include "core/manager.hpp"
 #include <memory>
+#include <cstdlib>
 
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
@@ -36,12 +37,18 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
        to_pos({246, 394}), to_pos({246, 90}), to_pos({427, 90}),
        to_pos({427, 190}), to_pos({334, 190}), to_pos({334, 293}),
        to_pos({418, 293}), to_pos({418, 502})},
-      // 困難地圖路徑 (目前與簡單難度相同)
-      {to_pos({-19, 236}), to_pos({185, 236}), to_pos({185, 110}),
-       to_pos({108, 110}), to_pos({108, 38}), to_pos({412, 38}),
-       to_pos({412, 117}), to_pos({290, 117}), to_pos({290, 204}),
+      // 困難地圖路徑 (1)
+      {to_pos({51, -10}), to_pos({51, 250}), to_pos({265, 250}),
+       to_pos({265, 340}), to_pos({108, 340}), to_pos({350, 340}),
+       to_pos({350, 250}), to_pos({420, 250}), to_pos({420, 435}),
        to_pos({420, 204}), to_pos({420, 298}), to_pos({114, 298}),
-       to_pos({114, 436}), to_pos({235, 436})}};
+       to_pos({220, 435}), to_pos({220, 502})},
+      // 困難地圖路徑 (2)
+      {to_pos({296, -10}), to_pos({296, 75}), to_pos({400, 75}),
+       to_pos({400, 185}), to_pos({235, 178}), to_pos({235, 75}),
+       to_pos({350, 250}), to_pos({420, 250}), to_pos({420, 435}),
+       to_pos({150, 75}), to_pos({150, 320}), to_pos({74, 324}),
+       to_pos({75, 400}), to_pos({140, 400}), to_pos({140, 502})}};
 
   // 創建並添加地圖
   for (size_t i = 0; i < map_paths.size(); ++i) {
@@ -49,6 +56,12 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
         std::make_shared<Map>(std::make_shared<Util::Image>(map_paths[i]), 1,
                               std::make_shared<Path>(paths[i], 40), false);
     this->add_map(map);
+  }
+  
+  // Store all paths for later use
+  all_paths.clear();
+  for (size_t i = 0; i < paths.size(); ++i) {
+    all_paths.push_back(std::make_shared<Path>(paths[i], 40));
   }
   m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
   m_Renderer->AddChild(m_waveText);
@@ -239,11 +252,18 @@ void Manager::set_map(int diff) {
   maps[diff]->SetVisible(true);
   current_map = maps[diff];
   current_diff = diff;
-  
-  // For now, use the single path from the map for all paths
-  // In the future, maps can have multiple paths
+
+  // Set up paths based on difficulty
   current_paths.clear();
-  current_paths.push_back(maps[diff]->get_path());
+  if (diff == 2) { // Hard map has two paths
+    current_paths.push_back(all_paths[3]); // First hard path
+    current_paths.push_back(all_paths[4]); // Second hard path
+    LOG_INFO("MNGR  : Hard map selected with 2 paths");
+  } else {
+    // Easy and medium maps use single path
+    current_paths.push_back(maps[diff]->get_path());
+    LOG_INFO("MNGR  : Map {} selected with 1 path", diff);
+  }
 }
 
 std::shared_ptr<Map> Manager::get_curr_map() { return maps[current_diff]; }
@@ -264,17 +284,22 @@ void Manager::add_moving(const std::shared_ptr<Interface::I_move> &moving) {
 
 // 氣球管理函數
 void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
-  // For now, default to path 0 (first path)
+  // For hard map, randomly choose between the two paths
   int pathId = 0;
-  
-  if (pathId >= static_cast<int>(current_paths.size()) || !current_paths[pathId]) {
+  if (current_diff == 2 && current_paths.size() > 1) {
+    // Hard map: randomly choose path 0 or 1
+    pathId = rand() % 2;
+  }
+
+  if (pathId >= static_cast<int>(current_paths.size()) ||
+      !current_paths[pathId]) {
     LOG_ERROR("MNGR  : Invalid path ID or path not found");
     return;
   }
-  
+
   auto bloon = std::make_shared<Bloon>(
       type, current_paths[pathId]->getPositionAtDistance(distance), z_index);
-  bloon->setPathId(pathId);  // Set the path ID for the bloon
+  bloon->setPathId(pathId);   // Set the path ID for the bloon
   bloon->setClickable(true);  // 更改為使用新介面方法
   this->add_clickable(bloon); // 使用新的方法
 
@@ -286,15 +311,19 @@ void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
   m_Renderer->AddChild(bloon);
   movings.push_back(bloon_holder);
   bloons.push_back(bloon_holder);
+  
+  LOG_DEBUG("MNGR  : Added bloon on path {} of {}", pathId, current_paths.size());
 }
 
 // Overloaded version that accepts path_id
-void Manager::add_bloon(Bloon::Type type, float distance, int path_id, float z_index) {
-  if (path_id >= static_cast<int>(current_paths.size()) || !current_paths[path_id]) {
+void Manager::add_bloon(Bloon::Type type, float distance, int path_id,
+                        float z_index) {
+  if (path_id >= static_cast<int>(current_paths.size()) ||
+      !current_paths[path_id]) {
     LOG_ERROR("MNGR  : Invalid path ID or path not found");
     return;
   }
-  
+
   auto bloon = std::make_shared<Bloon>(
       type, current_paths[path_id]->getPositionAtDistance(distance), z_index);
   bloon->setPathId(path_id);  // Set the path ID for the bloon
@@ -349,7 +378,9 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx) {
           "MNGR  : Gen bloon {} at distance {}",
           std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())),
           distance);
-    this->add_bloon(*sub_bloons[i], distance, 11 + frame_count / 10.0f);
+    // Use the same path as the parent bloon for child bloons
+    int parent_path_id = bloon->get_bloon()->getPathId();
+    this->add_bloon(*sub_bloons[i], distance, parent_path_id, 11 + frame_count / 10.0f);
   }
 
   bloon->kill();
@@ -548,13 +579,13 @@ void Manager::handlePoppers() {
   for (auto &popper : poppers) {
     // 檢查 popper 是否存活且在任何路徑上
     bool onPath = false;
-    for (const auto& path : current_paths) {
+    for (const auto &path : current_paths) {
       if (path && path->isOnPath(popper->get_position())) {
         onPath = true;
         break;
       }
     }
-    
+
     if (popper->is_alive() && onPath) {
       // 收集與 popper 碰撞的氣球
       std::vector<std::shared_ptr<Bloon>> collided_bloons;
@@ -895,7 +926,7 @@ void Manager::update() {
 // bloon_holder 內部類別實現
 Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
                                     float distance,
-                                    std::vector<std::shared_ptr<Path>>& paths)
+                                    std::vector<std::shared_ptr<Path>> &paths)
     : m_bloon(bloon), m_paths(paths), distance(distance) {}
 
 float Manager::bloon_holder::get_distance() { return distance; }
@@ -903,7 +934,8 @@ float Manager::bloon_holder::get_distance() { return distance; }
 Util::PTSDPosition Manager::bloon_holder::next_position(int frames = 1) {
   int pathId = m_bloon->getPathId();
   if (pathId < static_cast<int>(m_paths.size()) && m_paths[pathId]) {
-    return m_paths[pathId]->getPositionAtDistance(m_bloon->GetSpeed() * frames + distance);
+    return m_paths[pathId]->getPositionAtDistance(m_bloon->GetSpeed() * frames +
+                                                  distance);
   }
   return m_bloon->getPosition(); // fallback to current position
 }
@@ -1154,24 +1186,28 @@ void Manager::popimg_tick_manager() {
 
 // 在路徑終點生成終極釘子
 void Manager::createSpikeAtEnd() {
-  if (!current_map || current_paths.empty() || !current_paths[0]) {
+  if (!current_map || current_paths.empty()) {
     LOG_ERROR("MNGR  : 無法創建終點釘子 - 地圖或路徑未設置");
     return;
   }
 
-  // Use the first path for spike placement
-  auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() +
-                   current_paths[0]->getPositionAtPercentage(1).ToVec2();
-  auto spike_at_end = std::make_shared<Manager::end_spike>(
-      Util::PTSDPosition(pos_shift.x, pos_shift.y));
-  spike_at_end->setLife(10000000);
-  spike_at_end->setCanPopBlack(true);
-  spike_at_end->setCanPopFrozen(true);
-  spike_at_end->setExplosive(true);
-  add_popper(spike_at_end);
+  // Create spikes at the end of all current paths
+  for (size_t i = 0; i < current_paths.size(); ++i) {
+    if (!current_paths[i]) continue;
+    
+    auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() +
+                     current_paths[i]->getPositionAtPercentage(1).ToVec2();
+    auto spike_at_end = std::make_shared<Manager::end_spike>(
+        Util::PTSDPosition(pos_shift.x, pos_shift.y));
+    spike_at_end->setLife(10000000);
+    spike_at_end->setCanPopBlack(true);
+    spike_at_end->setCanPopFrozen(true);
+    spike_at_end->setExplosive(true);
+    add_popper(spike_at_end);
 
-  LOG_DEBUG("MNGR  : 在路徑終點創建終極釘子，位置: ({}, {})", pos_shift.x,
-            pos_shift.y);
+    LOG_DEBUG("MNGR  : 在路徑 {} 終點創建終極釘子，位置: ({}, {})", i, pos_shift.x,
+              pos_shift.y);
+  }
 }
 
 void Manager::unSelectFlag() {

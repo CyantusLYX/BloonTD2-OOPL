@@ -236,6 +236,7 @@ private:
   std::vector<std::shared_ptr<Map>> maps;
   std::shared_ptr<Map> current_map;
   std::vector<std::shared_ptr<Path>> current_paths;
+  std::vector<std::shared_ptr<Path>> all_paths; // Store all available paths
 
   // 關卡控制
   int current_diff = 0;
