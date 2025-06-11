@@ -59,6 +59,7 @@ void DartMonkey::handleBloonsInRange(
 
   // 取得目標氣球
   auto targetBloon = bloons[targetIndex];
+  
   float bloonDistance = distances[targetIndex];
 
   // 計算預測幀數 - 根據距離計算飛鏢飛行時間
@@ -75,8 +76,12 @@ void DartMonkey::handleBloonsInRange(
 
   // 使用路徑計算未來位置
   Util::PTSDPosition futurePosition = targetBloon->getPosition();
-  if (m_path) {
-    futurePosition = m_path->getPositionAtDistance(futureDistance);
+  
+  // 從paths vector中根據bloon的path_id找到對應路徑
+  int bloonPathId = targetBloon->getPathId();
+  const auto& paths = getPaths();
+  if (bloonPathId < static_cast<int>(paths.size()) && paths[bloonPathId]) {
+    futurePosition = paths[bloonPathId]->getPositionAtDistance(futureDistance);
   }
 
   // 設置冷卻

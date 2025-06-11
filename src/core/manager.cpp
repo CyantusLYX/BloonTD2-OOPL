@@ -239,7 +239,11 @@ void Manager::set_map(int diff) {
   maps[diff]->SetVisible(true);
   current_map = maps[diff];
   current_diff = diff;
-  current_path = maps[diff]->get_path();
+  
+  // For now, use the single path from the map for all paths
+  // In the future, maps can have multiple paths
+  current_paths.clear();
+  current_paths.push_back(maps[diff]->get_path());
 }
 
 std::shared_ptr<Map> Manager::get_curr_map() { return maps[current_diff]; }
@@ -260,15 +264,47 @@ void Manager::add_moving(const std::shared_ptr<Interface::I_move> &moving) {
 
 // 氣球管理函數
 void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
+  // For now, default to path 0 (first path)
+  int pathId = 0;
+  
+  if (pathId >= static_cast<int>(current_paths.size()) || !current_paths[pathId]) {
+    LOG_ERROR("MNGR  : Invalid path ID or path not found");
+    return;
+  }
+  
   auto bloon = std::make_shared<Bloon>(
-      type, current_path->getPositionAtDistance(distance), z_index);
+      type, current_paths[pathId]->getPositionAtDistance(distance), z_index);
+  bloon->setPathId(pathId);  // Set the path ID for the bloon
   bloon->setClickable(true);  // 更改為使用新介面方法
   this->add_clickable(bloon); // 使用新的方法
 
   register_mortal(bloon);
 
   auto bloon_holder =
-      std::make_shared<Manager::bloon_holder>(bloon, distance, current_path);
+      std::make_shared<Manager::bloon_holder>(bloon, distance, current_paths);
+
+  m_Renderer->AddChild(bloon);
+  movings.push_back(bloon_holder);
+  bloons.push_back(bloon_holder);
+}
+
+// Overloaded version that accepts path_id
+void Manager::add_bloon(Bloon::Type type, float distance, int path_id, float z_index) {
+  if (path_id >= static_cast<int>(current_paths.size()) || !current_paths[path_id]) {
+    LOG_ERROR("MNGR  : Invalid path ID or path not found");
+    return;
+  }
+  
+  auto bloon = std::make_shared<Bloon>(
+      type, current_paths[path_id]->getPositionAtDistance(distance), z_index);
+  bloon->setPathId(path_id);  // Set the path ID for the bloon
+  bloon->setClickable(true);  // 更改為使用新介面方法
+  this->add_clickable(bloon); // 使用新的方法
+
+  register_mortal(bloon);
+
+  auto bloon_holder =
+      std::make_shared<Manager::bloon_holder>(bloon, distance, current_paths);
 
   m_Renderer->AddChild(bloon);
   movings.push_back(bloon_holder);
@@ -510,8 +546,16 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 // 處理 popper 物件
 void Manager::handlePoppers() {
   for (auto &popper : poppers) {
-    // 檢查 popper 是否存活且在路徑上
-    if (popper->is_alive() && current_path->isOnPath(popper->get_position())) {
+    // 檢查 popper 是否存活且在任何路徑上
+    bool onPath = false;
+    for (const auto& path : current_paths) {
+      if (path && path->isOnPath(popper->get_position())) {
+        onPath = true;
+        break;
+      }
+    }
+    
+    if (popper->is_alive() && onPath) {
       // 收集與 popper 碰撞的氣球
       std::vector<std::shared_ptr<Bloon>> collided_bloons;
       std::vector<std::shared_ptr<bloon_holder>> collided_holders;
@@ -689,7 +733,7 @@ void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
   });
 
   // 將塔加入容器
-  tower->setPath(current_path);
+  tower->setPaths(current_paths);
   towers.push_back(tower);
 
   // 將塔的視覺元素加入渲染器
@@ -825,7 +869,7 @@ void Manager::wave_check() {
       counter = 0;
       auto bloon_type = bloons_gen_list.back();
       bloons_gen_list.pop_back();
-      add_bloon(bloon_type, 0, 10 + counter / 10.0);
+      add_bloon(bloon_type, 0, static_cast<float>(10 + counter / 10.0));
     }
   }
 }
@@ -851,13 +895,17 @@ void Manager::update() {
 // bloon_holder 內部類別實現
 Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
                                     float distance,
-                                    const std::shared_ptr<Path> path)
-    : m_bloon(bloon), m_path(path), distance(distance) {}
+                                    std::vector<std::shared_ptr<Path>>& paths)
+    : m_bloon(bloon), m_paths(paths), distance(distance) {}
 
 float Manager::bloon_holder::get_distance() { return distance; }
 
 Util::PTSDPosition Manager::bloon_holder::next_position(int frames = 1) {
-  return m_path->getPositionAtDistance(m_bloon->GetSpeed() * frames + distance);
+  int pathId = m_bloon->getPathId();
+  if (pathId < static_cast<int>(m_paths.size()) && m_paths[pathId]) {
+    return m_paths[pathId]->getPositionAtDistance(m_bloon->GetSpeed() * frames + distance);
+  }
+  return m_bloon->getPosition(); // fallback to current position
 }
 
 void Manager::bloon_holder::move() {
@@ -1106,13 +1154,14 @@ void Manager::popimg_tick_manager() {
 
 // 在路徑終點生成終極釘子
 void Manager::createSpikeAtEnd() {
-  if (!current_map || !current_path) {
+  if (!current_map || current_paths.empty() || !current_paths[0]) {
     LOG_ERROR("MNGR  : 無法創建終點釘子 - 地圖或路徑未設置");
     return;
   }
 
+  // Use the first path for spike placement
   auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() +
-                   current_path->getPositionAtPercentage(1).ToVec2();
+                   current_paths[0]->getPositionAtPercentage(1).ToVec2();
   auto spike_at_end = std::make_shared<Manager::end_spike>(
       Util::PTSDPosition(pos_shift.x, pos_shift.y));
   spike_at_end->setLife(10000000);

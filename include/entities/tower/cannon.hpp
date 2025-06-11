@@ -5,8 +5,8 @@
 #include "entities/tower/tower.hpp"
 #include "entities/bloon.hpp"
 #include "components/collisionComp.hpp"
+#include "Util/Logger.hpp"
 #include <memory>
-#include "conf.hpp"
 #include "config.hpp"
 
 class Cannon final : public Tower::Tower {
@@ -37,6 +37,23 @@ public:
     void onDragEnd() override { LOG_DEBUG("CANNON: Dragging end"); }
     bool isDraggable() const override { return m_draggable; }
     void setDraggable(bool draggable) override { m_draggable = draggable; }
+
+    // 升級系統實現
+    void setFirstUpgrade(int cost) override {
+        m_info.firstUpgrade = true;
+        m_info.investmentCost += cost;
+        // Bigger Bombs - 增加炸彈爆炸範圍 10
+        m_explosionRadius += 10.0f;
+    }
+    
+    void setSecondUpgrade(int cost) override {
+        m_info.secondUpgrade = true;
+        m_info.investmentCost += cost;
+        // Extra Range - 增加攻擊範圍 20
+        float newRange = RANGE_BOMB + 20.0f;
+        m_info.attackRange = newRange;
+        m_range->setRadius(newRange);
+    }
 
     // CollisionComponent 的實現
     std::shared_ptr<Components::CollisionComponent> getCollisionComponent() const override {

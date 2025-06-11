@@ -36,13 +36,13 @@ void UpgradeButtonConfigManager::Initialize() {
             Tower::TowerType::boomerang,
             UpgradeButtonConfig(
                 {"Multi", "Target"},
-                RESOURCE_DIR "/buttons/upgrades/boomerang_upgrade1.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade1.png",
                 COST_BOOMERANG_PIERCE_UPGRADE,
                 true
             ),
             UpgradeButtonConfig(
                 {"Sonic", "Boom"},
-                RESOURCE_DIR "/buttons/upgrades/boomerang_upgrade2.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade2.png",
                 COST_BOOMERANG_SONIC_UPGRADE,
                 true
             )
@@ -55,13 +55,13 @@ void UpgradeButtonConfigManager::Initialize() {
             Tower::TowerType::tack,
             UpgradeButtonConfig(
                 {"Faster", "Shooting"},
-                RESOURCE_DIR "/buttons/upgrades/tack_upgrade1.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade1.png",
                 COST_TACK_RATE_UPGRADE,
                 true
             ),
             UpgradeButtonConfig(
                 {"Extra", "Range", "Tacks"},
-                RESOURCE_DIR "/buttons/upgrades/tack_upgrade2.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade2.png",
                 COST_TACK_RANGE_UPGRADE,
                 true
             )
@@ -74,13 +74,13 @@ void UpgradeButtonConfigManager::Initialize() {
             Tower::TowerType::ice,
             UpgradeButtonConfig(
                 {"Deep", "Freeze"},
-                RESOURCE_DIR "/buttons/upgrades/ice_upgrade1.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade1.png",
                 COST_ICE_FREEZE_UPGRADE,
                 true
             ),
             UpgradeButtonConfig(
                 {"Extra", "Range"},
-                RESOURCE_DIR "/buttons/upgrades/ice_upgrade2.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade2.png",
                 COST_ICE_RANGE_UPGRADE,
                 true
             )
@@ -93,13 +93,13 @@ void UpgradeButtonConfigManager::Initialize() {
             Tower::TowerType::bomb,
             UpgradeButtonConfig(
                 {"Bigger", "Bombs"},
-                RESOURCE_DIR "/buttons/upgrades/bomb_upgrade1.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade1.png",
                 COST_BOMB_SIZE_UPGRADE,
                 true
             ),
             UpgradeButtonConfig(
                 {"Extra", "Range"},
-                RESOURCE_DIR "/buttons/upgrades/bomb_upgrade2.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade2.png",
                 COST_BOMB_RANGE_UPGRADE,
                 true
             )
@@ -112,13 +112,13 @@ void UpgradeButtonConfigManager::Initialize() {
             Tower::TowerType::super,
             UpgradeButtonConfig(
                 {"Epic", "Range"},
-                RESOURCE_DIR "/buttons/upgrades/super_upgrade1.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade1.png",
                 COST_SUPER_RANGE_UPGRADE,
                 true
             ),
             UpgradeButtonConfig(
                 {"Laser", "Vision"},
-                RESOURCE_DIR "/buttons/upgrades/super_upgrade2.png",
+                RESOURCE_DIR "/buttons/upgrades/dart_upgrade2.png",
                 COST_SUPER_LASER_UPGRADE,
                 true
             )

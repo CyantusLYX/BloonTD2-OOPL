@@ -6,10 +6,15 @@
 
 Cannon::Cannon(const Util::PTSDPosition &position, float range)
     : Tower::Tower(),
-      m_collision(Components::CollisionComponent(position, range)) {
-  
+      m_triggerRadius(20.0f),   // 默認觸發半徑
+      m_explosionRadius(60.0f), // 默認爆炸半徑
+      m_collision(Components::CollisionComponent(position, range))
+{
   // 設置狀態為 ready
   m_state = ::Tower::TowerState::ready;
+
+  // 設置塔類型
+  m_type = ::Tower::TowerType::bomb;
 
   // 創建塔身
   m_body = std::make_shared<::Tower::Body>(
@@ -21,8 +26,15 @@ Cannon::Cannon(const Util::PTSDPosition &position, float range)
   // 默認隱藏範圍
   m_range->setVisible(false);
   
-  // 設置類型
-  m_type = ::Tower::TowerType::bomb;
+  // 初始化塔資訊
+  m_info = {
+      "Cannon",                   // 塔的名稱
+      ::Tower::AtkSpeed::Slow,    // 攻擊速度
+      range,                      // 攻擊範圍
+      false,                      // 是否有第一個升級
+      false,                      // 是否有第二個升級
+      COST_BOMB                   // 投資成本
+  };
 }
 
 void Cannon::handleBloonsInRange(

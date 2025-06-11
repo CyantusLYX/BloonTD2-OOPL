@@ -66,12 +66,12 @@ public:
   class bloon_holder : public Interface::I_move, public Mortal {
   private:
     std::shared_ptr<Bloon> m_bloon;
-    std::shared_ptr<Path> m_path;
+    std::vector<std::shared_ptr<Path>>& m_paths; // Reference to manager's paths
     float distance = 0;
 
   public:
     explicit bloon_holder(std::shared_ptr<Bloon> bloon, float distance,
-                          const std::shared_ptr<Path> path);
+                          std::vector<std::shared_ptr<Path>>& paths);
     float get_distance();
     Util::PTSDPosition next_position(int frames) override;
     void move() override;
@@ -129,6 +129,7 @@ public:
 
   // 遊戲物件管理
   void add_bloon(Bloon::Type type, float distance, float z_index = 10);
+  void add_bloon(Bloon::Type type, float distance, int path_id, float z_index = 10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
@@ -234,7 +235,7 @@ private:
   // 地圖和路徑
   std::vector<std::shared_ptr<Map>> maps;
   std::shared_ptr<Map> current_map;
-  std::shared_ptr<Path> current_path;
+  std::vector<std::shared_ptr<Path>> current_paths;
 
   // 關卡控制
   int current_diff = 0;
