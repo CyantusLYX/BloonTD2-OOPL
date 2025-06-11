@@ -39,14 +39,12 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
        to_pos({418, 293}), to_pos({418, 502})},
       // 困難地圖路徑 (1)
       {to_pos({51, -10}), to_pos({51, 250}), to_pos({265, 250}),
-       to_pos({265, 340}), to_pos({108, 340}), to_pos({350, 340}),
+       to_pos({265, 340}), to_pos({350, 340}),
        to_pos({350, 250}), to_pos({420, 250}), to_pos({420, 435}),
-       to_pos({420, 204}), to_pos({420, 298}), to_pos({114, 298}),
        to_pos({220, 435}), to_pos({220, 502})},
       // 困難地圖路徑 (2)
       {to_pos({296, -10}), to_pos({296, 75}), to_pos({400, 75}),
        to_pos({400, 185}), to_pos({235, 178}), to_pos({235, 75}),
-       to_pos({350, 250}), to_pos({420, 250}), to_pos({420, 435}),
        to_pos({150, 75}), to_pos({150, 320}), to_pos({74, 324}),
        to_pos({75, 400}), to_pos({140, 400}), to_pos({140, 502})}};
 
@@ -256,8 +254,8 @@ void Manager::set_map(int diff) {
   // Set up paths based on difficulty
   current_paths.clear();
   if (diff == 2) { // Hard map has two paths
-    current_paths.push_back(all_paths[3]); // First hard path
-    current_paths.push_back(all_paths[4]); // Second hard path
+    current_paths.push_back(all_paths[2]); // First hard path
+    current_paths.push_back(all_paths[3]); // Second hard path
     LOG_INFO("MNGR  : Hard map selected with 2 paths");
   } else {
     // Easy and medium maps use single path
