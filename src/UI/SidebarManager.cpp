@@ -7,12 +7,14 @@ namespace UI {
 
 SidebarManager::SidebarManager(const Util::PTSDPosition &position, float height,
                                float width, float zIndex)
-    : m_position(position), m_size(width, height), m_zIndex(zIndex) {
+    : m_position(position),
+      m_size(width, height),
+      m_zIndex(zIndex) {
 
   // 創建背景形狀
   m_backgroundShape =
       std::make_shared<Util::Shape>(Util::ShapeType::Rectangle, m_size);
-  m_backgroundShape->SetColorRGB(255, 255,255,100); // 半透明灰色背景
+  m_backgroundShape->SetColorRGB(255, 255, 255, 100); // 半透明灰色背景
 
   // 創建背景GameObject
   m_background = std::make_shared<Util::GameObject>(m_backgroundShape, zIndex);
@@ -33,8 +35,9 @@ SidebarManager::SidebarManager(const Util::PTSDPosition &position, float height,
 
   // 創建狀態列元件 - 使用計算好的位置
   m_statusBar = std::make_shared<StatusBar>(
-      Util::PTSDPosition(position.x, statusBarY), // 修正：直接使用計算好的位置
-      width - 10.0f,                              // 減去一些間距
+      Util::PTSDPosition(position.x,
+                         statusBarY), // 修正：直接使用計算好的位置
+      width - 10.0f,                  // 減去一些間距
       statusHeight, zIndex + 0.1f,
       true // 固定大小
   );
@@ -70,8 +73,8 @@ void SidebarManager::setRenderer(
     // 設置完渲染器後重新計算位置
     recalculatePanelPositions();
   } else {
-    LOG_ERROR(
-        "SidebarManager: Failed to set renderer - renderer is null or expired");
+    LOG_ERROR("SidebarManager: Failed to set renderer - renderer is null "
+              "or expired");
   }
 }
 

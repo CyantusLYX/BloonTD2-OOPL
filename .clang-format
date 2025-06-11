@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+AccessModifierOffset: -2
+AllowShortFunctionsOnASingleLine: Inline
+AlwaysBreakTemplateDeclarations: Yes
+PackConstructorInitializers: Never
+InsertNewlineAtEOF: true
+BreakAfterAttributes: Always

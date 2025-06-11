@@ -8,7 +8,8 @@
 Button::Button(const std::string &name, const Util::PTSDPosition &pos,
                const std::variant<glm::vec2, float> col_parm, bool can_click,
                bool drawable, const std::string &path)
-    : Components::CollisionComponent(pos, col_parm), isDrawable(drawable),
+    : Components::CollisionComponent(pos, col_parm),
+      isDrawable(drawable),
       Util::GameObject(nullptr, 100, {0, 0}, true) {
   this->name = name;
   if (isDrawable) {
@@ -49,9 +50,13 @@ void Button::onClick() {
   LOG_DEBUG("BUTTON: button " + name + " onClick");
 }
 
-void Button::onFocus() { LOG_INFO("BUTTON:" + name + " onFokus"); }
+void Button::onFocus() {
+  LOG_INFO("BUTTON:" + name + " onFokus");
+}
 
-bool Button::isClickable() const { return m_State != State::non_clickable; }
+bool Button::isClickable() const {
+  return m_State != State::non_clickable;
+}
 
 void Button::setClickable(bool clickable) {
   m_State =

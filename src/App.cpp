@@ -33,8 +33,14 @@ void App::Update() {
   //   }
   //   else
   // {
+  //   if(manager->get_game_state() == Manager::game_state::over){
+  //     exit(-1);
+  //   }
+  //   else
+  // {
   manager->cleanup_dead_objects();
   if (manager->get_game_state() == Manager::game_state::menu) {
+
     auto now = Util::Input::GetCursorPosition();
     if (now.ToVec2() != previous_cursor_pos.ToVec2()) {
       previous_cursor_pos = Util::Input::GetCursorPosition();
@@ -42,15 +48,18 @@ void App::Update() {
     }
   } else if (manager->get_game_state() == Manager::game_state::over) {
 
-  } else if (manager->get_game_state() != Manager::game_state::menu) {
+  } else if (manager->get_game_state() == Manager::game_state::gap) {
+
+  } else if (manager->get_game_state() == Manager::game_state::playing) {
     // 更新遊戲邏輯
-    manager->updateDraggingObject(Util::Input::GetCursorPosition());
-    manager->processBloonsState();
-    manager->updateAllMovingObjects();
-    manager->handlePoppers();
-    manager->handleTowers();
-    manager->popimg_tick_manager();
+    // manager->updateDraggingObject(Util::Input::GetCursorPosition());
   }
+  manager->processBloonsState();
+  manager->handlePoppers();
+  manager->handleTowers();
+  manager->popimg_tick_manager();
+  manager->updateAllMovingObjects();
+  manager->updateDraggingObject(Util::Input::GetCursorPosition());
 
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {

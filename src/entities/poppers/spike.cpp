@@ -4,13 +4,15 @@
 #include "Util/Position.hpp"
 #include "components/canBuy.hpp"
 spike::spike(const Util::PTSDPosition &pos)
-    : popper(pos, 15.0f), CanBuy(Tower::TowerType::spike,25),
+    : popper(pos, 15.0f),
+      CanBuy(Tower::TowerType::spike, 25),
       m_object(std::make_shared<Util::GameObject>(
-          std::make_shared<Util::Image>(RESOURCE_DIR "/poppers/spike.png"), 5.0f)) {
-            m_object->SetVisible(true);
-            m_object->m_Transform.translation = glm::vec2(pos.x, pos.y);
-            m_position = pos;
-          }
+          std::make_shared<Util::Image>(RESOURCE_DIR "/poppers/spike.png"),
+          5.0f)) {
+  m_object->SetVisible(true);
+  m_object->m_Transform.translation = glm::vec2(pos.x, pos.y);
+  m_position = pos;
+}
 
 std::vector<bool> spike::hit(std::vector<std::shared_ptr<Bloon>> bloons) {
   std::vector<bool> hit_results(bloons.size(), false);
@@ -34,14 +36,16 @@ std::vector<bool> spike::hit(std::vector<std::shared_ptr<Bloon>> bloons) {
 
   return hit_results;
 }
-std::shared_ptr<Util::GameObject> spike::get_object() { return m_object; }
+std::shared_ptr<Util::GameObject> spike::get_object() {
+  return m_object;
+}
 
 void spike::onDragStart() {
   // 開始拖曳時的處理
   LOG_INFO("開始拖曳釘子");
 }
 
-void spike::onDrag(const Util::PTSDPosition& newPosition) {
+void spike::onDrag(const Util::PTSDPosition &newPosition) {
   // 更新釘子的位置
   m_object->m_Transform.translation = newPosition.ToVec2();
   m_position = newPosition;
@@ -55,4 +59,3 @@ void spike::onDragEnd() {
   // 放置後不再可拖曳
   m_draggable = false;
 }
-
