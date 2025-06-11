@@ -5,7 +5,7 @@ TowerButton::TowerButton(const std::string &name, const Util::PTSDPosition &pos,
                          std::variant<glm::vec2, float> col_parm,
                          const std::string &path, bool can_click,
                          Tower::TowerType towerType, int cost)
-    : Button(name, pos, col_parm, can_click, path), m_towerType(towerType),
+    : Button(name, pos, col_parm, can_click,true, path), m_towerType(towerType),
       m_cost(cost) {
 
   LOG_DEBUG("TOWER_BTN: 創建了一個 {} 塔按鈕，類型：{}, 成本：{}", name,

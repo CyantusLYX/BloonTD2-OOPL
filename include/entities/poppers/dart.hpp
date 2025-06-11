@@ -15,7 +15,7 @@ private:
   bool is_outside_bounds = false;
 
 public:
-  Dart(const Util::PTSDPosition &start, const Util::PTSDPosition &end, int life=2);
+  Dart(const Util::PTSDPosition &start, const Util::PTSDPosition &end, int life=1);
   
   // 添加 setPosition 方法
   void setPosition(const Util::PTSDPosition &position) override;

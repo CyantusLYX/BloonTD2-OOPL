@@ -13,6 +13,7 @@
 #include "entities/poppers/glue.hpp"
 #include <glm/fwd.hpp>
 #include <memory>
+#include <cstdlib>
 
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
@@ -49,12 +50,16 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
        to_pos({246, 394}), to_pos({246, 90}), to_pos({427, 90}),
        to_pos({427, 190}), to_pos({334, 190}), to_pos({334, 293}),
        to_pos({418, 293}), to_pos({418, 502})},
-      // 困難地圖路徑 (目前與簡單難度相同)
-      {to_pos({-19, 236}), to_pos({185, 236}), to_pos({185, 110}),
-       to_pos({108, 110}), to_pos({108, 38}), to_pos({412, 38}),
-       to_pos({412, 117}), to_pos({290, 117}), to_pos({290, 204}),
-       to_pos({420, 204}), to_pos({420, 298}), to_pos({114, 298}),
-       to_pos({114, 436}), to_pos({235, 436})}};
+      // 困難地圖路徑 (1)
+      {to_pos({51, -10}), to_pos({51, 250}), to_pos({265, 250}),
+       to_pos({265, 340}), to_pos({350, 340}),
+       to_pos({350, 250}), to_pos({420, 250}), to_pos({420, 435}),
+       to_pos({220, 435}), to_pos({220, 502})},
+      // 困難地圖路徑 (2)
+      {to_pos({296, -10}), to_pos({296, 75}), to_pos({400, 75}),
+       to_pos({400, 185}), to_pos({235, 178}), to_pos({235, 75}),
+       to_pos({150, 75}), to_pos({150, 320}), to_pos({74, 324}),
+       to_pos({75, 400}), to_pos({140, 400}), to_pos({140, 502})}};
 
   // 創建並添加地圖
   for (size_t i = 0; i < map_paths.size(); ++i) {
@@ -62,6 +67,12 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
         std::make_shared<Map>(std::make_shared<Util::Image>(map_paths[i]), 1,
                               std::make_shared<Path>(paths[i], 40), false);
     this->add_map(map);
+  }
+  
+  // Store all paths for later use
+  all_paths.clear();
+  for (size_t i = 0; i < paths.size(); ++i) {
+    all_paths.push_back(std::make_shared<Path>(paths[i], 40));
   }
   m_waveText->m_Transform.translation = Util::PTSDPosition(-280, -200).ToVec2();
   m_Renderer->AddChild(m_waveText);
@@ -295,8 +306,18 @@ void Manager::set_map(int diff) {
   maps[diff]->SetVisible(true);
   current_map = maps[diff];
   current_diff = diff;
-  current_path = maps[diff]->get_path();
-  current_waves = -1; // 重置當前波數
+
+  // Set up paths based on difficulty
+  current_paths.clear();
+  if (diff == 2) { // Hard map has two paths
+    current_paths.push_back(all_paths[2]); // First hard path
+    current_paths.push_back(all_paths[3]); // Second hard path
+    LOG_INFO("MNGR  : Hard map selected with 2 paths");
+  } else {
+    // Easy and medium maps use single path
+    current_paths.push_back(maps[diff]->get_path());
+    LOG_INFO("MNGR  : Map {} selected with 1 path", diff);
+  }
 }
 
 std::shared_ptr<Map> Manager::get_curr_map() { return maps[current_diff]; }
@@ -317,15 +338,56 @@ void Manager::add_moving(const std::shared_ptr<Interface::I_move> &moving) {
 
 // 氣球管理函數
 void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
+  // For hard map, randomly choose between the two paths
+  int pathId = 0;
+  if (current_diff == 2 && current_paths.size() > 1) {
+    // Hard map: randomly choose path 0 or 1
+    pathId = rand() % 2;
+  }
+
+  if (pathId >= static_cast<int>(current_paths.size()) ||
+      !current_paths[pathId]) {
+    LOG_ERROR("MNGR  : Invalid path ID or path not found");
+    return;
+  }
+
   auto bloon = std::make_shared<Bloon>(
-      type, current_path->getPositionAtDistance(distance), z_index);
+      type, current_paths[pathId]->getPositionAtDistance(distance), z_index);
+  bloon->setPathId(pathId);   // Set the path ID for the bloon
   bloon->setClickable(true);  // 更改為使用新介面方法
   this->add_clickable(bloon); // 使用新的方法
 
   register_mortal(bloon);
 
   auto bloon_holder =
-      std::make_shared<Manager::bloon_holder>(bloon, distance, current_path);
+      std::make_shared<Manager::bloon_holder>(bloon, distance, current_paths);
+
+  m_Renderer->AddChild(bloon);
+  movings.push_back(bloon_holder);
+  bloons.push_back(bloon_holder);
+  
+  LOG_DEBUG("MNGR  : Added bloon on path {} of {}", pathId, current_paths.size());
+}
+
+// Overloaded version that accepts path_id
+void Manager::add_bloon(Bloon::Type type, float distance, int path_id,
+                        float z_index) {
+  if (path_id >= static_cast<int>(current_paths.size()) ||
+      !current_paths[path_id]) {
+    LOG_ERROR("MNGR  : Invalid path ID or path not found");
+    return;
+  }
+
+  auto bloon = std::make_shared<Bloon>(
+      type, current_paths[path_id]->getPositionAtDistance(distance), z_index);
+  bloon->setPathId(path_id);  // Set the path ID for the bloon
+  bloon->setClickable(true);  // 更改為使用新介面方法
+  this->add_clickable(bloon); // 使用新的方法
+
+  register_mortal(bloon);
+
+  auto bloon_holder =
+      std::make_shared<Manager::bloon_holder>(bloon, distance, current_paths);
 
   m_Renderer->AddChild(bloon);
   movings.push_back(bloon_holder);
@@ -334,8 +396,9 @@ void Manager::add_bloon(Bloon::Type type, float distance, float z_index) {
 
 void Manager::add_button(const std::shared_ptr<Button> &button) {
   buttons.push_back(button);
-
-  m_Renderer->AddChild(button); // 將按鈕加入渲染器
+  if (button->isDrawable)
+    m_Renderer->AddChild(button); // 將按鈕加入渲染器
+  register_mortal(button);
 }
 
 void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx) {
@@ -369,7 +432,9 @@ void Manager::pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx) {
           "MNGR  : Gen bloon {} at distance {}",
           std::string(magic_enum::enum_name(bloon->get_bloon()->GetType())),
           distance);
-    this->add_bloon(*sub_bloons[i], distance, 11 + frame_count / 10.0f);
+    // Use the same path as the parent bloon for child bloons
+    int parent_path_id = bloon->get_bloon()->getPathId();
+    this->add_bloon(*sub_bloons[i], distance, parent_path_id, 11 + frame_count / 10.0f);
   }
 
   bloon->kill();
@@ -454,7 +519,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
       isCollided = collidable->isCollide(cursor_position);
     }
 
-    if (isCollided) {
+    if (isCollided || clickable->isClick(cursor_position)) {
       LOG_DEBUG("MNGR  : 檢測到點擊");
 
       // 1. 首先嘗試處理特殊類型按鈕 - TowerButton
@@ -472,7 +537,17 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
         break;
       }
-
+      auto clickedTower = std::dynamic_pointer_cast<Tower::Tower>(clickable);
+      if (clickedTower) {
+        auto newUpgradesPanel =
+            std::make_shared<UI::UpgradesPanel>(clickedTower, money);
+        for (auto button : newUpgradesPanel->getButtons()) {
+          add_button(button);
+          add_clickable(button);
+        }
+        add_updatable(newUpgradesPanel);
+        set_flag(newUpgradesPanel);
+      }
       // 2. 然後處理普通按鈕
       auto button = std::dynamic_pointer_cast<Button>(clickable);
       if (button) {
@@ -504,10 +579,57 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
               voltog ? RESOURCE_DIR "/buttons/Bsound.png"
                      : RESOURCE_DIR "/buttons/Bmute.png"));
         } else if (buttonName == "easy") {
+          set_map(0);
+          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          for (auto btn : emh_menu_buttons) {
+            btn->SetVisible(false);
+            btn->setClickable(false);
+          }
+          set_playing();
           menu_control(0);
         } else if (buttonName == "med") {
+          set_map(1);
+          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          for (auto btn : emh_menu_buttons) {
+            btn->SetVisible(false);
+            btn->setClickable(false);
+          }
+          set_playing();
           menu_control(1);
         } else if (buttonName == "hard") {
+          set_map(2);
+          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          for (auto btn : emh_menu_buttons) {
+            btn->SetVisible(false);
+            btn->setClickable(false);
+          }
+          set_playing();
+        } else if (buttonName == "sell") {
+          // 賣出按鈕功能
+          auto sellButton = std::dynamic_pointer_cast<UI::SellButton>(button);
+          if (sellButton) {
+            sellButton->onClick();
+          }
+          money += sellButton->getSellPrice();
+          sellButton->getTower()->kill(); // 賣出塔
+          unSelectFlag();
+        } else if (buttonName == "upgrade") {
+          // 升級按鈕功能
+          auto upgradeButton =
+              std::dynamic_pointer_cast<UI::UpgradeButton>(button);
+          if (upgradeButton) {
+            upgradeButton->onClick();
+            money -= upgradeButton->getCost();
+          }
+        } else if (buttonName == "cancel") {
+          // 取消按鈕功能
+          cancelTowerPlacement();
+        } else if (buttonName == "back") {
+          // 返回按鈕功能
+          unSelectFlag();
+        } else {
+          LOG_ERROR("MNGR  : 未處理的按鈕點擊：{}", buttonName);
+        }
           menu_control(2);
         } else if (buttonName == "start_round") {
           // 開始新一輪
@@ -547,8 +669,16 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 // 處理 popper 物件
 void Manager::handlePoppers() {
   for (auto &popper : poppers) {
-    // 檢查 popper 是否存活且在路徑上
-    if (popper->is_alive() && current_path->isOnPath(popper->get_position())) {
+    // 檢查 popper 是否存活且在任何路徑上
+    bool onPath = false;
+    for (const auto &path : current_paths) {
+      if (path && path->isOnPath(popper->get_position())) {
+        onPath = true;
+        break;
+      }
+    }
+
+    if (popper->is_alive() && onPath) {
       // 收集與 popper 碰撞的氣球
       std::vector<std::shared_ptr<Bloon>> collided_bloons;
       std::vector<std::shared_ptr<bloon_holder>> collided_holders;
@@ -636,6 +766,11 @@ void Manager::handlePoppers() {
 
 void Manager::register_mortal(std::shared_ptr<Mortal> mortal) {
   mortals.push_back(mortal);
+  for (auto child : mortal->get_children()) {
+    if (auto child_mortal = std::dynamic_pointer_cast<Mortal>(child)) {
+      mortals.push_back(child_mortal);
+    }
+  }
 }
 
 void Manager::cleanup_dead_objects() {
@@ -682,6 +817,11 @@ void Manager::cleanup_dead_objects() {
                     container.end());
   };
   // 使用通用函數清理各個容器
+
+  cleanup_container(buttons, [](const auto &button) {
+    return std::dynamic_pointer_cast<Mortal>(button);
+  });
+
   cleanup_container(bloons, [](const auto &bloon) {
     return std::dynamic_pointer_cast<Mortal>(bloon->get_bloon());
   });
@@ -697,6 +837,12 @@ void Manager::cleanup_dead_objects() {
   cleanup_container(popimgs, [](const auto &popimg_class) {
     return std::dynamic_pointer_cast<Mortal>(popimg_class);
   });
+  cleanup_container(towers, [](const auto &tower) {
+    return std::dynamic_pointer_cast<Mortal>(tower);
+  });
+  cleanup_container(updatables, [](const auto &updatable) {
+    return std::dynamic_pointer_cast<Mortal>(updatable);
+  });
 }
 
 void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
@@ -710,16 +856,23 @@ void Manager::add_tower(const std::shared_ptr<Tower::Tower> &tower) {
   });
 
   // 將塔加入容器
-  tower->setPath(current_path);
+  tower->setPaths(current_paths);
   towers.push_back(tower);
 
   // 將塔的視覺元素加入渲染器
   if (auto body = tower->getBody()) {
     m_Renderer->AddChild(body);
+    mortals.push_back(body);
   }
   if (auto range = tower->getRange()) {
     m_Renderer->AddChild(range);
+    mortals.push_back(range);
   }
+  if (auto clickable =
+          std::dynamic_pointer_cast<Interface::I_clickable>(tower)) {
+    this->add_clickable(clickable);
+  }
+  mortals.push_back(tower); // 註冊為可死亡物件
 }
 
 void Manager::handleTowers() {
@@ -845,7 +998,7 @@ void Manager::wave_check() {
       counter = 0;
       auto bloon_type = bloons_gen_list.back();
       bloons_gen_list.pop_back();
-      add_bloon(bloon_type, 0, 10 + counter / 10.0);
+      add_bloon(bloon_type, 0, static_cast<float>(10 + counter / 10.0));
     }
   }
 }
@@ -861,6 +1014,11 @@ void Manager::update() {
     // 全局變數 drag_cooldown，在 handleClickAt 中使用
     drag_cd = false;
   }
+  for (auto updatable : updatables) {
+    auto mortal = std::dynamic_pointer_cast<Mortal>(updatable); // 確保是 Mortal
+    if (mortal->is_alive())
+      updatable->update();
+  }
 
   if (m_game_state == game_state::gap)
     startround_anim->SetVisible(true);
@@ -871,13 +1029,18 @@ void Manager::update() {
 // bloon_holder 內部類別實現
 Manager::bloon_holder::bloon_holder(std::shared_ptr<Bloon> bloon,
                                     float distance,
-                                    const std::shared_ptr<Path> path)
-    : m_bloon(bloon), m_path(path), distance(distance) {}
+                                    std::vector<std::shared_ptr<Path>> &paths)
+    : m_bloon(bloon), m_paths(paths), distance(distance) {}
 
 float Manager::bloon_holder::get_distance() { return distance; }
 
 Util::PTSDPosition Manager::bloon_holder::next_position(int frames = 1) {
-  return m_path->getPositionAtDistance(m_bloon->GetSpeed() * frames + distance);
+  int pathId = m_bloon->getPathId();
+  if (pathId < static_cast<int>(m_paths.size()) && m_paths[pathId]) {
+    return m_paths[pathId]->getPositionAtDistance(m_bloon->GetSpeed() * frames +
+                                                  distance);
+  }
+  return m_bloon->getPosition(); // fallback to current position
 }
 
 void Manager::bloon_holder::move() {
@@ -986,17 +1149,8 @@ void Manager::placeCurrentTower(const Util::PTSDPosition &position) {
         // 更新位置確保精確
         tower->setPosition(position);
 
-        tower->setPopperCallback([this](std::shared_ptr<popper> p) {
-          this->add_popper(p);
-          auto move_popper = std::dynamic_pointer_cast<Interface::I_move>(p);
-          if (move_popper) {
-            this->add_moving(move_popper);
-          }
-        });
-
-        tower->setPath(current_path);
-
-        towers.push_back(tower);
+        // 使用 add_tower 函數來正確設置塔
+        add_tower(tower);
 
         LOG_DEBUG("MNGR  : 使用拖曳中的塔放置，位置: ({}, {})", position.x,
                   position.y);
@@ -1089,6 +1243,9 @@ void Manager::initUI() {
   // 初始化塔按鈕配置
   UI::TowerButtonConfigManager::Initialize();
 
+  // 初始化升級按鈕配置
+  UI::UpgradeButtonConfigManager::Initialize();
+
   // 從配置中添加所有可用的塔按鈕
   auto towerConfigs = UI::TowerButtonConfigManager::GetAllAvailableConfigs();
   for (const auto &config : towerConfigs) {
@@ -1155,4 +1312,37 @@ void Manager::medal_setter(int diff){
   }
 
   LOG_INFO("MNGR  : 獎牌 {} 已設置為 1", diff);
+}
+
+// 在路徑終點生成終極釘子
+void Manager::createSpikeAtEnd() {
+  if (!current_map || current_paths.empty()) {
+    LOG_ERROR("MNGR  : 無法創建終點釘子 - 地圖或路徑未設置");
+    return;
+  }
+
+  // Create spikes at the end of all current paths
+  for (size_t i = 0; i < current_paths.size(); ++i) {
+    if (!current_paths[i]) continue;
+    
+    auto pos_shift = Util::PTSDPosition(0, -5).ToVec2() +
+                     current_paths[i]->getPositionAtPercentage(1).ToVec2();
+    auto spike_at_end = std::make_shared<Manager::end_spike>(
+        Util::PTSDPosition(pos_shift.x, pos_shift.y));
+    spike_at_end->setLife(10000000);
+    spike_at_end->setCanPopBlack(true);
+    spike_at_end->setCanPopFrozen(true);
+    spike_at_end->setExplosive(true);
+    add_popper(spike_at_end);
+
+    LOG_DEBUG("MNGR  : 在路徑 {} 終點創建終極釘子，位置: ({}, {})", i, pos_shift.x,
+              pos_shift.y);
+  }
+}
+
+void Manager::unSelectFlag() {
+  if (current_flag) {
+    current_flag->kill();
+    set_flag(nullptr);
+  }
 }

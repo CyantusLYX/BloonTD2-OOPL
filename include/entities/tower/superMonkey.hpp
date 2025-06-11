@@ -35,6 +35,20 @@ public:
   bool isDraggable() const override { return m_draggable; }
   void setDraggable(bool draggable) override { m_draggable = draggable; }
 
+  // 升級系統
+  void setFirstUpgrade(int cost) override {
+    m_info.firstUpgrade = true;
+    m_info.investmentCost += cost;
+    m_info.attackRange += 100.0f; // 增加攻擊範圍
+    m_range->setRadius(RANGE_SUPER + 100.0f); // 更新實際射程圓圈
+  }
+  
+  void setSecondUpgrade(int cost) override {
+    m_info.secondUpgrade = true;
+    m_info.investmentCost += cost;
+    // Laser upgrade - 增加穿透力和特殊能力（跟 DartMonkey 的 piercing dart 一樣）
+  }
+
   // CollisionComponent 實現
   std::shared_ptr<Components::CollisionComponent> getCollisionComponent() const override {
     return std::make_shared<Components::CollisionComponent>(m_collision);

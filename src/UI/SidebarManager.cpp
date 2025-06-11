@@ -127,15 +127,10 @@ void SidebarManager::setSize(const glm::vec2 &size) {
   // 重新計算各面板大小
   float statusHeight = size.y * 0.12f;
   float buyHeight = size.y * 0.38f;
-  float infoHeight = size.y * 0.50f;
 
   // 更新各面板大小
   m_statusBar->setSize(glm::vec2(size.x - 10.0f, statusHeight));
   m_towerBtnPanel->setSize(glm::vec2(size.x - 10.0f, buyHeight));
-
-  if (m_infoFlag) {
-    m_infoFlag->setSize(glm::vec2(size.x - 10.0f, infoHeight));
-  }
 
   // 重新計算位置
   recalculatePanelPositions();

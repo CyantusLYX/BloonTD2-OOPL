@@ -10,6 +10,9 @@ BoomerangMonkey::BoomerangMonkey(const Util::PTSDPosition &position, float range
   
   // 設置狀態為 ready
   m_state = ::Tower::TowerState::ready;
+  
+  // 設置類型
+  m_type = ::Tower::TowerType::boomerang;
 
   // 創建塔身
   m_body = std::make_shared<::Tower::Body>(
@@ -21,8 +24,15 @@ BoomerangMonkey::BoomerangMonkey(const Util::PTSDPosition &position, float range
   // 默認隱藏範圍
   m_range->setVisible(false);
   
-  // 設置類型
-  m_type = ::Tower::TowerType::boomerang;
+  // 初始化塔資訊
+  m_info = {
+      "Boomerang Monkey",         // 塔的名稱
+      ::Tower::AtkSpeed::Slow,    // 攻擊速度
+      range,                      // 攻擊範圍
+      false,                      // 是否有第一個升級
+      false,                      // 是否有第二個升級
+      COST_BOOMERANG              // 投資成本
+  };
 }
 
 void BoomerangMonkey::handleBloonsInRange(
@@ -82,6 +92,11 @@ void BoomerangMonkey::handleBloonsInRange(
   auto boomerang = std::make_shared<Boomerang>(position, angle, 
                                               m_range->getRadius(), 
                                               m_boomerangLife);
+  
+  // 如果有第二個升級 (Sonic Boom)，設置可以擊破冰凍氣球
+  if (m_info.secondUpgrade) {
+    boomerang->setCanPopFrozen(true);
+  }
   
   // 使用回調函數將迴旋鏢加入遊戲世界
   if (m_popperCallback) {
