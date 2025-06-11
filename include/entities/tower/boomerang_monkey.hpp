@@ -5,7 +5,7 @@
 #include "entities/tower/tower.hpp"
 #include "entities/bloon.hpp"
 #include "components/collisionComp.hpp"
-#include "entities/tower/tower.hpp"
+#include "Util/Logger.hpp"
 #include <memory>
 #include "config.hpp"
 
@@ -37,6 +37,19 @@ public:
     void onDragEnd() override { LOG_DEBUG("BOMKY : Dragging end"); }
     bool isDraggable() const override { return m_draggable; }
     void setDraggable(bool draggable) override { m_draggable = draggable; }
+
+    // 升級系統實現
+    void setFirstUpgrade(int cost) override {
+        m_info.firstUpgrade = true;
+        m_info.investmentCost += cost;
+        m_boomerangLife = 5; // Multi Target - 增加迴旋鏢生命值到 5
+    }
+    
+    void setSecondUpgrade(int cost) override {
+        m_info.secondUpgrade = true;
+        m_info.investmentCost += cost;
+        // Sonic Boom - 可以擊破冰凍氣球，在 handleBloonsInRange 中設置
+    }
 
     // CollisionComponent 實現
     std::shared_ptr<Components::CollisionComponent> getCollisionComponent() const override {

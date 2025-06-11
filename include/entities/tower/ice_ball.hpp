@@ -13,7 +13,7 @@ class IceBall final : public Tower::Tower {
 private:
     int m_cooldown = 160;       // 冰凍冷卻時間（幀數）
     int m_currentCooldown = 0; // 當前剩餘冷卻時間
-    int m_freezeFrames = 60;   // 氣球凍結持續時間（幀數）
+    int m_freezeFrames = 72;   // 氣球凍結持續時間（幀數）
     bool m_draggable = false;  // 是否可拖曳
     bool m_clickable = true;   // 是否可點擊
     Components::CollisionComponent m_collision;
@@ -39,15 +39,31 @@ public:
     bool isDraggable() const override { return m_draggable; }
     void setDraggable(bool draggable) override { m_draggable = draggable; }
 
+    // 升級系統實現
+    void setFirstUpgrade(int cost) override {
+        m_info.firstUpgrade = true;
+        m_info.investmentCost += cost;
+        // Deep Freeze - 增加凍結持續時間 33 幀
+        m_freezeFrames += 33;
+    }
+    
+    void setSecondUpgrade(int cost) override {
+        m_info.secondUpgrade = true;
+        m_info.investmentCost += cost;
+        // Extra Range - 增加攻擊範圍 15
+        float newRange = RANGE_ICE + 15.0f;
+        m_info.attackRange = newRange;
+        m_range->setRadius(newRange);
+    }
+
+    // CollisionComponent 的實現
+    std::shared_ptr<Components::CollisionComponent> getCollisionComponent() const override {
+        return m_range->getCollisionComponent();
+    }
+
     // 設置可凍結特殊氣球的能力
     void setCanFreezeLead(bool canFreeze) { m_canFreezeLead = canFreeze; }
     void setCanFreezeWhite(bool canFreeze) { m_canFreezeWhite = canFreeze; }
-
-public:
-    IceBall(const IceBall &) = default;
-    IceBall(IceBall &&) = delete;
-    IceBall &operator=(const IceBall &) = default;
-    IceBall &operator=(IceBall &&) = delete;
 };
 
 #endif

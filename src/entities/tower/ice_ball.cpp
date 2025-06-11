@@ -8,6 +8,9 @@ IceBall::IceBall(const Util::PTSDPosition &position, float range)
     : Tower::Tower(),
       m_collision(Components::CollisionComponent(position, range)) {
 
+    // 設置塔類型
+    m_type = ::Tower::TowerType::ice;
+
     // 建立塔身
     m_body = std::make_shared<::Tower::Body>(
         position,
@@ -15,12 +18,24 @@ IceBall::IceBall(const Util::PTSDPosition &position, float range)
     
     // 建立範圍顯示
     m_range = std::make_shared<::Tower::Range>(range, position);
+    // 默認隱藏範圍
+    m_range->setVisible(false);
     
     // 設置碰撞範圍
     m_collision.setPosition(position);
     
     // 設置初始狀態
     m_state = ::Tower::TowerState::ready;
+    
+    // 初始化塔資訊
+    m_info = {
+        "Ice Ball",                 // 塔的名稱
+        ::Tower::AtkSpeed::Slow,    // 攻擊速度
+        range,                      // 攻擊範圍
+        false,                      // 是否有第一個升級
+        false,                      // 是否有第二個升級
+        COST_ICE                    // 投資成本
+    };
     
     // 設置路徑
     setPath(nullptr); // IceBall 不需要路徑用於預測

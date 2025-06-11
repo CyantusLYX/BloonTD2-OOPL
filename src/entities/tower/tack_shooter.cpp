@@ -12,6 +12,9 @@ TackShooter::TackShooter(const Util::PTSDPosition &position, float range)
   // 明確設置狀態為 ready（預設塔可以攻擊）
   m_state = ::Tower::TowerState::ready;
 
+  // 設置塔類型
+  m_type = ::Tower::TowerType::tack;
+
   // 創建塔身
   m_body = std::make_shared<::Tower::Body>(
       position,
@@ -21,6 +24,16 @@ TackShooter::TackShooter(const Util::PTSDPosition &position, float range)
   m_range = std::make_shared<::Tower::Range>(range, position);
   // 默認隱藏範圍
   m_range->setVisible(false);
+
+  // 初始化塔資訊
+  m_info = {
+      "Tack Shooter",             // 塔的名稱
+      ::Tower::AtkSpeed::Normal,  // 攻擊速度
+      range,                      // 攻擊範圍
+      false,                      // 是否有第一個升級
+      false,                      // 是否有第二個升級
+      COST_TACK                   // 投資成本
+  };
 }
 
 void TackShooter::handleBloonsInRange(
@@ -50,13 +63,19 @@ void TackShooter::handleBloonsInRange(
   // 獲取發射位置
   auto position = getPosition();
   
+  // 根據升級計算 tack 的射程
+  float tackRange = m_range->getRadius() / 2;
+  if (m_info.secondUpgrade) {
+    tackRange = m_range->getRadius() / 1.5f; // 第二個升級增加 tack 射程
+  }
+  
   // 發射 8 個方向的 tack
   for (int i = 0; i < 8; i++) {
     // 計算每個 tack 的角度 (45度間隔)
     float angle = i * 45.0f * (M_PI / 180.0f);
     
     // 建立 tack
-    auto tack = std::make_shared<Tack>(position, angle, m_range->getRadius()/2);
+    auto tack = std::make_shared<Tack>(position, angle, tackRange);
     
     // 使用回調函數將 tack 加入遊戲世界
     if (m_popperCallback) {

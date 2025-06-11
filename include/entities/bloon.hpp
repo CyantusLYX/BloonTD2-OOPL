@@ -25,6 +25,7 @@ private:
     float m_SpeedMult;            // 實際速度 = baseSpeed*m_SpeedMult
     int m_RBE;                    // Red Bloon Equivalent (用於生命值計算)
     int freeze_counter = 0;       // 冰凍計時器
+    int m_path_id = 0;            // 氣球所屬路徑ID
     std::vector<std::shared_ptr<Bloon::Type>> m_ChildBloons;
     
     // 碰撞組件
@@ -58,6 +59,10 @@ public:
     Type GetType() const { return m_Type; }
     State GetState() const { return m_State; }
     std::vector<std::shared_ptr<Bloon::Type>> GetChildBloons() const { return m_ChildBloons; }
+    
+    // Path ID methods
+    void setPathId(int path_id) { m_path_id = path_id; }
+    int getPathId() const { return m_path_id; }
     
     // I_clickable 介面實現
     void onClick() override;

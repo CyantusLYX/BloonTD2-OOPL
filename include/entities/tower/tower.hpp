@@ -131,7 +131,7 @@ protected:
   std::function<void(std::shared_ptr<popper>)> m_popperCallback;
   std::shared_ptr<Body> m_body;
   std::shared_ptr<Range> m_range;
-  std::shared_ptr<Path> m_path;
+  std::vector<std::shared_ptr<Path>> m_paths;
   std::shared_ptr<Util::GameObject> renderRoot =
       std::make_shared<Util::GameObject>();
 
@@ -169,7 +169,14 @@ public:
     m_range->setVisible(visible);
   }
 
-  void setPath(const std::shared_ptr<Path> &path) { m_path = path; }
+  void setPath(const std::shared_ptr<Path> &path) { 
+    m_paths.clear();
+    m_paths.push_back(path); 
+  }
+  
+  void setPaths(const std::vector<std::shared_ptr<Path>> &paths) { 
+    m_paths = paths; 
+  }
   virtual std::shared_ptr<Components::CollisionComponent>
   getCollisionComponent() const {
     return m_range->getCollisionComponent();
@@ -184,7 +191,13 @@ public:
   handleBloonsInRange(const std::vector<std::shared_ptr<Bloon>> &bloons,
                       const std::vector<float> &distances) = 0;
 
-  std::shared_ptr<Path> getPath() const { return m_path; }
+  std::shared_ptr<Path> getPath() const { 
+    return m_paths.empty() ? nullptr : m_paths[0]; 
+  }
+  
+  const std::vector<std::shared_ptr<Path>>& getPaths() const { 
+    return m_paths; 
+  }
 
   virtual std::shared_ptr<Body> getBody() { return m_body; }
 
