@@ -22,12 +22,12 @@ DartMonkey::DartMonkey(const Util::PTSDPosition &position, float range)
   // 默認隱藏範圍
   m_range->setVisible(false);
   m_info = {
-      "Dart Monkey",             // 塔的名稱
+      "Dart Monkey",           // 塔的名稱
       ::Tower::AtkSpeed::Fast, // 攻擊速度
-      range,                     // 攻擊範圍
-      false,                     // 是否有第一個升級
-      false,                     // 是否有第二個升級
-      COST_DART                  // 投資成本
+      range,                   // 攻擊範圍
+      false,                   // 是否有第一個升級
+      false,                   // 是否有第二個升級
+      COST_DART                // 投資成本
   };
 }
 
@@ -59,7 +59,7 @@ void DartMonkey::handleBloonsInRange(
 
   // 取得目標氣球
   auto targetBloon = bloons[targetIndex];
-  
+
   float bloonDistance = distances[targetIndex];
 
   // 計算預測幀數 - 根據距離計算飛鏢飛行時間
@@ -76,10 +76,10 @@ void DartMonkey::handleBloonsInRange(
 
   // 使用路徑計算未來位置
   Util::PTSDPosition futurePosition = targetBloon->getPosition();
-  
+
   // 從paths vector中根據bloon的path_id找到對應路徑
   int bloonPathId = targetBloon->getPathId();
-  const auto& paths = getPaths();
+  const auto &paths = getPaths();
   if (bloonPathId < static_cast<int>(paths.size()) && paths[bloonPathId]) {
     futurePosition = paths[bloonPathId]->getPositionAtDistance(futureDistance);
   }

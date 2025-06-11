@@ -11,7 +11,7 @@ namespace UI {
 class Flag : public Util::GameObject, public Mortal {
 private:
 protected:
-  Util::PTSDPosition basePosition; // 基礎位置
+  Util::PTSDPosition basePosition;     // 基礎位置
   glm::vec2 m_size = {148.0f, 243.0f}; // 預設大小
 
   // Protected constructor: 只有衍生類別可以呼叫

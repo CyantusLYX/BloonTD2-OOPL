@@ -1,13 +1,16 @@
 #ifndef MANAGER_HPP
 #define MANAGER_HPP
 
+#include "UI/Flag.hpp"
 #include "UI/SidebarManager.hpp"
-#include "UI/button.hpp"
 #include "UI/buttons/tower_btn.hpp"
 #include "UI/buttons/tower_btn_conf.hpp"
+#include "UI/buttons/upgrade_btn_conf.hpp"
+#include "UI/container/upgrades.hpp"
 #include "Util/Color.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Input.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
@@ -19,6 +22,7 @@
 #include "conf.hpp"
 #include "core/loader.hpp"
 #include "entities/bloon.hpp"
+#include "entities/poppers/glue.hpp"
 #include "entities/poppers/popper.hpp"
 #include "entities/poppers/spike.hpp"
 #include "entities/tower/all_tower.hpp"
@@ -26,6 +30,7 @@
 #include "interfaces/clickable.hpp"
 #include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
+#include "interfaces/interfaces.hpp"
 #include "interfaces/move.hpp"
 #include "map.hpp"
 #include <algorithm>
@@ -61,12 +66,12 @@ public:
   class bloon_holder : public Interface::I_move, public Mortal {
   private:
     std::shared_ptr<Bloon> m_bloon;
-    std::shared_ptr<Path> m_path;
+    std::vector<std::shared_ptr<Path>> &m_paths; // Reference to manager's paths
     float distance = 0;
 
   public:
     explicit bloon_holder(std::shared_ptr<Bloon> bloon, float distance,
-                          const std::shared_ptr<Path> path);
+                          std::vector<std::shared_ptr<Path>> &paths);
     float get_distance();
     Util::PTSDPosition next_position(int frames) override;
     void move() override;
@@ -74,7 +79,7 @@ public:
     void pre_kill() override { m_bloon->kill(); }
   };
 
-  // sfx
+  //  sfx
   class popimg_class : public Mortal, public Util::GameObject {
   public:
     popimg_class()
@@ -113,7 +118,8 @@ public:
 
   class end_spike : public spike {
   public:
-    end_spike(const Util::PTSDPosition &pos = {0, 0}) : spike(pos) {
+    end_spike(const Util::PTSDPosition &pos = {0, 0})
+        : spike(pos) {
       setLife(10000000);
     }
   };
@@ -124,11 +130,28 @@ public:
 
   // 遊戲物件管理
   void add_bloon(Bloon::Type type, float distance, float z_index = 10);
+  void add_bloon(Bloon::Type type, float distance, int path_id,
+                 float z_index = 10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
+  void add_updatable(const std::shared_ptr<Interface::IUpdatable> &updatable) {
+    updatables.push_back(updatable);
+    for (const auto &child : updatable->get_children()) {
+      updatables.push_back(child);
+    }
+  }
   void pop_bloon(std::shared_ptr<bloon_holder> bloon, bool fx = true);
+  void set_flag(const std::shared_ptr<UI::Flag> &flag) {
+    if (flag != nullptr) {
+      m_Renderer->AddChild(flag);
+      register_mortal(flag);
+    }
+    if (current_flag)
+      current_flag->kill();
+    current_flag = flag;
+  }
 
   void add_tower(const std::shared_ptr<Tower::Tower> &tower);
 
@@ -155,9 +178,11 @@ public:
   void end_dragging(); // ender_dragon()
   bool drag_cd = false;
 
-  // Sidebar 相關方法
+  // UI 相關方法
+  void unselectAll() { unSelectFlag(); };
   void initUI();
   void updateUI();
+  void unSelectFlag();
 
   // 塔建造相關
   void startDraggingTower(Tower::TowerType towerType);
@@ -167,6 +192,9 @@ public:
   // 創建一個塔
   std::shared_ptr<Tower::Tower> createTower(Tower::TowerType type,
                                             const Util::PTSDPosition &position);
+
+  // 在路徑終點創建終極釘子
+  void createSpikeAtEnd();
 
   // Getters 函式
   mouse_status get_mouse_status() const { return m_mouse_status; }
@@ -191,6 +219,7 @@ public:
       std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png");
   std::shared_ptr<Util::GameObject> m_gameover =
       std::make_shared<Util::GameObject>(m_gameover_img, 100);
+  std::shared_ptr<UI::Flag> current_flag;
 
 private:
   // 渲染和狀態
@@ -207,7 +236,8 @@ private:
   // 地圖和路徑
   std::vector<std::shared_ptr<Map>> maps;
   std::shared_ptr<Map> current_map;
-  std::shared_ptr<Path> current_path;
+  std::vector<std::shared_ptr<Path>> current_paths;
+  std::vector<std::shared_ptr<Path>> all_paths; // Store all available paths
 
   // 關卡控制
   int current_diff = 0;
@@ -227,6 +257,7 @@ private:
   std::vector<std::shared_ptr<Button>> buttons;
   std::vector<std::shared_ptr<Tower::Tower>> towers;
   std::vector<std::shared_ptr<popimg_class>> popimgs;
+  std::vector<std::shared_ptr<Interface::IUpdatable>> updatables;
 
   // UI 相關
   std::shared_ptr<UI::SidebarManager> m_sidebarManager;
@@ -243,7 +274,7 @@ private:
   std::shared_ptr<Button> b_start_round = std::make_shared<Button>(
       "start_round", Util::PTSDPosition(235, -180), glm::vec2(50, 50));
   std::shared_ptr<Button> end_game = std::make_shared<Button>(
-    "end_game", Util::PTSDPosition(235, -220), glm::vec2(50, 50));
+      "end_game", Util::PTSDPosition(235, -220), glm::vec2(50, 50));
   void medal_setter(int diff);
   std::shared_ptr<Util::GameObject> startround_anim;
   // sound->setSize({50, 50});

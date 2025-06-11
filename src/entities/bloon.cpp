@@ -3,7 +3,6 @@
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include "Util/SFX.hpp"
-#include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 #include "components/collisionComp.hpp"
 #include <memory>
@@ -12,7 +11,8 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos, float z_index)
     : Util::GameObject(nullptr, z_index, {0, 0}, true),
       Components::CollisionComponent(
           pos, static_cast<float>(10.0)), // Initialize base class
-      m_Type(type), m_State(State::alive) {
+      m_Type(type),
+      m_State(State::alive) {
   m_Transform.translation = pos.ToVec2();
   switch (type) {
   case Type::red:
@@ -71,13 +71,12 @@ Bloon::Bloon(Bloon::Type type, const Util::PTSDPosition pos, float z_index)
   float radius = static_cast<float>(m_Drawable->GetSize().x / 2);
   m_collisionComponent =
       std::make_shared<Components::CollisionComponent>(pos, radius);
-
-} 
+}
 
 void Bloon::setFrozed(const int freeze_frames) {
   m_State = State::frozed;
   freeze_counter = freeze_frames;
-  //this->m_Drawable=
+  // this->m_Drawable=
 }
 
 void Bloon::setGlued() {
@@ -88,27 +87,28 @@ void Bloon::setGlued() {
     // 可以在此處添加視覺效果，如改變氣球顏色等
   } else if (m_State != State::glued) {
     // 其他狀態不受影響（如凍結）
-    LOG_TRACE("BLOON : 氣球當前狀態 {}, 無法應用黏滯效果", static_cast<int>(m_State));
+    LOG_TRACE("BLOON : 氣球當前狀態 {}, 無法應用黏滯效果",
+              static_cast<int>(m_State));
   }
   // 如果已經處於黏滯狀態，則不需要做任何事
 }
 
 void Bloon::updateFreeze() {
-    // 如果處於凍結狀態
-    if (m_State == State::frozed) {
-        // 減少凍結幀數
-        if (freeze_counter > 0) {
-          freeze_counter--;
-        }
-        
-        // 如果計數器為零，解凍氣球
-        if (freeze_counter <= 0) {
-            // 恢復為正常狀態
-            m_State = State::alive;
-            
-            // 恢復視覺效果（如果有的話）
-        }
+  // 如果處於凍結狀態
+  if (m_State == State::frozed) {
+    // 減少凍結幀數
+    if (freeze_counter > 0) {
+      freeze_counter--;
     }
+
+    // 如果計數器為零，解凍氣球
+    if (freeze_counter <= 0) {
+      // 恢復為正常狀態
+      m_State = State::alive;
+
+      // 恢復視覺效果（如果有的話）
+    }
+  }
 }
 
 void Bloon::setPosition(const Util::PTSDPosition &position) {

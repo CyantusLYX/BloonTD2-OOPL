@@ -9,7 +9,8 @@ private:
 
 public:
   CanBuy(Tower::TowerType towerType, int cost)
-      : m_towerType(towerType), m_cost(cost) {};
+      : m_towerType(towerType),
+        m_cost(cost) {};
   CanBuy() = default;
   ~CanBuy() override = default;
   Tower::TowerType getTowerType() const { return m_towerType; }

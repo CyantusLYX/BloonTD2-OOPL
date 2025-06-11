@@ -15,14 +15,15 @@ const std::string UpgradeButton::BACKGROUND_CANT_AFFORD =
     RESOURCE_DIR "/buttons/upgrades/canAford.png";
 
 UpgradeButton::UpgradeButton(std::shared_ptr<Tower::Tower> tower,
-                             int upgradeIndex, 
-                             int& money,
+                             int upgradeIndex, int &money,
                              const Util::PTSDPosition &pos)
-    : Button("upgrade", pos,
-             glm::vec2(68, 143), true, false),
-      m_tower(tower), m_upgradeIndex(upgradeIndex),
-      m_buttonState(ButtonState::BuyFor), m_basePosition(pos),
-      m_moneyRef(money), m_lastKnownMoney(money) {
+    : Button("upgrade", pos, glm::vec2(68, 143), true, false),
+      m_tower(tower),
+      m_upgradeIndex(upgradeIndex),
+      m_buttonState(ButtonState::BuyFor),
+      m_basePosition(pos),
+      m_moneyRef(money),
+      m_lastKnownMoney(money) {
 
   // 獲取升級配置
   if (upgradeIndex == 0) {
@@ -47,7 +48,6 @@ UpgradeButton::UpgradeButton(std::shared_ptr<Tower::Tower> tower,
 void UpgradeButton::initializeUI() {
   // 創建背景圖片
   m_Drawable = std::make_shared<Util::Image>(BACKGROUND_BUY_FOR);
-
 
   // 創建升級圖示
   m_iconObject = std::make_shared<Util::GameObject>(
@@ -123,14 +123,13 @@ void UpgradeButton::updateNameTexts() {
   // 為每個名稱單詞創建文字物件
   for (size_t i = 0; i < m_config.name.size(); ++i) {
     auto nameText = std::make_shared<Util::Text>(
-        RESOURCE_DIR "/font/Trebuchet MS.ttf",
-        18, m_config.name[i]);
-    
+        RESOURCE_DIR "/font/Trebuchet MS.ttf", 18, m_config.name[i]);
+
     // 設置文字顏色為白色，更顯眼
     nameText->SetColor(Util::Color(255, 255, 255));
-    
-    auto nameTextObj = std::make_shared<Util::GameObject>(
-        nameText, m_ZIndex + 0.3f);
+
+    auto nameTextObj =
+        std::make_shared<Util::GameObject>(nameText, m_ZIndex + 0.3f);
 
     m_nameTextObjects.push_back(nameTextObj);
     addChild(nameTextObj);
@@ -142,15 +141,15 @@ void UpgradeButton::updateCostText() {
     RemoveChild(m_costTextObject);
   }
 
-  auto costText = std::make_shared<Util::Text>(
-      RESOURCE_DIR "/font/Trebuchet MS.ttf",
-      18, "$" + std::to_string(m_config.cost));
+  auto costText =
+      std::make_shared<Util::Text>(RESOURCE_DIR "/font/Trebuchet MS.ttf", 18,
+                                   "$" + std::to_string(m_config.cost));
 
   // 設置價格文字顏色為白色，更顯眼
   costText->SetColor(Util::Color(255, 255, 255));
 
-  m_costTextObject = std::make_shared<Util::GameObject>(
-      costText, m_ZIndex + 0.3f);
+  m_costTextObject =
+      std::make_shared<Util::GameObject>(costText, m_ZIndex + 0.3f);
 
   addChild(m_costTextObject);
 }
@@ -177,7 +176,7 @@ void UpgradeButton::calculateTextPositions() {
 
   // 設置價格文字位置（在按鈕下方）
   if (m_costTextObject) {
-    float costY =   -60.0f;
+    float costY = -60.0f;
     m_costTextObject->m_Transform.translation = basePos + glm::vec2(5, costY);
   }
 }
@@ -190,10 +189,10 @@ void UpgradeButton::refreshDisplay() {
 void UpgradeButton::setPosition(const Util::PTSDPosition &position) {
   // 更新基礎位置
   m_basePosition = position;
-  
+
   // 調用父類的 setPosition 來更新按鈕本身的位置
   Button::setPosition(position);
-  
+
   // 重新計算所有子物件的位置
   calculateTextPositions();
 }

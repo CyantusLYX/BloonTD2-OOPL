@@ -4,11 +4,11 @@
 #include "Util/Time.hpp"
 #include "components/canBuy.hpp"
 #include "components/collisionComp.hpp"
+#include "conf.hpp"
 #include "entities/poppers/dart.hpp"
 #include "tower.hpp"
-#include "conf.hpp"
 
-class DartMonkey final : public Tower::Tower{
+class DartMonkey final : public Tower::Tower {
 private:
   int m_cooldown = 25;       // 射擊冷卻時間（幀數）
   int m_currentCooldown = 0; // 當前剩餘冷卻時間
@@ -17,7 +17,8 @@ private:
   Components::CollisionComponent m_collision;
 
 public:
-  DartMonkey(const Util::PTSDPosition &position, float range = float(RANGE_DART));
+  DartMonkey(const Util::PTSDPosition &position,
+             float range = float(RANGE_DART));
   ~DartMonkey() = default;
 
   // 處理射程內氣球的方法
@@ -37,8 +38,8 @@ public:
   void setFirstUpgrade(int cost) override {
     m_info.firstUpgrade = true;
     m_info.investmentCost += cost;
-    m_info.attackRange += 25.0f; // 增加攻擊範圍
-    m_range->setRadius(RANGE_DART+25.0f); // 增加射程
+    m_info.attackRange += 25.0f;            // 增加攻擊範圍
+    m_range->setRadius(RANGE_DART + 25.0f); // 增加射程
   }
   // components::collisionComp
 

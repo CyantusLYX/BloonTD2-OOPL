@@ -1,6 +1,6 @@
+#include "core/loader.hpp"
 #include "Util/Logger.hpp"
 #include "entities/bloon.hpp"
-#include "core/loader.hpp"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -27,7 +27,7 @@ std::vector<Bloon::Type> load_bloons(int wave) {
     for (const auto &level : root) {
       if (level["level"] == wave) {
         found = true;
-        LOG_TRACE("LODR  : level {}", wave+1);
+        LOG_TRACE("LODR  : level {}", wave + 1);
 
         // 取得該關卡的所有氣球類型
         const auto &bloons = level["bloons"];

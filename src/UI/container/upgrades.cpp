@@ -5,9 +5,11 @@
 #include "interfaces/interfaces.hpp"
 #include <glm/fwd.hpp>
 #include <magic_enum/magic_enum.hpp>
-UI::UpgradesPanel::UpgradesPanel(std::shared_ptr<Tower::Tower> tower, int& money)
-    : Flag(), m_tower(tower),
-			m_money(money) {
+UI::UpgradesPanel::UpgradesPanel(std::shared_ptr<Tower::Tower> tower,
+                                 int &money)
+    : Flag(),
+      m_tower(tower),
+      m_money(money) {
   // 創建背景 GameObject
   m_background = std::make_shared<Util::GameObject>(
       std::make_shared<Util::Image>(RESOURCE_DIR "/UI/UpgradeBase.png"), 50);
@@ -32,12 +34,12 @@ UI::UpgradesPanel::UpgradesPanel(std::shared_ptr<Tower::Tower> tower, int& money
       50.1);
 
   // 創建升級按鈕1 GameObject
-  m_upgradeBtn1Object =
-      std::make_shared<UI::UpgradeButton>(m_tower, 0, m_money, Util::PTSDPosition(0, 0));
+  m_upgradeBtn1Object = std::make_shared<UI::UpgradeButton>(
+      m_tower, 0, m_money, Util::PTSDPosition(0, 0));
 
   // 創建升級按鈕2 GameObject
-  m_upgradeBtn2Object =
-      std::make_shared<UI::UpgradeButton>(m_tower, 1, m_money, Util::PTSDPosition(0, 0));
+  m_upgradeBtn2Object = std::make_shared<UI::UpgradeButton>(
+      m_tower, 1, m_money, Util::PTSDPosition(0, 0));
 
   // 創建賣出按鈕 GameObject
   m_sellBtnObject =
@@ -79,13 +81,13 @@ UI::UpgradesPanel::UpgradesPanel(std::shared_ptr<Tower::Tower> tower, int& money
 
   // 初始化所有文字內容
   refreshAllTexts();
-	Interface::IUpdatable::add_child(m_upgradeBtn1Object);
-	Interface::IUpdatable::add_child(m_upgradeBtn2Object);
-	
+  Interface::IUpdatable::add_child(m_upgradeBtn1Object);
+  Interface::IUpdatable::add_child(m_upgradeBtn2Object);
 };
 UI::SellButton::SellButton(std::shared_ptr<Tower::Tower> tower,
                            const Util::PTSDPosition &pos)
-    : Button("sell", pos, glm::vec2(138, 25), true, false), m_tower(tower) {
+    : Button("sell", pos, glm::vec2(138, 25), true, false),
+      m_tower(tower) {
   refreshSellPrice();
   setClickable(true);
   m_ZIndex = 50.1f; // 確保賣出按鈕在升級面板上方

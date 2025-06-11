@@ -26,7 +26,8 @@ public:
 class BombSpecConfig : public SpecConfig {
 public:
   BombSpecConfig(float triggerRadius = 20.0f, float explosionRadius = 60.0f)
-      : triggerRadius(triggerRadius), explosionRadius(explosionRadius) {};
+      : triggerRadius(triggerRadius),
+        explosionRadius(explosionRadius) {};
   float triggerRadius;   // 觸發範圍
   float explosionRadius; // 爆炸範圍
 };
@@ -138,8 +139,14 @@ protected:
 public:
   TowerInfo getInfo() const { return m_info; }
   TowerType getType() const { return m_type; }
-  virtual void setFirstUpgrade(int cost) { m_info.firstUpgrade = true; m_info.investmentCost += cost; };
-  virtual void setSecondUpgrade(int cost) { m_info.secondUpgrade = true; m_info.investmentCost += cost; };
+  virtual void setFirstUpgrade(int cost) {
+    m_info.firstUpgrade = true;
+    m_info.investmentCost += cost;
+  };
+  virtual void setSecondUpgrade(int cost) {
+    m_info.secondUpgrade = true;
+    m_info.investmentCost += cost;
+  };
   virtual bool isUpgradable() const { return Isupgradable; }
   void setClickable(bool clickable) override { IsClickable = clickable; }
   bool isClickable() const override { return IsClickable; }
@@ -169,13 +176,13 @@ public:
     m_range->setVisible(visible);
   }
 
-  void setPath(const std::shared_ptr<Path> &path) { 
+  void setPath(const std::shared_ptr<Path> &path) {
     m_paths.clear();
-    m_paths.push_back(path); 
+    m_paths.push_back(path);
   }
-  
-  void setPaths(const std::vector<std::shared_ptr<Path>> &paths) { 
-    m_paths = paths; 
+
+  void setPaths(const std::vector<std::shared_ptr<Path>> &paths) {
+    m_paths = paths;
   }
   virtual std::shared_ptr<Components::CollisionComponent>
   getCollisionComponent() const {
@@ -191,13 +198,11 @@ public:
   handleBloonsInRange(const std::vector<std::shared_ptr<Bloon>> &bloons,
                       const std::vector<float> &distances) = 0;
 
-  std::shared_ptr<Path> getPath() const { 
-    return m_paths.empty() ? nullptr : m_paths[0]; 
+  std::shared_ptr<Path> getPath() const {
+    return m_paths.empty() ? nullptr : m_paths[0];
   }
-  
-  const std::vector<std::shared_ptr<Path>>& getPaths() const { 
-    return m_paths; 
-  }
+
+  const std::vector<std::shared_ptr<Path>> &getPaths() const { return m_paths; }
 
   virtual std::shared_ptr<Body> getBody() { return m_body; }
 

@@ -6,7 +6,9 @@ namespace UI {
 StatusItem::StatusItem(const std::string &title,
                        const std::string &initialValue, float width,
                        float height, float zIndex)
-    : GameObject(nullptr, zIndex), m_width(width), m_height(height) {
+    : GameObject(nullptr, zIndex),
+      m_width(width),
+      m_height(height) {
 
   // 創建背景 (完全透明)
   bgShape = std::make_shared<Util::Shape>(Util::ShapeType::Rectangle,
@@ -72,8 +74,11 @@ void StatusItem::updateTextPositions() {
 
 StatusBar::StatusBar(const Util::PTSDPosition &position, float width,
                      float height, float zIndex, bool fixedSize)
-    : GameObject(nullptr, zIndex), m_width(width), m_height(height),
-      m_padding(10.0f), m_spacing(5.0f) {
+    : GameObject(nullptr, zIndex),
+      m_width(width),
+      m_height(height),
+      m_padding(10.0f),
+      m_spacing(5.0f) {
 
   // 創建背景
   m_backgroundShape = std::make_shared<Util::Shape>(Util::ShapeType::Rectangle,
@@ -185,9 +190,9 @@ void StatusBar::updateLayout() {
   m_moneyItem->updateTextPositions();
   m_livesItem->updateTextPositions();
 
-  LOG_DEBUG(
-      "StatusBar: Layout updated - Money at global y={}, Lives at global y={}",
-      moneyPosY, livesPosY);
+  LOG_DEBUG("StatusBar: Layout updated - Money at global y={}, Lives at "
+            "global y={}",
+            moneyPosY, livesPosY);
 }
 
 } // namespace UI

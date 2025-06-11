@@ -4,7 +4,6 @@
 #include "Util/Logger.hpp"
 #include "Util/Renderer.hpp"
 #include "core/ShapeAnimation.hpp"
-#include "core/ShapeAnimation.hpp"
 #include "core/shape.hpp"
 #include "entities/bloon.hpp"
 #include "entities/poppers/spike.hpp"
@@ -41,7 +40,7 @@ void App::Update() {
   // {
   manager->cleanup_dead_objects();
   if (manager->get_game_state() == Manager::game_state::menu) {
-    
+
     auto now = Util::Input::GetCursorPosition();
     if (now.ToVec2() != previous_cursor_pos.ToVec2()) {
       previous_cursor_pos = Util::Input::GetCursorPosition();

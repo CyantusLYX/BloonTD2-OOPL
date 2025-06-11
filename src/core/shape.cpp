@@ -17,9 +17,12 @@ std::unique_ptr<Core::VertexArray> Shape::s_EllipseVA = nullptr;
 std::unique_ptr<Core::VertexArray> Shape::s_LineVA = nullptr;
 
 Shape::Shape(ShapeType type, const glm::vec2 &size, const Color &color)
-    : m_Type(type), m_Size(size), m_Color(color), m_HasOutline(false),
+    : m_Type(type),
+      m_Size(size),
+      m_Color(color),
+      m_HasOutline(false),
       m_OutlineWidth(1.0f) {
-        LOG_INFO("SHAPE : shapeconstr");
+  LOG_INFO("SHAPE : shapeconstr");
   // 初始化著色器程序（如果尚未初始化）
   if (s_Program == nullptr) {
     InitializeShaders();
@@ -35,7 +38,9 @@ Shape::Shape(ShapeType type, const glm::vec2 &size, const Color &color)
       *s_Program, "Matrices", 0);
 }
 
-void Shape::SetColor(const Color &color) { m_Color = color; }
+void Shape::SetColor(const Color &color) {
+  m_Color = color;
+}
 
 void Shape::SetColorRGB(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
   m_Color = Color::FromRGB(r, g, b, a);
@@ -45,7 +50,9 @@ void Shape::SetColorHSV(float h, float s, float v, float a) {
   m_Color = Color::FromHSV(h, s, v, a);
 }
 
-void Shape::SetColorHex(Uint32 hex) { m_Color = Color::FromHex(hex); }
+void Shape::SetColorHex(Uint32 hex) {
+  m_Color = Color::FromHex(hex);
+}
 
 void Shape::SetColorHex(const std::string &hex) {
   m_Color = Color::FromHex(hex);
@@ -64,24 +71,38 @@ void Shape::SetAlpha(float alpha) {
   m_Color.a = clampedAlpha * 255.0f; // 將 0-1 範圍的值轉為 0-255
 }
 
-void Shape::SetSize(const glm::vec2 &size) { m_Size = size; }
+void Shape::SetSize(const glm::vec2 &size) {
+  m_Size = size;
+}
 
 void Shape::SetOutline(bool outline, float width) {
   m_HasOutline = outline;
   m_OutlineWidth = std::max(0.1f, width);
 }
 
-ShapeType Shape::GetType() const { return m_Type; }
+ShapeType Shape::GetType() const {
+  return m_Type;
+}
 
-Color Shape::GetColor() const { return m_Color; }
+Color Shape::GetColor() const {
+  return m_Color;
+}
 
-float Shape::GetAlpha() const { return m_Color.a / 255.0f; }
+float Shape::GetAlpha() const {
+  return m_Color.a / 255.0f;
+}
 
-bool Shape::HasOutline() const { return m_HasOutline; }
+bool Shape::HasOutline() const {
+  return m_HasOutline;
+}
 
-float Shape::GetOutlineWidth() const { return m_OutlineWidth; }
+float Shape::GetOutlineWidth() const {
+  return m_OutlineWidth;
+}
 
-glm::vec2 Shape::GetSize() const { return m_Size; }
+glm::vec2 Shape::GetSize() const {
+  return m_Size;
+}
 
 void Shape::Draw(const Core::Matrices &data) {
   // 設置 uniform 數據
@@ -184,18 +205,24 @@ void Shape::InitializeRectangle() {
   // 矩形頂點
   s_RectangleVA->AddVertexBuffer(std::make_unique<Core::VertexBuffer>(
       std::vector<float>{
-          -0.5f, 0.5f,  // 左上
-          -0.5f, -0.5f, // 左下
-          0.5f, -0.5f,  // 右下
-          0.5f, 0.5f,   // 右上
+          -0.5f,
+          0.5f, // 左上
+          -0.5f,
+          -0.5f, // 左下
+          0.5f,
+          -0.5f, // 右下
+          0.5f,
+          0.5f, // 右上
       },
       2));
 
   // 索引
   s_RectangleVA->SetIndexBuffer(
       std::make_unique<Core::IndexBuffer>(std::vector<unsigned int>{
-          0, 1, 2, // 第一個三角形
-          0, 2, 3  // 第二個三角形
+          0, 1,
+          2, // 第一個三角形
+          0, 2,
+          3 // 第二個三角形
       }));
 }
 
@@ -235,9 +262,12 @@ void Shape::InitializeTriangle() {
   // 三角形頂點
   s_TriangleVA->AddVertexBuffer(std::make_unique<Core::VertexBuffer>(
       std::vector<float>{
-          0.0f, 0.5f,   // 頂點
-          -0.5f, -0.5f, // 左下
-          0.5f, -0.5f,  // 右下
+          0.0f,
+          0.5f, // 頂點
+          -0.5f,
+          -0.5f, // 左下
+          0.5f,
+          -0.5f, // 右下
       },
       2));
 
@@ -282,10 +312,14 @@ void Shape::InitializeLine() {
   // 線段頂點
   s_LineVA->AddVertexBuffer(std::make_unique<Core::VertexBuffer>(
       std::vector<float>{
-          -0.5f, 0.0f, // 起點
-          0.5f, 0.0f,  // 終點
-          0.5f, 0.01f, // 終點上方
-          -0.5f, 0.01f // 起點上方
+          -0.5f,
+          0.0f, // 起點
+          0.5f,
+          0.0f, // 終點
+          0.5f,
+          0.01f, // 終點上方
+          -0.5f,
+          0.01f // 起點上方
       },
       2));
 

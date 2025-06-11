@@ -15,14 +15,19 @@ protected:
   bool explosive = false;
   bool canPopFrozen = false;
   bool canPopBlack = false;
+
 public:
-  popper(const Util::PTSDPosition &pos = {0, 0}, const std::variant<glm::vec2, float> &circle_r_or_rectangle_xy = 0.0f)
+  popper(const Util::PTSDPosition &pos = {0, 0},
+         const std::variant<glm::vec2, float> &circle_r_or_rectangle_xy = 0.0f)
       : Components::CollisionComponent(pos, circle_r_or_rectangle_xy) {
-    m_colType = circle_r_or_rectangle_xy.index() == 1 ? Interface::ColType::OVAL : Interface::ColType::RECTANGLE;}  
+    m_colType = circle_r_or_rectangle_xy.index() == 1
+                    ? Interface::ColType::OVAL
+                    : Interface::ColType::RECTANGLE;
+  }
   bool is_explosive() const { return explosive; }
   virtual std::vector<bool> hit(std::vector<std::shared_ptr<Bloon>> bloons) = 0;
-  virtual std::shared_ptr<Util::GameObject> get_object(){return nullptr;};
-  virtual Util::PTSDPosition get_position() const=0;
+  virtual std::shared_ptr<Util::GameObject> get_object() { return nullptr; };
+  virtual Util::PTSDPosition get_position() const = 0;
   void setCanPopFrozen(bool canPopFrozen) { this->canPopFrozen = canPopFrozen; }
   bool getCanPopFrozen() const { return canPopFrozen; }
   void setCanPopBlack(bool canPopBlack) { this->canPopBlack = canPopBlack; }

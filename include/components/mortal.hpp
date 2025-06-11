@@ -31,8 +31,7 @@ public:
     }
     m_MortalChildren.clear();
   }
-  virtual void pre_kill() {
-  };
+  virtual void pre_kill() {};
 
   // 獲取唯一識別碼
   const std::string &get_uuid() const { return m_uuid; }

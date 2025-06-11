@@ -4,11 +4,11 @@
 #include "Util/Time.hpp"
 #include "components/canBuy.hpp"
 #include "components/collisionComp.hpp"
+#include "conf.hpp"
 #include "entities/poppers/dart.hpp"
 #include "tower.hpp"
-#include "conf.hpp"
 
-class SuperMonkey final : public Tower::Tower{
+class SuperMonkey final : public Tower::Tower {
 private:
   int m_cooldown = 5;        // 射擊冷卻時間（幀數）- 比 DartMonkey 更快
   int m_currentCooldown = 0; // 當前剩餘冷卻時間
@@ -17,7 +17,8 @@ private:
   Components::CollisionComponent m_collision;
 
 public:
-  SuperMonkey(const Util::PTSDPosition &position, float range = float(RANGE_SUPER));
+  SuperMonkey(const Util::PTSDPosition &position,
+              float range = float(RANGE_SUPER));
   ~SuperMonkey() = default;
 
   // 處理射程內氣球的方法
@@ -39,18 +40,20 @@ public:
   void setFirstUpgrade(int cost) override {
     m_info.firstUpgrade = true;
     m_info.investmentCost += cost;
-    m_info.attackRange += 100.0f; // 增加攻擊範圍
+    m_info.attackRange += 100.0f;             // 增加攻擊範圍
     m_range->setRadius(RANGE_SUPER + 100.0f); // 更新實際射程圓圈
   }
-  
+
   void setSecondUpgrade(int cost) override {
     m_info.secondUpgrade = true;
     m_info.investmentCost += cost;
-    // Laser upgrade - 增加穿透力和特殊能力（跟 DartMonkey 的 piercing dart 一樣）
+    // Laser upgrade - 增加穿透力和特殊能力（跟 DartMonkey 的 piercing dart
+    // 一樣）
   }
 
   // CollisionComponent 實現
-  std::shared_ptr<Components::CollisionComponent> getCollisionComponent() const override {
+  std::shared_ptr<Components::CollisionComponent>
+  getCollisionComponent() const override {
     return std::make_shared<Components::CollisionComponent>(m_collision);
   }
 
