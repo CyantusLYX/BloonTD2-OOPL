@@ -39,8 +39,14 @@ void App::Update() {
   //   }
   //   else
   // {
+  //   if(manager->get_game_state() == Manager::game_state::over){
+  //     exit(-1);
+  //   }
+  //   else
+  // {
   manager->cleanup_dead_objects();
   if (manager->get_game_state() == Manager::game_state::menu) {
+
     auto now = Util::Input::GetCursorPosition();
     if (now.ToVec2() != previous_cursor_pos.ToVec2()) {
       previous_cursor_pos = Util::Input::GetCursorPosition();

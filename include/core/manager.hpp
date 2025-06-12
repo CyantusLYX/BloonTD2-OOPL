@@ -32,6 +32,7 @@
 #include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
 #include "interfaces/interfaces.hpp"
+#include "interfaces/interfaces.hpp"
 #include "interfaces/move.hpp"
 #include "map.hpp"
 #include <algorithm>
@@ -68,10 +69,12 @@ public:
   private:
     std::shared_ptr<Bloon> m_bloon;
     std::vector<std::shared_ptr<Path>> &m_paths; // Reference to manager's paths
+    std::vector<std::shared_ptr<Path>> &m_paths; // Reference to manager's paths
     float distance = 0;
 
   public:
     explicit bloon_holder(std::shared_ptr<Bloon> bloon, float distance,
+                          std::vector<std::shared_ptr<Path>> &paths);
                           std::vector<std::shared_ptr<Path>> &paths);
     float get_distance();
     Util::PTSDPosition next_position(int frames) override;
@@ -80,6 +83,7 @@ public:
     void pre_kill() override { m_bloon->kill(); }
   };
 
+  //  sfx
   //  sfx
   class popimg_class : public Mortal, public Util::GameObject {
   public:
@@ -119,6 +123,8 @@ public:
 
   class end_spike : public spike {
   public:
+    end_spike(const Util::PTSDPosition &pos = {0, 0})
+        : spike(pos) {
     end_spike(const Util::PTSDPosition &pos = {0, 0})
         : spike(pos) {
       setLife(10000000);
@@ -172,10 +178,13 @@ public:
   void add_bloon(Bloon::Type type, float distance, float z_index = 10);
   void add_bloon(Bloon::Type type, float distance, int path_id,
                  float z_index = 10);
+  void add_bloon(Bloon::Type type, float distance, int path_id,
+                 float z_index = 10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
+  void add_updatable(const std::shared_ptr<Interface::IUpdatable> &updatable) {
   void add_updatable(const std::shared_ptr<Interface::IUpdatable> &updatable) {
     updatables.push_back(updatable);
     for (const auto &child : updatable->get_children()) {
@@ -208,6 +217,9 @@ public:
   void menu_control(int diff);
   void menu_control(bool visible);
   bool f_wave_end = 0;
+  void menu_control(int diff);
+  void menu_control(bool visible);
+  bool f_wave_end = 0;
   void add_map(const std::shared_ptr<Map> &map);
   void update();
   // 點擊和拖曳相關
@@ -219,6 +231,7 @@ public:
   bool drag_cd = false;
 
   // UI 相關方法
+  void unselectAll() { unSelectFlag(); };
   void unselectAll() { unSelectFlag(); };
   void initUI();
   void updateUI();
@@ -251,6 +264,7 @@ public:
 
   // some resources
   std::shared_ptr<Util::Text> m_waveText_text = std::make_shared<Util::Text>(
+      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "1",
       RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "1",
       Util::Color(0, 0, 0), false);
   std::shared_ptr<Util::GameObject> m_waveText =
@@ -331,6 +345,7 @@ private:
   //   "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50));
   std::vector<std::shared_ptr<Button>> emh_menu_buttons;
   std::vector<std::shared_ptr<Util::GameObject>> emh_medals;
+  std::vector<std::shared_ptr<Util::GameObject>> emh_medals;
 
   std::shared_ptr<popper> createPopper(Tower::TowerType type,
                                        const Util::PTSDPosition &position);
@@ -353,3 +368,4 @@ private:
 };
 
 #endif // MANAGER_HPP
+

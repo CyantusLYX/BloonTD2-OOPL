@@ -5,6 +5,7 @@
 #include "Util/Input.hpp"
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
+#include "components/mortal.hpp"
 #include "core/shape.hpp"
 #include "interfaces/clickable.hpp"
 #include <memory>
@@ -52,3 +53,4 @@ public:
   void setPosition(const Util::PTSDPosition &position) override;
 };
 #endif
+
