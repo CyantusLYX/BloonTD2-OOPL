@@ -19,6 +19,7 @@
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
 bool voltog = 1;
+bool inf = 0;
 
 // 座標轉換輔助函數
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
@@ -91,6 +92,16 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   add_button(end_game);
   add_clickable(end_game);
 
+  infinity->setSize({60,25});
+  add_button(infinity);
+  add_clickable(infinity);
+  clear->setSize({60,25});
+  add_button(clear);
+  add_clickable(clear);
+  skip->setSize({60,25});
+  add_button(skip);
+  add_clickable(skip);
+
   // start_round animation
   std::vector<glm::vec2> a_sizes = std::vector<glm::vec2>{};
   std::vector<Util::Color> a_colors = std::vector<Util::Color>{};
@@ -99,19 +110,23 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
     a_sizes.push_back(b_start_round->GetScaledSize());
     a_colors.push_back(Util::Color(0, 255, 0, 255 / (i + 1)));
   }
-  for (int i = 0; i < 16; i++) {
+  for (int i = 16; i > 0; i--) {
     a_sizes.push_back(b_start_round->GetScaledSize());
-    a_colors.push_back(Util::Color(0, 255, 0, 255 / (16 - i)));
+    a_colors.push_back(Util::Color(0, 255, 0, 255 / (i + 1)));
   }
 
   auto startround_shapeanim = std::make_shared<Util::ShapeAnimation>(
-      Util::ShapeType::Rectangle, a_sizes, a_colors, true, 50, true, 100);
+      Util::ShapeType::Rectangle, a_sizes, a_colors, true, 50, true, 500);
 
   startround_anim = std::make_shared<Util::GameObject>(
       startround_shapeanim, 50.1f, Util::PTSDPosition(-235, 180), true);
-
+  
   add_object(startround_anim);
 
+  ban = std::make_shared<Manager::banners>(
+    std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"), 50.f);
+  ban->SetZIndex(50.1f);
+  add_object(ban);
   // menu
   emh_menu_buttons.push_back(std::make_shared<Button>(
       "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50)));
@@ -230,7 +245,7 @@ void Manager::startDraggingTower(Tower::TowerType towerType) {
   int cost = BuyableConfigManager::GetCost(towerType);
 
   // 檢查金錢是否足夠
-  if (cost > money) {
+  if (cost > money && !inf) {
     LOG_DEBUG("MNGR  : 金錢不足，無法購買物品");
     return;
   }
@@ -617,6 +632,9 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           for (auto &holder : bloons) {
             m_Renderer->RemoveChild(holder->get_bloon());
           }
+          for (auto &tower : towers) {
+            m_Renderer->RemoveChild(tower->getBody());
+          }
           m_game_state = game_state::menu;
           menu_control(true);
         } else if (buttonName == "sound") {
@@ -690,7 +708,29 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           } else if (m_game_state == game_state::playing) {
             LOG_DEBUG("MNGR  : 已經在進行中，無法再次開始");
           }
-        } else {
+        }else if(buttonName == "skip"){
+          if(current_waves<40) current_waves += 10;//skip 10 level
+          else {
+            m_game_state = game_state::over;
+            over = 1;
+          }
+        } else if(buttonName == "clear"){
+          for (auto &holder : bloons) {
+            m_Renderer->RemoveChild(holder->get_bloon());
+          }
+          m_game_state = game_state::gap;
+        }else if(buttonName == "infinity"){
+          inf = !inf;
+          button->SetDrawable(std::make_shared<Util::Image>(
+              inf ? RESOURCE_DIR "/buttons/Binfinity.png"
+                  : RESOURCE_DIR "/buttons/Binfinity_n.png"));
+        } else if (buttonName == "voltoggle") {
+          voltog = !voltog;
+          button->SetDrawable(std::make_shared<Util::Image>(
+              voltog ? RESOURCE_DIR "/buttons/Bsound.png"
+                     : RESOURCE_DIR "/buttons/Bmute.png"));
+        }
+        else {
           LOG_ERROR("MNGR  : 未知按鈕名稱或按鈕目前無法使用: {}", buttonName);
 
           break;
@@ -761,12 +801,9 @@ void Manager::handlePoppers() {
           collided_bloons.push_back(bloon);
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
-            life--;
+            if(!inf) life--;
             if (life < 0) {
-              auto a = std::make_shared<Util::GameObject>(
-                  std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"),
-                  100);
-              m_Renderer->AddChild(a);
+              over = 0;
               m_game_state = game_state::over;
             }
             // this->add_clickable(bloon); // 使用新的方法
@@ -1023,7 +1060,11 @@ void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
       (current_waves != -1 && current_waves <= 50)) {
     set_playing();
-  } else {
+  } else if(current_waves > 50) {
+    over = 1;
+    m_game_state = game_state::over;
+  }
+  else {
     LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
@@ -1202,10 +1243,9 @@ void Manager::placeCurrentTower(const Util::PTSDPosition &position) {
   dragging = nullptr;
   m_mouse_status = mouse_status::free;
   m_isTowerDragging = false;
-
   // 確保只扣一次錢
-  if (currentCost > 0 && money >= currentCost) {
-    money -= currentCost;
+  if ((currentCost > 0 && money >= currentCost) || inf) {
+    if(!inf) money -= currentCost;
 
     if (BuyableConfigManager::IsTower(currentType)) {
       // 嘗試將 dragging 轉換為 Tower
@@ -1282,7 +1322,8 @@ void Manager::updateUI() {
     for (const auto &button : buttons) {
       // 檢查金錢是否足夠
       int cost = button->getCost();
-      button->setClickable(money >= cost);
+      if(!inf) button->setClickable(money >= cost);
+      else button->setClickable(true);
     }
   }
 }
