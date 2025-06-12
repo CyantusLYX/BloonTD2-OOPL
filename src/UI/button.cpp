@@ -1,11 +1,9 @@
 #include "UI/button.hpp"
-#include "Core/Drawable.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include <glm/fwd.hpp>
-#include <memory>
 
 Button::Button(const std::string &name, const Util::PTSDPosition &pos,
                const std::variant<glm::vec2, float> col_parm, bool can_click,

@@ -5,7 +5,6 @@
 #include "Util/Input.hpp"
 #include "components/collisionComp.hpp"
 #include "components/mortal.hpp"
-#include "components/mortal.hpp"
 #include "core/shape.hpp"
 #include "interfaces/clickable.hpp"
 #include <memory>
@@ -21,8 +20,6 @@ public:
   Button(const std::string &name, const Util::PTSDPosition &pos,
          std::variant<glm::vec2, float> col_parm = 0.0f, bool can_click = true,
          bool drawable = true, const std::string &path = "");
-
-  
   ~Button() override = default;
 
 private:
@@ -53,4 +50,3 @@ public:
   void setPosition(const Util::PTSDPosition &position) override;
 };
 #endif
-

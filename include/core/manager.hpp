@@ -2,7 +2,6 @@
 #define MANAGER_HPP
 
 #include "UI/Flag.hpp"
-#include "Core/Drawable.hpp"
 #include "UI/SidebarManager.hpp"
 #include "UI/buttons/tower_btn.hpp"
 #include "UI/buttons/tower_btn_conf.hpp"
@@ -31,7 +30,6 @@
 #include "interfaces/clickable.hpp"
 #include "interfaces/collision.hpp"
 #include "interfaces/draggable.hpp"
-#include "interfaces/interfaces.hpp"
 #include "interfaces/interfaces.hpp"
 #include "interfaces/move.hpp"
 #include "map.hpp"
@@ -69,12 +67,10 @@ public:
   private:
     std::shared_ptr<Bloon> m_bloon;
     std::vector<std::shared_ptr<Path>> &m_paths; // Reference to manager's paths
-    std::vector<std::shared_ptr<Path>> &m_paths; // Reference to manager's paths
     float distance = 0;
 
   public:
     explicit bloon_holder(std::shared_ptr<Bloon> bloon, float distance,
-                          std::vector<std::shared_ptr<Path>> &paths);
                           std::vector<std::shared_ptr<Path>> &paths);
     float get_distance();
     Util::PTSDPosition next_position(int frames) override;
@@ -83,7 +79,6 @@ public:
     void pre_kill() override { m_bloon->kill(); }
   };
 
-  //  sfx
   //  sfx
   class popimg_class : public Mortal, public Util::GameObject {
   public:
@@ -125,50 +120,9 @@ public:
   public:
     end_spike(const Util::PTSDPosition &pos = {0, 0})
         : spike(pos) {
-    end_spike(const Util::PTSDPosition &pos = {0, 0})
-        : spike(pos) {
       setLife(10000000);
     }
   };
-
-  class banners : public Util::GameObject {
-  public:
-    banners(const std::shared_ptr<Core::Drawable> &drawable, const float zIndex,
-            const glm::vec2 &pivot = {0, 0}, const bool visible = true,
-            const std::vector<std::shared_ptr<GameObject>> &children =
-                std::vector<std::shared_ptr<GameObject>>())
-        : Util::GameObject(drawable, zIndex, pivot, visible, children) {}
-    bool get_vision() { return m_Visible; }
-    void set_ban(bool ban_mode) {
-      if (ban_mode == 1)
-        m_Drawable =
-            std::make_shared<Util::Image>(RESOURCE_DIR "/titles/cl.png");
-      else
-        m_Drawable =
-            std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png");
-    }
-  };
-
-private:
-  std::shared_ptr<Manager::banners> ban;
-  int over = -1; //-1:playing 0:gameover 1:win
-public:
-  void call_ban() {
-    if (ban) {
-      if (ban->get_vision() == false && m_game_state == game_state::over) {
-        ban->set_ban(over == 1 ? 1 : 0);
-        ban->SetVisible(true);
-      } else if (ban->get_vision() == true &&
-                 m_game_state != game_state::over) {
-        ban->SetVisible(false);
-      }
-    }
-  }
-
-  // std::shared_ptr<Manager::banners> ban_over =
-  // std::make_shared<Manager::banners>(
-  //   std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"), 50.f,
-  //   {0, 0}, false, nullptr);
 
   // 建構函式和解構函式
   explicit Manager(std::shared_ptr<Util::Renderer> &renderer);
@@ -178,13 +132,10 @@ public:
   void add_bloon(Bloon::Type type, float distance, float z_index = 10);
   void add_bloon(Bloon::Type type, float distance, int path_id,
                  float z_index = 10);
-  void add_bloon(Bloon::Type type, float distance, int path_id,
-                 float z_index = 10);
   void add_moving(const std::shared_ptr<Interface::I_move> &moving);
   void add_object(const std::shared_ptr<Util::GameObject> &object);
   void add_popper(const std::shared_ptr<popper> &popper);
   void add_button(const std::shared_ptr<Button> &button);
-  void add_updatable(const std::shared_ptr<Interface::IUpdatable> &updatable) {
   void add_updatable(const std::shared_ptr<Interface::IUpdatable> &updatable) {
     updatables.push_back(updatable);
     for (const auto &child : updatable->get_children()) {
@@ -217,9 +168,6 @@ public:
   void menu_control(int diff);
   void menu_control(bool visible);
   bool f_wave_end = 0;
-  void menu_control(int diff);
-  void menu_control(bool visible);
-  bool f_wave_end = 0;
   void add_map(const std::shared_ptr<Map> &map);
   void update();
   // 點擊和拖曳相關
@@ -231,7 +179,6 @@ public:
   bool drag_cd = false;
 
   // UI 相關方法
-  void unselectAll() { unSelectFlag(); };
   void unselectAll() { unSelectFlag(); };
   void initUI();
   void updateUI();
@@ -264,7 +211,6 @@ public:
 
   // some resources
   std::shared_ptr<Util::Text> m_waveText_text = std::make_shared<Util::Text>(
-      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "1",
       RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "1",
       Util::Color(0, 0, 0), false);
   std::shared_ptr<Util::GameObject> m_waveText =
@@ -321,8 +267,6 @@ private:
 
 public:
   void menu_hover(Util::PTSDPosition now);
-  int get_over(){return over;}
-  void set_over(int o) { over = o; }
 
 private:
   std::shared_ptr<Button> sound = std::make_shared<Button>(
@@ -330,21 +274,13 @@ private:
   std::shared_ptr<Button> b_start_round = std::make_shared<Button>(
       "start_round", Util::PTSDPosition(235, -180), glm::vec2(50, 50));
   std::shared_ptr<Button> end_game = std::make_shared<Button>(
-      "end_game", Util::PTSDPosition(270, -220), glm::vec2(50, 50));
-  std::shared_ptr<Button> infinity = std::make_shared<Button>(
-      "infinity", Util::PTSDPosition(30, -220), glm::vec2(50, 50));
-  std::shared_ptr<Button> clear = std::make_shared<Button>(
-      "clear", Util::PTSDPosition(110, -220), glm::vec2(50, 50));
-  std::shared_ptr<Button> skip = std::make_shared<Button>(
-      "skip", Util::PTSDPosition(190, -220), glm::vec2(50, 50));
-
+      "end_game", Util::PTSDPosition(235, -220), glm::vec2(50, 50));
   void medal_setter(int diff);
   std::shared_ptr<Util::GameObject> startround_anim;
   // sound->setSize({50, 50});
   // std::shared_ptr<Button> easy_btn = std::make_shared<Button>(
   //   "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50));
   std::vector<std::shared_ptr<Button>> emh_menu_buttons;
-  std::vector<std::shared_ptr<Util::GameObject>> emh_medals;
   std::vector<std::shared_ptr<Util::GameObject>> emh_medals;
 
   std::shared_ptr<popper> createPopper(Tower::TowerType type,
@@ -368,4 +304,3 @@ private:
 };
 
 #endif // MANAGER_HPP
-

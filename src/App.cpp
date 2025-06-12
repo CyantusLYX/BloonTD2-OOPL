@@ -1,5 +1,4 @@
 #include "App.hpp"
-#include "Util/GameObject.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
@@ -39,11 +38,6 @@ void App::Update() {
   //   }
   //   else
   // {
-  //   if(manager->get_game_state() == Manager::game_state::over){
-  //     exit(-1);
-  //   }
-  //   else
-  // {
   manager->cleanup_dead_objects();
   if (manager->get_game_state() == Manager::game_state::menu) {
 
@@ -53,9 +47,10 @@ void App::Update() {
       manager->menu_hover(now);
     }
   } else if (manager->get_game_state() == Manager::game_state::over) {
+
   } else if (manager->get_game_state() == Manager::game_state::gap) {
+
   } else if (manager->get_game_state() == Manager::game_state::playing) {
-    if(manager->get_over() != -1) manager->set_over(-1);
     // 更新遊戲邏輯
     // manager->updateDraggingObject(Util::Input::GetCursorPosition());
   }
@@ -65,7 +60,6 @@ void App::Update() {
   manager->popimg_tick_manager();
   manager->updateAllMovingObjects();
   manager->updateDraggingObject(Util::Input::GetCursorPosition());
-  manager->call_ban();
 
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
