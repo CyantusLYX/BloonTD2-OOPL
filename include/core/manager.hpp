@@ -318,9 +318,9 @@ private:
   std::shared_ptr<Button> end_game = std::make_shared<Button>(
       "end_game", Util::PTSDPosition(270, -220), glm::vec2(50, 50));
   std::shared_ptr<Button> infinity = std::make_shared<Button>(
-      "infinity", Util::PTSDPosition(200, -130), glm::vec2(50, 50));
+      "infinity", Util::PTSDPosition(30, -220), glm::vec2(50, 50));
   std::shared_ptr<Button> clear = std::make_shared<Button>(
-      "clear", Util::PTSDPosition(280, -130), glm::vec2(50, 50));
+      "clear", Util::PTSDPosition(110, -220), glm::vec2(50, 50));
   std::shared_ptr<Button> skip = std::make_shared<Button>(
       "skip", Util::PTSDPosition(190, -220), glm::vec2(50, 50));
 
