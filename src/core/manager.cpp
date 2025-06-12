@@ -630,10 +630,13 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           // 選單按鈕功能
           // 移除所有氣球
           for (auto &holder : bloons) {
-            m_Renderer->RemoveChild(holder->get_bloon());
+            holder->kill();
           }
           for (auto &tower : towers) {
-            m_Renderer->RemoveChild(tower->getBody());
+            tower->kill();
+          }
+          for (auto &popper : poppers) {
+            popper->kill();
           }
           m_game_state = game_state::menu;
           menu_control(true);
@@ -649,6 +652,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
         } else if (buttonName == "easy") {
           set_map(0);
           createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          money= STARTING_MONEY; // 重置金錢
           life = MAX_LIVES_EASY;
           for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
@@ -659,6 +663,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
         } else if (buttonName == "med") {
           set_map(1);
           createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          money= STARTING_MONEY; // 重置金錢
           life = MAX_LIVES_MEDIUM;
           for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
@@ -669,6 +674,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
         } else if (buttonName == "hard") {
           set_map(2);
           createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
+          money= STARTING_MONEY; // 重置金錢
           life = MAX_LIVES_HARD;
           for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
