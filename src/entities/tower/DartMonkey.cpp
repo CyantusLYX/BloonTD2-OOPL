@@ -95,7 +95,7 @@ void DartMonkey::handleBloonsInRange(
   auto dart = std::make_shared<Dart>(getPosition(),  // 從猴子位置發射
                                      futurePosition, // 朝向預測的未來位置
                                      m_info.secondUpgrade ? 2 : 1);
-  if (m_info.firstUpgrade) {
+  if (m_info.secondUpgrade) {
     dart->setCanPopFrozen(true);
   }
   // 使用 popperCallback 將飛鏢加入 popper 列表
