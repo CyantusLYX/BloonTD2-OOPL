@@ -1,13 +1,15 @@
 #include "UI/button.hpp"
+#include "Core/Drawable.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Position.hpp"
 #include <glm/fwd.hpp>
+#include <memory>
 
 Button::Button(const std::string &name, const Util::PTSDPosition &pos,
                const std::variant<glm::vec2, float> col_parm,
-               bool can_click, const std::string &path)
+               bool can_click, const std::string &path, const std::shared_ptr<Core::Drawable> &drawable)
     : Components::CollisionComponent(pos, col_parm),
       Util::GameObject(nullptr, 100, {0, 0}, true) {
   this->name = name;
@@ -15,7 +17,10 @@ Button::Button(const std::string &name, const Util::PTSDPosition &pos,
     m_Drawable = std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/B" +
                                                name + ".png");
   } else {
-    m_Drawable = std::make_shared<Util::Image>(path);
+    if(drawable == nullptr){
+      m_Drawable = std::make_shared<Util::Image>(path);
+    }
+    else m_Drawable = drawable;
   }
   auto image = std::dynamic_pointer_cast<Util::Image>(m_Drawable);
   image->UseAntiAliasing(false);

@@ -77,6 +77,16 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   add_button(end_game);
   add_clickable(end_game);
 
+  infinity->setSize({60,25});
+  add_button(infinity);
+  add_clickable(infinity);
+  clear->setSize({60,25});
+  add_button(clear);
+  add_clickable(clear);
+  skip->setSize({60,25});
+  add_button(skip);
+  add_clickable(skip);
+
   // start_round animation
   std::vector<glm::vec2> a_sizes = std::vector<glm::vec2>{};
   std::vector<Util::Color> a_colors = std::vector<Util::Color>{};
@@ -85,19 +95,23 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
     a_sizes.push_back(b_start_round->GetScaledSize());
     a_colors.push_back(Util::Color(0, 255, 0, 255 / (i + 1)));
   }
-  for (int i = 0; i < 16; i++) {
+  for (int i = 16; i > 0; i--) {
     a_sizes.push_back(b_start_round->GetScaledSize());
-    a_colors.push_back(Util::Color(0, 255, 0, 255 / (16 - i)));
+    a_colors.push_back(Util::Color(0, 255, 0, 255 / (i + 1)));
   }
 
   auto startround_shapeanim = std::make_shared<Util::ShapeAnimation>(
-      Util::ShapeType::Rectangle, a_sizes, a_colors, true, 50, true, 100);
+      Util::ShapeType::Rectangle, a_sizes, a_colors, true, 50, true, 500);
 
   startround_anim = std::make_shared<Util::GameObject>(
       startround_shapeanim, 50.1f, Util::PTSDPosition(-235, 180), true);
-
+  
   add_object(startround_anim);
 
+  ban = std::make_shared<Manager::banners>(
+    std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"), 50.f);
+  ban->SetZIndex(50.1f);
+  add_object(ban);
   // menu
   emh_menu_buttons.push_back(std::make_shared<Button>(
       "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50)));
@@ -492,6 +506,9 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           for (auto &holder : bloons) {
             m_Renderer->RemoveChild(holder->get_bloon());
           }
+          for (auto &tower : towers) {
+            m_Renderer->RemoveChild(tower->getBody());
+          }
           m_game_state = game_state::menu;
           menu_control(true);
         } else if (buttonName == "sound") {
@@ -518,7 +535,19 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           } else if (m_game_state == game_state::playing) {
             LOG_DEBUG("MNGR  : 已經在進行中，無法再次開始");
           }
-        } else {
+        }else if(buttonName == "skip"){
+          if(current_waves<40) current_waves += 10;//skip 10 level
+          else {
+            m_game_state = game_state::over;
+            over = 1;
+          }
+        } else if(buttonName == "clear"){
+          for (auto &holder : bloons) {
+            m_Renderer->RemoveChild(holder->get_bloon());
+          }
+          m_game_state = game_state::gap;
+        }
+        else {
           LOG_ERROR("MNGR  : 未知按鈕名稱或按鈕目前無法使用: {}", buttonName);
         }
 
@@ -1155,4 +1184,8 @@ void Manager::medal_setter(int diff){
   }
 
   LOG_INFO("MNGR  : 獎牌 {} 已設置為 1", diff);
+}
+
+int Manager::get_over(){
+  return over;
 }

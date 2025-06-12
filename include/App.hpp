@@ -1,6 +1,7 @@
 #ifndef APP_HPP
 #define APP_HPP
 
+#include "Util/GameObject.hpp"
 #include "Util/Position.hpp"
 #include "Util/Renderer.hpp"
 #include "core/manager.hpp"
