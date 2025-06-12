@@ -17,6 +17,7 @@
 bool toggle_show_collision_at = 0;
 bool toggle_show_bloons = 0;
 bool voltog = 1;
+bool inf = 0;
 
 // 座標轉換輔助函數
 glm::vec2 to_pos(glm::vec2 vec) { // from vec2(sdl) to ptsd to vec2
@@ -229,7 +230,7 @@ void Manager::startDraggingTower(Tower::TowerType towerType) {
   int cost = BuyableConfigManager::GetCost(towerType);
 
   // 檢查金錢是否足夠
-  if (cost > money) {
+  if (cost > money && !inf) {
     LOG_DEBUG("MNGR  : 金錢不足，無法購買物品");
     return;
   }
@@ -546,6 +547,16 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
             m_Renderer->RemoveChild(holder->get_bloon());
           }
           m_game_state = game_state::gap;
+        }else if(buttonName == "infinity"){
+          inf = !inf;
+          button->SetDrawable(std::make_shared<Util::Image>(
+              inf ? RESOURCE_DIR "/buttons/Binfinity.png"
+                  : RESOURCE_DIR "/buttons/Binfinity_n.png"));
+        } else if (buttonName == "voltoggle") {
+          voltog = !voltog;
+          button->SetDrawable(std::make_shared<Util::Image>(
+              voltog ? RESOURCE_DIR "/buttons/Bsound.png"
+                     : RESOURCE_DIR "/buttons/Bmute.png"));
         }
         else {
           LOG_ERROR("MNGR  : 未知按鈕名稱或按鈕目前無法使用: {}", buttonName);
@@ -597,12 +608,8 @@ void Manager::handlePoppers() {
           collided_bloons.push_back(bloon);
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
-            life--;
+            if(!inf) life--;
             if (life < 0) {
-              auto a = std::make_shared<Util::GameObject>(
-                  std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"),
-                  100);
-              m_Renderer->AddChild(a);
               m_game_state = game_state::over;
             }
             // this->add_clickable(bloon); // 使用新的方法
@@ -1000,10 +1007,9 @@ void Manager::placeCurrentTower(const Util::PTSDPosition &position) {
   dragging = nullptr;
   m_mouse_status = mouse_status::free;
   m_isTowerDragging = false;
-
   // 確保只扣一次錢
-  if (currentCost > 0 && money >= currentCost) {
-    money -= currentCost;
+  if ((currentCost > 0 && money >= currentCost) || inf) {
+    if(!inf) money -= currentCost;
 
     if (BuyableConfigManager::IsTower(currentType)) {
       // 嘗試將 dragging 轉換為 Tower
@@ -1087,7 +1093,8 @@ void Manager::updateUI() {
     for (const auto &button : buttons) {
       // 檢查金錢是否足夠
       int cost = button->getCost();
-      button->setClickable(money >= cost);
+      if(!inf) button->setClickable(money >= cost);
+      else button->setClickable(true);
     }
   }
 }
