@@ -55,6 +55,7 @@ void App::Update() {
   } else if (manager->get_game_state() == Manager::game_state::over) {
   } else if (manager->get_game_state() == Manager::game_state::gap) {
   } else if (manager->get_game_state() == Manager::game_state::playing) {
+    if(manager->get_over() != -1) manager->set_over(-1);
     // 更新遊戲邏輯
     // manager->updateDraggingObject(Util::Input::GetCursorPosition());
   }

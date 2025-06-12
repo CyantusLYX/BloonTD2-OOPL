@@ -610,6 +610,7 @@ void Manager::handlePoppers() {
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
             if(!inf) life--;
             if (life < 0) {
+              over = 0;
               m_game_state = game_state::over;
             }
             // this->add_clickable(bloon); // 使用新的方法
@@ -842,7 +843,11 @@ void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
       (current_waves != -1 && current_waves <= 50)) {
     set_playing();
-  } else {
+  } else if(current_waves > 50) {
+    over = 1;
+    m_game_state = game_state::over;
+  }
+  else {
     LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
@@ -1191,8 +1196,4 @@ void Manager::medal_setter(int diff){
   }
 
   LOG_INFO("MNGR  : 獎牌 {} 已設置為 1", diff);
-}
-
-int Manager::get_over(){
-  return over;
 }

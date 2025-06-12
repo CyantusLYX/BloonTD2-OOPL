@@ -276,7 +276,8 @@ private:
 
 public:
   void menu_hover(Util::PTSDPosition now);
-  int get_over();
+  int get_over(){return over;}
+  void set_over(int o) { over = o; }
 
 private:
   std::shared_ptr<Button> sound = std::make_shared<Button>(
