@@ -1,6 +1,8 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CyantusLYX/BloonTD2-OOPL)
 # 2025 OOPL Final Report
 
+<span style="color:blue">some *blue* text</span>
+
 ## 組別資訊
 
 ### 組別：50
