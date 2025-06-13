@@ -6,10 +6,11 @@
 #include <glm/fwd.hpp>
 #include <magic_enum/magic_enum.hpp>
 UI::UpgradesPanel::UpgradesPanel(std::shared_ptr<Tower::Tower> tower,
-                                 int &money)
+                                 int &money, bool &inf)
     : Flag(),
       m_tower(tower),
-      m_money(money) {
+      m_money(money),
+      m_infinityMode(inf) {
   // 創建背景 GameObject
   m_background = std::make_shared<Util::GameObject>(
       std::make_shared<Util::Image>(RESOURCE_DIR "/UI/UpgradeBase.png"), 50);
@@ -35,11 +36,11 @@ UI::UpgradesPanel::UpgradesPanel(std::shared_ptr<Tower::Tower> tower,
 
   // 創建升級按鈕1 GameObject
   m_upgradeBtn1Object = std::make_shared<UI::UpgradeButton>(
-      m_tower, 0, m_money, Util::PTSDPosition(0, 0));
+      m_tower, 0, m_money, m_infinityMode, Util::PTSDPosition(0, 0));
 
   // 創建升級按鈕2 GameObject
   m_upgradeBtn2Object = std::make_shared<UI::UpgradeButton>(
-      m_tower, 1, m_money, Util::PTSDPosition(0, 0));
+      m_tower, 1, m_money, m_infinityMode, Util::PTSDPosition(0, 0));
 
   // 創建賣出按鈕 GameObject
   m_sellBtnObject =

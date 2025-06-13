@@ -15,7 +15,7 @@ const std::string UpgradeButton::BACKGROUND_CANT_AFFORD =
     RESOURCE_DIR "/buttons/upgrades/canAford.png";
 
 UpgradeButton::UpgradeButton(std::shared_ptr<Tower::Tower> tower,
-                             int upgradeIndex, int &money,
+                             int upgradeIndex, int &money, bool &inf,
                              const Util::PTSDPosition &pos)
     : Button("upgrade", pos, glm::vec2(68, 143), true, false),
       m_tower(tower),
@@ -23,7 +23,8 @@ UpgradeButton::UpgradeButton(std::shared_ptr<Tower::Tower> tower,
       m_buttonState(ButtonState::BuyFor),
       m_basePosition(pos),
       m_moneyRef(money),
-      m_lastKnownMoney(money) {
+      m_lastKnownMoney(money),
+      m_infinityMode(inf) {
 
   // 獲取升級配置
   if (upgradeIndex == 0) {
@@ -67,7 +68,7 @@ void UpgradeButton::initializeUI() {
 void UpgradeButton::updateButtonState() {
   if (isUpgradeAlreadyBought()) {
     setButtonState(ButtonState::AlreadyBought);
-  } else if (getCurrentMoney() >= m_config.cost) {
+  } else if (getCurrentMoney() >= m_config.cost || m_infinityMode) {
     setButtonState(ButtonState::BuyFor);
   } else {
     setButtonState(ButtonState::CantAfford);

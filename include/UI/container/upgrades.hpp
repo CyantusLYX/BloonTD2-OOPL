@@ -34,7 +34,8 @@ private:
   std::shared_ptr<UpgradeButton> m_upgradeBtn2Object;  // 升級按鈕2
   std::shared_ptr<SellButton> m_sellBtnObject;         // 賣出按鈕 GameObject
   std::vector<std::shared_ptr<Util::GameObject>> children_ct;
-  int &m_money; // 引用當前金錢
+  int &m_money;         // 引用當前金錢
+  bool &m_infinityMode; // 引用無限模式開關
 public:
   void update() override {
     m_sellBtnObject->refreshSellPrice(); // 刷新賣出價格
@@ -67,7 +68,7 @@ public:
   std::shared_ptr<UpgradeButton> getUpgradeButton2() {
     return m_upgradeBtn2Object;
   }
-  UpgradesPanel(std::shared_ptr<Tower::Tower> tower, int &money);
+  UpgradesPanel(std::shared_ptr<Tower::Tower> tower, int &money, bool &inf);
   ~UpgradesPanel() override = default;
 };
 }; // namespace UI

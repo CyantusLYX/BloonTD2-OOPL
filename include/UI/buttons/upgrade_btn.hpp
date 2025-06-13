@@ -26,6 +26,7 @@ private:
   ButtonState m_buttonState;             // 按鈕狀態
   UpgradeButtonConfig m_config;          // 升級配置
   Util::PTSDPosition m_basePosition;     // 基礎位置
+  bool &m_infinityMode;                  // 無限模式開關引用
   int &m_moneyRef;                       // 指向當前金錢的引用
   int m_lastKnownMoney;                  // 上次已知的金錢快照
 
@@ -46,7 +47,7 @@ private:
 public:
   // 建構函數
   UpgradeButton(std::shared_ptr<Tower::Tower> tower, int upgradeIndex,
-                int &money,
+                int &money, bool &inf,
                 const Util::PTSDPosition &pos = Util::PTSDPosition(0, 0));
 
   // 解構函數

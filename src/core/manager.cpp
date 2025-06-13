@@ -92,13 +92,13 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   add_button(end_game);
   add_clickable(end_game);
 
-  infinity->setSize({60,25});
+  infinity->setSize({60, 25});
   add_button(infinity);
   add_clickable(infinity);
-  clear->setSize({60,25});
+  clear->setSize({60, 25});
   add_button(clear);
   add_clickable(clear);
-  skip->setSize({60,25});
+  skip->setSize({60, 25});
   add_button(skip);
   add_clickable(skip);
 
@@ -120,11 +120,11 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
 
   startround_anim = std::make_shared<Util::GameObject>(
       startround_shapeanim, 50.1f, Util::PTSDPosition(-235, 180), true);
-  
+
   add_object(startround_anim);
 
   ban = std::make_shared<Manager::banners>(
-    std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"), 50.f);
+      std::make_shared<Util::Image>(RESOURCE_DIR "/titles/gg.png"), 50.f);
   ban->SetZIndex(50.1f);
   add_object(ban);
   // menu
@@ -589,7 +589,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
 
         // 創建並設置新的upgrades panel
         auto newUpgradesPanel =
-            std::make_shared<UI::UpgradesPanel>(clickedTower, money);
+            std::make_shared<UI::UpgradesPanel>(clickedTower, money, inf);
         for (auto button : newUpgradesPanel->getButtons()) {
           add_button(button);
           add_clickable(button);
@@ -651,35 +651,38 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
                      : RESOURCE_DIR "/buttons/Bmute.png"));
         } else if (buttonName == "easy") {
           set_map(0);
-          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
-          money= STARTING_MONEY; // 重置金錢
+          createSpikeAtEnd();     // 在正確的地圖設置後創建終點釘子
+          money = STARTING_MONEY; // 重置金錢
           life = MAX_LIVES_EASY;
           for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
           set_playing();
+          current_waves = -1; // 重置波數
           menu_control(0);
         } else if (buttonName == "med") {
           set_map(1);
-          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
-          money= STARTING_MONEY; // 重置金錢
+          createSpikeAtEnd();     // 在正確的地圖設置後創建終點釘子
+          money = STARTING_MONEY; // 重置金錢
           life = MAX_LIVES_MEDIUM;
           for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
+          current_waves = -1; // 重置波數
           set_playing();
           menu_control(1);
         } else if (buttonName == "hard") {
           set_map(2);
-          createSpikeAtEnd(); // 在正確的地圖設置後創建終點釘子
-          money= STARTING_MONEY; // 重置金錢
+          createSpikeAtEnd();     // 在正確的地圖設置後創建終點釘子
+          money = STARTING_MONEY; // 重置金錢
           life = MAX_LIVES_HARD;
           for (auto btn : emh_menu_buttons) {
             btn->SetVisible(false);
             btn->setClickable(false);
           }
+          current_waves = -1; // 重置波數
           set_playing();
           menu_control(2);
         } else if (buttonName == "sell") {
@@ -697,7 +700,8 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
               std::dynamic_pointer_cast<UI::UpgradeButton>(button);
           if (upgradeButton) {
             upgradeButton->onClick();
-            money -= upgradeButton->getCost();
+            if (!inf)
+              money -= upgradeButton->getCost();
           }
         } else if (buttonName == "cancel") {
           // 取消按鈕功能
@@ -714,18 +718,23 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           } else if (m_game_state == game_state::playing) {
             LOG_DEBUG("MNGR  : 已經在進行中，無法再次開始");
           }
-        }else if(buttonName == "skip"){
-          if(current_waves<40) current_waves += 10;//skip 10 level
+        } else if (buttonName == "skip") {
+          if (current_waves < 40) {
+            current_waves += 10;
+            for (auto &holder : bloons) {
+              holder->kill();
+            }
+          } // skip 10 level
           else {
             m_game_state = game_state::over;
             over = 1;
           }
-        } else if(buttonName == "clear"){
+        } else if (buttonName == "clear") {
           for (auto &holder : bloons) {
             m_Renderer->RemoveChild(holder->get_bloon());
           }
           m_game_state = game_state::gap;
-        }else if(buttonName == "infinity"){
+        } else if (buttonName == "infinity") {
           inf = !inf;
           button->SetDrawable(std::make_shared<Util::Image>(
               inf ? RESOURCE_DIR "/buttons/Binfinity.png"
@@ -735,8 +744,7 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           button->SetDrawable(std::make_shared<Util::Image>(
               voltog ? RESOURCE_DIR "/buttons/Bsound.png"
                      : RESOURCE_DIR "/buttons/Bmute.png"));
-        }
-        else {
+        } else {
           LOG_ERROR("MNGR  : 未知按鈕名稱或按鈕目前無法使用: {}", buttonName);
 
           break;
@@ -807,7 +815,8 @@ void Manager::handlePoppers() {
           collided_bloons.push_back(bloon);
           collided_holders.push_back(holder);
           if (std::dynamic_pointer_cast<end_spike>(popper)) {
-            if(!inf) life--;
+            if (!inf)
+              life--;
             if (life < 0) {
               over = 0;
               m_game_state = game_state::over;
@@ -1066,11 +1075,10 @@ void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
       (current_waves != -1 && current_waves <= 50)) {
     set_playing();
-  } else if(current_waves > 50) {
+  } else if (current_waves > 50) {
     over = 1;
     m_game_state = game_state::over;
-  }
-  else {
+  } else {
     LOG_ERROR("MNGR  : Invalid game state");
     // throw std::runtime_error("Invalid game state or wrong waves");
   }
@@ -1093,12 +1101,12 @@ void Manager::wave_check() {
     set_gap();
 
   if (current_waves >= 0) {
-    bloonInterval = 15 - current_waves;
+    bloonInterval = 20 - current_waves;
     if (bloonInterval < 5) {
       bloonInterval = std::ceil(5 - current_waves / 20.0);
     }
     // 確保最小間隔
-    bloonInterval = std::max(1, bloonInterval);
+    bloonInterval = std::max(5, bloonInterval);
     bloonInterval *= 1;
   }
 
@@ -1251,7 +1259,8 @@ void Manager::placeCurrentTower(const Util::PTSDPosition &position) {
   m_isTowerDragging = false;
   // 確保只扣一次錢
   if ((currentCost > 0 && money >= currentCost) || inf) {
-    if(!inf) money -= currentCost;
+    if (!inf)
+      money -= currentCost;
 
     if (BuyableConfigManager::IsTower(currentType)) {
       // 嘗試將 dragging 轉換為 Tower
@@ -1328,8 +1337,10 @@ void Manager::updateUI() {
     for (const auto &button : buttons) {
       // 檢查金錢是否足夠
       int cost = button->getCost();
-      if(!inf) button->setClickable(money >= cost);
-      else button->setClickable(true);
+      if (!inf)
+        button->setClickable(money >= cost);
+      else
+        button->setClickable(true);
     }
   }
 }
