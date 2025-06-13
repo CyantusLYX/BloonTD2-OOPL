@@ -22,6 +22,7 @@
 #include "components/towerType.hpp"
 #include "conf.hpp"
 #include "core/loader.hpp"
+#include "core/shape.hpp"
 #include "entities/bloon.hpp"
 #include "entities/poppers/glue.hpp"
 #include "entities/poppers/popper.hpp"
@@ -251,7 +252,7 @@ public:
 
   // some resources
   std::shared_ptr<Util::Text> m_waveText_text = std::make_shared<Util::Text>(
-      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "1",
+      RESOURCE_DIR "/font/NotoSansTC-ExtraLight.ttf", 32, "0",
       Util::Color(0, 0, 0), false);
   std::shared_ptr<Util::GameObject> m_waveText =
       std::make_shared<Util::GameObject>(m_waveText_text, 5);
@@ -281,6 +282,11 @@ private:
 
   // 關卡控制
   int current_diff = 0;
+  public:
+  int get_diff(){
+    return current_diff;
+  };
+  private:
   int bloon_interval = 0;
   int frame_count = 0;
   int current_waves = -1;
@@ -323,14 +329,19 @@ private:
       "clear", Util::PTSDPosition(110, -220), glm::vec2(50, 50));
   std::shared_ptr<Button> skip = std::make_shared<Button>(
       "skip", Util::PTSDPosition(190, -220), glm::vec2(50, 50));
-
+  
+public:
   void medal_setter(int diff);
+private:
   std::shared_ptr<Util::GameObject> startround_anim;
   // sound->setSize({50, 50});
   // std::shared_ptr<Button> easy_btn = std::make_shared<Button>(
   //   "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50));
   std::vector<std::shared_ptr<Button>> emh_menu_buttons;
   std::vector<std::shared_ptr<Util::GameObject>> emh_medals;
+  std::shared_ptr<Util::GameObject> menu_bg =
+      std::make_shared<Util::GameObject>(std::make_shared<Util::Shape>(Util::ShapeType::Rectangle, glm::vec2(420, 300),
+                                    Util::Color(0, 0, 0, 100)), 2.1f);
 
   std::shared_ptr<popper> createPopper(Tower::TowerType type,
                                        const Util::PTSDPosition &position);

@@ -93,6 +93,8 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   add_clickable(end_game);
 
   infinity->setSize({60, 25});
+  infinity->SetDrawable(
+      std::make_shared<Util::Image>(RESOURCE_DIR "/buttons/Binfinity_n.png"));
   add_button(infinity);
   add_clickable(infinity);
   clear->setSize({60, 25});
@@ -129,11 +131,11 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
   add_object(ban);
   // menu
   emh_menu_buttons.push_back(std::make_shared<Button>(
-      "easy", Util::PTSDPosition(-200, 100), glm::vec2(50, 50)));
+      "easy", Util::PTSDPosition(-225, 100), glm::vec2(50, 50)));
   emh_menu_buttons.push_back(std::make_shared<Button>(
-      "med", Util::PTSDPosition(-50, 100), glm::vec2(50, 50)));
+      "med", Util::PTSDPosition(-75, 100), glm::vec2(50, 50)));
   emh_menu_buttons.push_back(std::make_shared<Button>(
-      "hard", Util::PTSDPosition(100, 100), glm::vec2(50, 50)));
+      "hard", Util::PTSDPosition(75, 100), glm::vec2(50, 50)));
   for (auto btn : emh_menu_buttons) {
     add_button(btn);
     add_clickable(btn);
@@ -142,9 +144,11 @@ Manager::Manager(std::shared_ptr<Util::Renderer> &renderer)
         10));
     add_object(emh_medals.back());
   }
+  menu_bg->SetPivot({80,-50});
+  add_object(menu_bg);
   for (int i = 0; i < 3; i++) {
     emh_medals[i]->m_Transform.translation =
-        Util::PTSDPosition(-200 + i * 150, 40).ToVec2();
+        Util::PTSDPosition(-225 + i * 150, 40).ToVec2();
   }
 
   initUI();
@@ -493,6 +497,7 @@ void Manager::menu_control(bool visible) {
   for (auto medal : emh_medals) {
     medal->SetVisible(visible);
   }
+  menu_bg->SetVisible(visible);
 }
 
 void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
@@ -638,6 +643,8 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
           for (auto &popper : poppers) {
             popper->kill();
           }
+          m_waveText_text->SetText(" ");
+          m_waveText->SetDrawable(m_waveText_text);
           m_game_state = game_state::menu;
           menu_control(true);
         } else if (buttonName == "sound") {
@@ -729,9 +736,13 @@ void Manager::handleClickAt(const Util::PTSDPosition &cursor_position) {
             m_game_state = game_state::over;
             over = 1;
           }
-        } else if (buttonName == "clear") {
+          if (current_waves < 50) {
+            m_waveText_text->SetText(std::to_string(current_waves + 1));
+            m_waveText->SetDrawable(m_waveText_text);
+          }
+        } else if (buttonName == "clear" && m_game_state == game_state::playing) {
           for (auto &holder : bloons) {
-            m_Renderer->RemoveChild(holder->get_bloon());
+            holder->kill();
           }
           m_game_state = game_state::gap;
         } else if (buttonName == "infinity") {
@@ -1037,7 +1048,7 @@ void Manager::next_wave() {
     for (int _ = 0; _ < 50; _++) {
       // bloons_gen_list.push_back(Bloon::Type::rainbow);
     };
-  } else if (m_game_state == game_state::playing && current_waves == 50) {
+  } else if (current_waves >= 49) {
     set_menu();
     current_waves = -1;
   } else {
@@ -1073,9 +1084,9 @@ void Manager::next_wave() {
 
 void Manager::start_wave() {
   if (m_game_state == game_state::gap &&
-      (current_waves != -1 && current_waves <= 50)) {
+      (current_waves != -1 && current_waves <= 49)) {
     set_playing();
-  } else if (current_waves > 50) {
+  } else if (current_waves > 49) {
     over = 1;
     m_game_state = game_state::over;
   } else {
@@ -1094,7 +1105,12 @@ void Manager::wave_check() {
       m_game_state == game_state::playing && !f_wave_end) {
     counter = 0;
     f_wave_end = true;
-    m_waveText_text->SetText(std::to_string(current_waves + 2));
+    if (current_waves + 2 < 50)
+      m_waveText_text->SetText(std::to_string(current_waves + 2));
+    else {
+      over = 1;
+      m_game_state = game_state::over;
+    }
     return;
   }
   if (f_wave_end)

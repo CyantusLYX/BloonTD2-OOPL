@@ -39,6 +39,7 @@ void App::Update() {
   //   }
   //   else
   // {
+  manager->call_ban();
   manager->cleanup_dead_objects();
   if (manager->get_game_state() == Manager::game_state::menu) {
     auto now = Util::Input::GetCursorPosition();
@@ -46,6 +47,15 @@ void App::Update() {
       previous_cursor_pos = Util::Input::GetCursorPosition();
       manager->menu_hover(now);
     }
+    if(manager->get_over() == 1) {
+      manager->medal_setter(manager->get_diff());
+    }
+    if(manager->get_over() != -1) {
+      manager->set_over(-1);
+    }
+
+    
+
   } else if (manager->get_game_state() == Manager::game_state::over) {
   } else if (manager->get_game_state() == Manager::game_state::gap) {
   } else if (manager->get_game_state() == Manager::game_state::playing) {
@@ -59,7 +69,6 @@ void App::Update() {
   manager->popimg_tick_manager();
   manager->updateAllMovingObjects();
   manager->updateDraggingObject(Util::Input::GetCursorPosition());
-  manager->call_ban();
 
   // 處理輸入
   if (Util::Input::IsKeyDown(Util::Keycode::MOUSE_LB)) {
