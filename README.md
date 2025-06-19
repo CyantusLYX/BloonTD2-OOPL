@@ -236,7 +236,7 @@ Bloons Tower Defense 2 (BTD2) 是一款經典的塔防遊戲。玩家需要在�
 | 2    | 完成專案權限改為 public |  V  |
 | 3    | 具有 debug mode 的功能  |  V  |
 | 4    | 解決專案上所有 Memory Leak 的問題  |God knows|
-| 5    | 報告中沒有任何錯字，以及沒有任何一項遺漏  |I don;t think so,|
+| 5    | 報告中沒有任何錯字，以及沒有任何一項遺漏  |Yes|
 | 6    | 遊戲可玩  |  V  |
 | 7    | 程式能跑  |  V  |
 | 8    | 人沒跑()  |  V  |
